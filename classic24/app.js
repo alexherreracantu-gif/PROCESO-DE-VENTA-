@@ -446,11 +446,13 @@ function safetyNote() {
 }
 
 // ---------- Componentes ----------
-function donut(p, size, stroke, color, inner = '') {
+let animateNext = true;
+function donut(p, size, stroke, color, inner = '', anim = false) {
   const r = (size - stroke) / 2, c = 2 * Math.PI * r, v = clamp(p || 0, 0, 1);
+  const cls = anim && animateNext ? 'arc anim' : 'arc';
   return `<svg class="donut" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" aria-hidden="true">
     <circle cx="${size / 2}" cy="${size / 2}" r="${r}" style="fill:none;stroke:var(--line);stroke-width:${stroke}"/>
-    ${v > 0 ? `<circle cx="${size / 2}" cy="${size / 2}" r="${r}" style="fill:none;stroke:${color};stroke-width:${stroke};stroke-linecap:round" stroke-dasharray="${(c * v).toFixed(2)} ${c.toFixed(2)}" transform="rotate(-90 ${size / 2} ${size / 2})"/>` : ''}
+    ${v > 0 ? `<circle class="${cls}" cx="${size / 2}" cy="${size / 2}" r="${r}" style="fill:none;stroke:${color};stroke-width:${stroke};stroke-linecap:round;--len:${(c * v).toFixed(2)};--c:${c.toFixed(2)}" stroke-dasharray="${(c * v).toFixed(2)} ${c.toFixed(2)}" transform="rotate(-90 ${size / 2} ${size / 2})"/>` : ''}
     ${inner}</svg>`;
 }
 function dayRings(mon) {
@@ -464,6 +466,27 @@ function dayRings(mon) {
       ${donut(p, 44, 5, col, `<text x="22" y="26" text-anchor="middle" class="ring-txt">${lbl}</text>`)}
       <small>${DOW1[d.getDay()]} ${d.getDate()}</small></button>`;
   }).join('')}</div>`;
+}
+const ICON = {
+  weight: '<path d="M5 4h14l2 16H3L5 4Z"/><path d="M9 10a3 3 0 0 1 6 0M12 10l1.5-2"/>',
+  kcal: '<path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2.2 1-3.6 2-4.6.3 1.6 1.2 2.6 2.2 2.6C11 8.5 11 6 12 3Z"/>',
+  protein: '<path d="M15.5 4.5a4.5 4.5 0 0 1 2.3 8.4L11 19.7a2.4 2.4 0 1 1-3.4-3.4l-.1.1a2.4 2.4 0 1 1-2.8-2.8l.1-.1a2.4 2.4 0 1 1 3.4-3.4L15 3.3"/>',
+  steps: '<path d="M8 3c1.7 0 2.5 2 2.5 4.5S9.7 12 8 12s-2.5-2-2.5-4.5S6.3 3 8 3ZM6 15h4v2.5a2 2 0 0 1-4 0V15ZM16 7c1.7 0 2.5 2 2.5 4.5S17.7 16 16 16s-2.5-2-2.5-4.5S14.3 7 16 7ZM14 19h4v.5a2 2 0 0 1-4 0V19Z"/>',
+  train: '<path d="M6 7v10M3 9.5v5M18 7v10M21 9.5v5M6 12h12"/>',
+  posing: '<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4ZM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/>',
+  sleep: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/>',
+  creatine: '<path d="M10.5 20.5 3.5 13.5a4.95 4.95 0 1 1 7-7l7 7a4.95 4.95 0 1 1-7 7ZM7 10l7 7"/>',
+  cardio: '<path d="M20.8 8.6c0 5.4-8.8 11-8.8 11S3.2 14 3.2 8.6A4.6 4.6 0 0 1 12 6.4a4.6 4.6 0 0 1 8.8 2.2Z"/><path d="M3.5 12h4l2-3 3 6 2-3h6"/>',
+  water: '<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11Z"/>'
+};
+const icon = id => `<span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24">${ICON[id] || ICON.train}</svg></span>`;
+function prepBar(w) {
+  const segs = Array.from({ length: 24 }, (_, i) => {
+    const n = i + 1, gap = PHASES.some(p => p.from === n && n > 1);
+    return `<i class="${n < w ? 'done' : n === w ? 'cur' : ''} ${gap ? 'gap' : ''}"></i>`;
+  }).join('');
+  return `<div class="prepbar"><div class="prepbar-track">${segs}</div>
+    <div class="prepbar-lbl"><span>Semana 1</span><b>${w >= 1 && w <= 24 ? `${Math.round(clamp(w - 1, 0, 24) / 24 * 100)}% del camino` : ''}</b><span>Show</span></div></div>`;
 }
 function statusDot(s) {
   const map = { ok: ['ok', '✓'], miss: ['miss', '✕'], pending: ['pending', ''], opt: ['pending', ''], na: ['na', '–'] };
@@ -483,10 +506,11 @@ function render() {
   Cloud.deferred = false;
   $$('.nav-item').forEach(x => x.classList.toggle('active', x.dataset.tab === tab));
   ({ today: renderToday, training: renderTraining, nutrition: renderNutrition, progress: renderPanel, prep: renderPrep })[tab]();
+  animateNext = false;
 }
 
 function renderToday() {
-  const w = weekOf(), ph = phaseOf(w), dts = daysToShow(), items = dayItems(view), d = dayOf(view), sn = safetyNote();
+  const w = weekOf(), ph = phaseOf(w), dts = daysToShow(), items = dayItems(view), d = dayOf(view), sn = safetyNote(), tsc = dayScore(todayKey());
   const extra = [
     { id: 'cardio', label: 'Cardio zona 2', value: `${num(d.cardio)} min · ${weekSummary(mondayOf(view)).cardioDone}/${S().cardioSessions} en la semana`, status: +d.cardio >= 20 ? 'ok' : 'opt', pct: (+d.cardio || 0) / S().cardioMinutes },
     { id: 'water', label: 'Agua', value: `${round(d.water || 0, 2)} / ${S().water} L`, status: +d.water >= S().water ? 'ok' : 'opt', pct: (+d.water || 0) / S().water }
@@ -494,9 +518,15 @@ function renderToday() {
   const plan = PLAN[planOf(view)];
   $('#content').innerHTML = `
   <section class="hero">
-    <div class="eyebrow">${w < 1 ? 'Antes de la semana 1' : w > 24 ? 'Después del show' : `Semana ${w}/24 · ${esc(ph.name)}`}</div>
-    <div class="hero-number">${dts >= 0 ? `${dts} días` : 'Show terminado'}</div>
-    <div class="hero-sub">${dts >= 0 ? `para el escenario · ${fmtShort(S().competitionDate)}` : 'Cambia la fecha en Ajustes'}</div>
+    <div class="hero-grid">
+      <div>
+        <div class="eyebrow">${w < 1 ? 'Antes de la semana 1' : w > 24 ? 'Después del show' : `Semana ${w} · ${esc(ph.name)}`}</div>
+        ${dts >= 0 ? `<div class="count"><span class="count-n">${dts}</span><span class="count-u">días</span></div>` : '<div class="hero-number">Show terminado</div>'}
+        <div class="hero-sub">${dts >= 0 ? `para el escenario · ${fmtShort(S().competitionDate)}` : 'Cambia la fecha en Ajustes'}</div>
+      </div>
+      <div class="hero-ring">${donut(tsc.pct, 104, 10, 'var(--gold)', `<text x="52" y="54" text-anchor="middle" class="donut-pct">${Math.round((tsc.pct || 0) * 100)}%</text><text x="52" y="71" text-anchor="middle" class="donut-sub">hoy ${tsc.ok}/${tsc.total}</text>`, true)}</div>
+    </div>
+    ${prepBar(w)}
   </section>
   <div class="card">
     <div class="row between"><h3 style="margin:0">Tu semana</h3><button class="btn small" data-tab="progress">Ver panel</button></div>
@@ -505,7 +535,7 @@ function renderToday() {
   <div class="section-title"><h2>Registro del día</h2><span>toca una línea para registrar</span></div>
   ${datebar()}
   <div class="card">
-    <div class="row between"><div><div class="eyebrow">Entreno</div><h3 style="margin:4px 0 0">${esc(plan.name)}</h3></div>
+    <div class="plan-card">${icon(plan.ex.length ? 'train' : planOf(view) === 3 ? 'steps' : 'sleep')}<div style="flex:1;min-width:0"><div class="eyebrow">${plan.ex.length ? `Entreno · ${plan.ex.length} ejercicios · ${totalSets(planOf(view))} series` : 'Hoy sin pesas'}</div><h3>${esc(plan.name)}</h3></div>
     <button class="btn small ${plan.ex.length ? 'primary' : ''}" data-tab="training">${plan.ex.length ? 'Abrir' : 'Ver'}</button></div>
     ${!plan.ex.length ? `<p class="muted mini" style="margin:8px 0 0">${planOf(view) === 3 ? '10,000 pasos y cardio zona 2 opcional de 30–40 min. Si perdiste una sesión esta semana, hoy es el día para recuperarla.' : 'Descanso total. Pasos normales, comida y sueño. También sirve para recuperar una sesión perdida.'}</p>` : ''}
   </div>
@@ -516,8 +546,8 @@ function renderToday() {
 function itemRow(it) {
   const pct = clamp(it.pct || 0, 0, 1);
   const bar = it.status === 'na' || it.id === 'weight' || it.id === 'creatine' || it.id === 'sleep' ? '' : `<div class="progress ${it.status === 'ok' ? 'good' : it.over ? 'over' : ''}"><i style="width:${Math.round(pct * 100)}%"></i></div>`;
-  return `<button class="item-row" data-act="item" data-id="${it.id}">${statusDot(it.status)}
-    <span class="item-main"><span class="row between"><span>${esc(it.label)}</span><span class="muted mini">${esc(it.value)}</span></span>${bar}</span></button>`;
+  return `<button class="item-row s-${it.status}" data-act="item" data-id="${it.id}">${icon(it.id)}
+    <span class="item-main"><span class="item-top"><span class="item-label">${esc(it.label)}</span><span class="item-val">${esc(it.value)}</span></span>${bar}</span>${statusDot(it.status)}</button>`;
 }
 
 function renderTraining() {
@@ -548,13 +578,14 @@ function exHTML(p, i, e, log) {
       <input inputmode="decimal" aria-label="RIR serie ${j + 1}" placeholder="${esc(rir)}" value="${esc(s.rir || '')}" data-change="set" data-key="${key}" data-j="${j}" data-f="rir" data-n="${sets}">
       <input class="done" type="checkbox" aria-label="Serie ${j + 1} hecha" ${s.done ? 'checked' : ''} data-change="setdone" data-key="${key}" data-j="${j}" data-n="${sets}" data-rest="${rest}" data-name="${esc(name)}"></div>`;
   }).join('');
-  return `<div class="exercise"><div class="exercise-title"><div><b>${esc(name)}</b><div><small>${sets} × ${min}–${max} · RIR ${rir} · descanso ${round(rest / 60, 1)} min</small></div></div>
+  const allDone = x.sets && x.sets.length >= sets && x.sets.slice(0, sets).every(s => s && s.done);
+  return `<div class="exercise ${allDone ? 'all-done' : ''}"><div class="exercise-title"><div class="ex-head"><span class="ex-n">${pad(i + 1)}</span><div><b>${esc(name)}</b><div><small>${sets} × ${min}–${max} · RIR ${rir} · descanso ${round(rest / 60, 1)} min</small></div></div></div>
     <button class="btn small" data-act="timer" data-sec="${rest}" data-name="${esc(name)}">${round(rest / 60, 1)}m</button></div>
     <div class="last">${last ? `Última vez (${fmtShort(last.date)}): <b>${last.sets.slice(0, sets).map(s => s && s.kg && s.reps ? `${esc(s.kg)}×${esc(s.reps)}` : '—').join(' · ')}</b>` : 'Primera vez: elige un peso que te deje en el RIR marcado.'}</div>
     ${lastTop ? `<div class="alert good mt" style="padding:9px 11px">La última vez llegaste a ${max} en todas las series: hoy sube la carga (+2.5 kg o el siguiente incremento).</div>` : ''}
-    <div class="set-row"><div></div><div class="set-head">KG</div><div class="set-head">REPS</div><div class="set-head">RIR</div><div class="set-head">OK</div></div>
-    ${rows}
-    <input style="margin-top:8px;font-size:14px;padding:10px" placeholder="Notas (máquina, asiento, sensaciones)" value="${esc(x.note || '')}" data-change="exnote" data-key="${key}" data-n="${sets}"></div>`;
+    <div class="sets"><div class="set-row"><div></div><div class="set-head">KG</div><div class="set-head">REPS</div><div class="set-head">RIR</div><div class="set-head">OK</div></div>
+    ${rows}</div>
+    <input class="ex-note" placeholder="Notas (máquina, asiento, sensaciones)" value="${esc(x.note || '')}" data-change="exnote" data-key="${key}" data-n="${sets}"></div>`;
 }
 
 function defaultMeal() { const h = new Date().getHours(); return h < 11 ? 'Desayuno' : h < 16 ? 'Comida' : h < 19 ? 'Pre-entreno' : 'Cena'; }
@@ -564,13 +595,15 @@ function renderNutrition() {
   const byMeal = MEALS.map(ml => ({ ml, foods: n.foods.map((f, i) => ({ ...f, i })).filter(f => f.meal === ml) })).filter(g => g.foods.length);
   $('#content').innerHTML = `
   ${datebar()}
-  <div class="macro-grid">
-    ${[['Kcal', m.kcal, s.calories, ''], ['Proteína', m.p, s.protein, 'g'], ['Carbos', m.c, s.carbs, 'g'], ['Grasa', m.f, s.fat, 'g']].map(([l, v, t, u]) =>
-      `<div class="macro ${left(v, t) >= 0 ? 'left' : ''}"><b>${left(v, t) >= 0 ? num(left(v, t)) : '+' + num(-left(v, t))}${u}</b><small>${l} ${left(v, t) >= 0 ? 'restantes' : 'de más'}<br>${num(v)} / ${num(t)}${u}</small></div>`).join('')}
-  </div>
+  <div class="card"><div class="macro-rings">
+    ${[['Kcal', m.kcal, s.calories, '', 'var(--gold)'], ['Proteína', m.p, s.protein, 'g', 'var(--good)'], ['Carbos', m.c, s.carbs, 'g', 'var(--gold-hi)'], ['Grasa', m.f, s.fat, 'g', 'var(--warn)']].map(([l, v, t, u, c]) => {
+      const lf = left(v, t), over = lf < 0;
+      return `<div class="macro-ring">${donut(v / t, 74, 8, over ? 'var(--bad)' : c, `<text x="37" y="40" text-anchor="middle" class="macro-num">${over ? '+' + num(-lf) : num(lf)}</text><text x="37" y="52" text-anchor="middle" class="macro-lbl">${over ? 'de más' : 'faltan'}</text>`, true)}
+        <b>${l}</b><small>${num(v)} / ${num(t)}${u}</small></div>`; }).join('')}
+  </div></div>
   <div class="section-title"><h2>Agregar rápido</h2><span>toca una porción</span></div>
   <div class="chips">${MEALS.map(ml => `<button class="chip ${ml === mealSel ? 'on' : ''}" data-act="meal" data-meal="${ml}">${ml}</button>`).join('')}</div>
-  <div class="food-presets mt">${FOODS.map((f, i) => `<button class="preset" data-act="preset" data-i="${i}"><b>${esc(f[0])}</b><small>${f[1]} kcal · P${f[2]} C${f[3]} G${f[4]}</small></button>`).join('')}</div>
+  <div class="food-presets mt">${FOODS.map((f, i) => `<button class="preset" data-act="preset" data-i="${i}"><b>${esc(f[0])}</b><small><em>${f[1]} kcal</em> · P${f[2]} C${f[3]} G${f[4]}</small></button>`).join('')}</div>
   <div class="row mt"><button class="btn full" data-act="food-custom">+ Alimento propio</button><button class="btn full" data-act="food-repeat">Repetir ayer</button></div>
   <div class="section-title"><h2>Comidas del día</h2><span>${n.foods.length} registros</span></div>
   <div class="card">${byMeal.length ? byMeal.map(g => `<div class="eyebrow" style="margin:6px 0 2px">${g.ml}</div>${g.foods.map(f => `<div class="check"><div style="min-width:0"><b style="font-size:14px">${esc(f.name)}</b><div class="tiny muted">${num(f.kcal)} kcal · P${num(f.p)} C${num(f.c)} G${num(f.f)}</div></div><button class="btn small danger" data-act="food-del" data-i="${f.i}" aria-label="Borrar">✕</button></div>`).join('')}`).join('')
@@ -609,7 +642,7 @@ function renderPanel() {
   <div class="card">
     <div class="eyebrow">Cumplimiento${weekOf(panelWeek) >= 1 && weekOf(panelWeek) <= 24 ? ` · semana ${weekOf(panelWeek)} de la prep` : ''}</div>
     <div class="donut-wrap">
-      <div class="donut-big">${donut(pct, 132, 14, col, `<text x="66" y="68" text-anchor="middle" class="donut-pct">${pct == null ? '—' : Math.round(pct * 100) + '%'}</text><text x="66" y="88" text-anchor="middle" class="donut-sub">${ws.ok}/${ws.total} metas</text>`)}</div>
+      <div class="donut-big">${donut(pct, 132, 14, col, `<text x="66" y="68" text-anchor="middle" class="donut-pct">${pct == null ? '—' : Math.round(pct * 100) + '%'}</text><text x="66" y="88" text-anchor="middle" class="donut-sub">${ws.ok}/${ws.total} metas</text>`, true)}</div>
       <div class="legend">${ws.items.filter(it => it.total).map(it => `<div class="legend-row"><span class="row between"><span>${esc(it.label)}</span><span class="muted">${it.ok}/${it.total}</span></span>
         <div class="progress ${it.ok === it.total ? 'good' : ''}"><i style="width:${Math.round(it.ok / it.total * 100)}%;${it.ok / it.total < 0.6 ? 'background:var(--bad)' : ''}"></i></div></div>`).join('')}
         <div class="legend-row"><span class="row between"><span>Cardio</span><span class="muted">${ws.cardioDone}/${ws.cardioTarget}</span></span>
@@ -836,7 +869,7 @@ function settingsModal() {
 }
 
 // ---------- Acciones ----------
-function setTab(t) { tab = t; if (t === 'progress') panelWeek = mondayOf(todayKey()); render(); window.scrollTo(0, 0); }
+function setTab(t) { tab = t; animateNext = true; if (t === 'progress') panelWeek = mondayOf(todayKey()); render(); window.scrollTo(0, 0); }
 const ACT = {
   settings: () => settingsModal(),
   close: () => closeModal(),

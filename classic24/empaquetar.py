@@ -12,6 +12,7 @@ css = leer("styles.css")
 css += "\n.topbar{top:env(safe-area-inset-top,0px);padding-top:12px}\n"
 js = "window.C24_EMBED = true;\n" + leer("app.js")
 cuerpo = cuerpo.replace('<script src="app.js"></script>', "<script>\n" + js.replace("</script", "<\\/script") + "\n</script>")
-salida = titulo + "\n<style>\n" + css + "</style>\n" + cuerpo.strip() + "\n"
+fuentes = "\n".join(re.findall(r'<link [^>]*fonts\.(?:googleapis|gstatic)[^>]*>', html))
+salida = titulo + "\n" + fuentes + "\n<style>\n" + css + "</style>\n" + cuerpo.strip() + "\n"
 open(sys.argv[1], "w", encoding="utf-8").write(salida)
 print(len(salida), "bytes →", sys.argv[1])
