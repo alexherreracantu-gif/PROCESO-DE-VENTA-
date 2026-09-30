@@ -1,0 +1,863 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Panel de ventas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="assets/config.js"></script>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --surface: #ffffff;
+      --surface-2: #eef1f5;
+      --text: #0f172a;
+      --muted: #5b6475;
+      --border: #dde2ea;
+      --accent: #0e7c66;
+      --accent-strong: #0a5f4e;
+      --accent-soft: #dff3ee;
+      --on-accent: #ffffff;
+      --wa: #1faa53;
+      --ok: #15803d;
+      --ok-soft: #dcfce7;
+      --bad: #b91c1c;
+      --bad-soft: #fee2e2;
+      --warn: #b45309;
+      --warn-soft: #fef3c7;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #0b1016; --surface: #121a23; --surface-2: #19232f; --text: #e8edf3; --muted: #9aa6b5;
+        --border: #263241; --accent: #35c9a5; --accent-strong: #5fdcbc; --accent-soft: #123a33; --on-accent: #06221b;
+        --wa: #2bc766; --ok: #4ade80; --ok-soft: #12321f; --bad: #f87171; --bad-soft: #3a1515; --warn: #f0a44b; --warn-soft: #3a2a10;
+      }
+    }
+    :root[data-theme="dark"] {
+      --bg: #0b1016; --surface: #121a23; --surface-2: #19232f; --text: #e8edf3; --muted: #9aa6b5;
+      --border: #263241; --accent: #35c9a5; --accent-strong: #5fdcbc; --accent-soft: #123a33; --on-accent: #06221b;
+      --wa: #2bc766; --ok: #4ade80; --ok-soft: #12321f; --bad: #f87171; --bad-soft: #3a1515; --warn: #f0a44b; --warn-soft: #3a2a10;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Inter", system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
+    header { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+    header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 12px; padding-bottom: 0; flex-wrap: wrap; }
+    .title { font-weight: 800; letter-spacing: -.02em; }
+    .title small { color: var(--muted); font-weight: 500; margin-left: 6px; }
+    nav.tabs { display: flex; gap: 4px; overflow-x: auto; width: 100%; margin-top: 8px; scrollbar-width: none; }
+    nav.tabs button {
+      font: inherit; font-weight: 600; font-size: .92rem; border: 0; background: none; color: var(--muted);
+      padding: 10px 14px; border-bottom: 3px solid transparent; cursor: pointer; white-space: nowrap;
+    }
+    nav.tabs button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); }
+    main { padding: 24px 0 64px; }
+    .panel[hidden] { display: none; }
+    h2 { margin: 0 0 4px; letter-spacing: -.02em; }
+    .sub { color: var(--muted); margin: 0 0 20px; }
+    h3 { margin: 0 0 12px; font-size: 1.02rem; }
+
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 18px; }
+    .grid { display: grid; gap: 16px; }
+    .g2 { grid-template-columns: 1fr 1fr; }
+    .g3 { grid-template-columns: repeat(3, 1fr); }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .spacer { flex: 1; }
+
+    label { display: block; font-weight: 600; font-size: .85rem; margin-bottom: 4px; }
+    .field { margin-bottom: 12px; }
+    input[type="text"], input[type="tel"], input[type="number"], input[type="email"], input[type="date"], select, textarea {
+      width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text); font: inherit; font-size: .95rem;
+    }
+    textarea { min-height: 110px; resize: vertical; }
+    input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      border: 0; border-radius: 10px; padding: 9px 14px; font: inherit; font-weight: 700; font-size: .9rem;
+      cursor: pointer; background: var(--accent); color: var(--on-accent); text-decoration: none;
+    }
+    .btn:hover { background: var(--accent-strong); }
+    .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+    .btn.ghost:hover { background: var(--surface-2); }
+    .btn.wa { background: var(--wa); color: #fff; }
+    .btn.danger { background: transparent; color: var(--bad); border: 1px solid var(--border); }
+    .btn.xs { padding: 6px 10px; font-size: .8rem; border-radius: 8px; }
+
+    /* Prospectos */
+    .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; margin-bottom: 16px; }
+    .stat {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px;
+      cursor: pointer; text-align: left; font: inherit; color: inherit;
+    }
+    .stat[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+    .stat b { display: block; font-size: 1.4rem; line-height: 1.1; }
+    .stat span { color: var(--muted); font-size: .76rem; font-weight: 600; }
+    .leads { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+    .lead { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+    .lead .name { font-weight: 800; font-size: 1.02rem; }
+    .lead .meta { color: var(--muted); font-size: .84rem; }
+    .tag { display: inline-block; font-size: .72rem; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: var(--surface-2); color: var(--muted); margin-right: 4px; }
+    .tag.hot { background: var(--bad-soft); color: var(--bad); }
+    .tag.warm { background: var(--warn-soft); color: var(--warn); }
+    .tag.pn { background: var(--accent-soft); color: var(--accent-strong); }
+    .next { background: var(--surface-2); border-radius: 10px; padding: 10px 12px; font-size: .86rem; }
+    .next b { display: block; font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
+    .lead select { padding: 7px 10px; font-size: .85rem; }
+    .empty { color: var(--muted); text-align: center; padding: 40px 16px; border: 1px dashed var(--border); border-radius: 14px; }
+
+    /* Calculadora */
+    .ledger { width: 100%; border-collapse: collapse; font-size: .93rem; }
+    .ledger td { padding: 7px 0; border-bottom: 1px solid var(--border); }
+    .ledger td:last-child { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; padding-left: 8px; }
+    .ledger tr.total td { border-bottom: 0; font-size: 1.02rem; padding-top: 10px; }
+    .verdict { border-radius: 14px; padding: 16px; margin-top: 14px; font-weight: 600; }
+    .verdict .amt { font-size: 1.8rem; font-weight: 800; display: block; letter-spacing: -.02em; }
+    .verdict.ok { background: var(--ok-soft); color: var(--ok); }
+    .verdict.bad { background: var(--bad-soft); color: var(--bad); }
+    .extras { display: grid; gap: 8px; }
+    .extra { display: grid; grid-template-columns: auto 1fr 130px; gap: 10px; align-items: center; }
+    .extra label { margin: 0; font-weight: 500; }
+    .inline { display: flex; gap: 8px; }
+    .inline select { width: auto; }
+    .hint { color: var(--muted); font-size: .8rem; margin-top: 4px; }
+
+    /* Checklists */
+    .check { list-style: none; padding: 0; margin: 0; }
+    .check li { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: .92rem; }
+    .check li:last-child { border-bottom: 0; }
+    .check input { margin-top: 4px; accent-color: var(--accent); width: 16px; height: 16px; flex: none; }
+    .check input:checked + span { color: var(--muted); text-decoration: line-through; }
+
+    pre.out { white-space: pre-wrap; background: var(--surface-2); border-radius: 12px; padding: 14px; font: inherit; font-size: .9rem; margin: 0 0 12px; min-height: 80px; }
+    .toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-weight: 600; font-size: .9rem; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 50; }
+    .toast.show { opacity: 1; }
+    dialog { border: 1px solid var(--border); border-radius: 16px; background: var(--surface); color: var(--text); width: calc(100% - 32px); max-width: 560px; padding: 20px; }
+    dialog::backdrop { background: rgba(0,0,0,.5); }
+
+    @media (max-width: 820px) {
+      .g2, .g3 { grid-template-columns: 1fr; }
+      .leads { grid-template-columns: 1fr; }
+      .extra { grid-template-columns: auto 1fr 110px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="title">Panel de ventas <small id="hdrAsesor"></small></div>
+      <a class="btn ghost xs" href="index.html" target="_blank" rel="noopener">Ver landing</a>
+      <nav class="tabs" role="tablist">
+        <button role="tab" data-tab="prospectos" aria-selected="true">Prospectos</button>
+        <button role="tab" data-tab="calculadora" aria-selected="false">Calculadora de cierre</button>
+        <button role="tab" data-tab="mensajes" aria-selected="false">Mensajes</button>
+        <button role="tab" data-tab="piedras" aria-selected="false">Piedras Negras</button>
+        <button role="tab" data-tab="checklists" aria-selected="false">Checklists</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- PROSPECTOS -->
+    <section class="panel" id="tab-prospectos">
+      <div class="row" style="margin-bottom:12px">
+        <div>
+          <h2>Prospectos</h2>
+          <p class="sub" style="margin:0">Cada tarjeta te dice el siguiente paso del proceso. Los datos se guardan solo en este navegador.</p>
+        </div>
+        <div class="spacer"></div>
+        <button class="btn" id="btnNuevo">+ Nuevo</button>
+        <button class="btn ghost" id="btnImportWa">Pegar mensaje de WhatsApp</button>
+        <button class="btn ghost" id="btnCsv">Exportar CSV</button>
+        <button class="btn ghost" id="btnBackup">Respaldo</button>
+      </div>
+      <div class="field" style="max-width:360px"><input type="text" id="buscar" placeholder="Buscar por nombre, teléfono o modelo"></div>
+      <div class="stats" id="stats"></div>
+      <div class="leads" id="leads"></div>
+    </section>
+
+    <!-- CALCULADORA -->
+    <section class="panel" id="tab-calculadora" hidden>
+      <h2>Calculadora de cierre</h2>
+      <p class="sub">Cuadra la venta antes de firmar y antes de la salida. Regla de oro: si sobra, queda en Accesorios como saldo a favor; si falta aunque sea $1, el carro no sale.</p>
+      <div class="grid g2">
+        <div class="card">
+          <h3>1. Venta</h3>
+          <div class="grid g2" style="gap:12px">
+            <div class="field"><label for="cModelo">Modelo</label><select id="cModelo"></select></div>
+            <div class="field"><label for="cFactura">Valor factura</label><input id="cFactura" type="number" min="0" step="100"></div>
+            <div class="field"><label for="cEnganche">Enganche total (incluye separación)</label><input id="cEnganche" type="number" min="0" step="1000" value="100000"></div>
+            <div class="field"><label for="cSeparacion">Separación ya pagada</label><input id="cSeparacion" type="number" min="0" step="500"></div>
+          </div>
+          <h3 style="margin-top:8px">2. ¿Qué le di? (bonos)</h3>
+          <div class="grid g2" style="gap:12px">
+            <div class="field"><label for="cBonos">Bonos de agencia / marca</label><input id="cBonos" type="number" min="0" step="1000" value="50000"></div>
+            <div class="field">
+              <label for="cFrontera">Bono frontera</label>
+              <div class="inline">
+                <input id="cFrontera" type="number" min="0" step="0.5" value="0">
+                <select id="cFronteraModo" aria-label="Tipo de bono frontera"><option value="monto">$</option><option value="pct">%</option></select>
+              </div>
+              <div class="hint" id="cFronteraHint">Pendiente de validar: ¿monto fijo o % del valor factura?</div>
+            </div>
+          </div>
+          <h3 style="margin-top:8px">3. ¿Qué le vendí? (nota de extras)</h3>
+          <div class="extras" id="extras"></div>
+          <h3 style="margin-top:16px">4. Banco</h3>
+          <div class="field">
+            <label for="cDesembolso">Desembolso real del banco</label>
+            <input id="cDesembolso" type="number" min="0" step="100" placeholder="Vacío = usar el desembolso esperado">
+            <div class="hint">Cuando llegue el archivo de desembolso, escribe aquí el monto real.</div>
+          </div>
+          <div class="field">
+            <label for="cOtros">Otros pagos del cliente aplicados</label>
+            <input id="cOtros" type="number" min="0" step="100" value="0">
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <h3>Resumen para la firma</h3>
+            <table class="ledger">
+              <tr><td>Valor factura</td><td id="rFactura"></td></tr>
+              <tr><td>− Enganche del cliente</td><td id="rEnganche"></td></tr>
+              <tr><td>− Bonos</td><td id="rBonos"></td></tr>
+              <tr class="total"><td><b>Desembolso esperado del banco</b></td><td id="rEsperado"></td></tr>
+            </table>
+            <table class="ledger" style="margin-top:12px">
+              <tr><td>Enganche a entregar el día de la firma</td><td id="rEngFirma"></td></tr>
+              <tr><td>Nota de extras vendidos</td><td id="rExtras"></td></tr>
+            </table>
+          </div>
+          <div class="card" style="margin-top:16px">
+            <h3>Cuadre para la salida</h3>
+            <table class="ledger">
+              <tr><td>Enganche (incluye separación)</td><td id="qEnganche"></td></tr>
+              <tr><td>Bonos</td><td id="qBonos"></td></tr>
+              <tr><td>Desembolso del banco</td><td id="qDesembolso"></td></tr>
+              <tr><td>Otros pagos</td><td id="qOtros"></td></tr>
+              <tr class="total"><td><b>Total cubierto</b></td><td id="qCubierto"></td></tr>
+              <tr><td>Valor factura + extras</td><td id="qCargos"></td></tr>
+            </table>
+            <div class="verdict" id="verdict"></div>
+            <div class="row" style="margin-top:12px">
+              <button class="btn ghost" id="btnCopyCuadre">Copiar resumen</button>
+              <button class="btn ghost" id="btnToPN">Llevar a correo de Piedras Negras</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MENSAJES -->
+    <section class="panel" id="tab-mensajes" hidden>
+      <h2>Mensajes listos</h2>
+      <p class="sub">Elige un prospecto y la etapa. El mensaje se llena solo y lo mandas por WhatsApp con un clic.</p>
+      <div class="grid g2">
+        <div class="card">
+          <div class="field"><label for="mLead">Prospecto</label><select id="mLead"></select></div>
+          <div class="field"><label for="mTpl">Mensaje</label><select id="mTpl"></select></div>
+          <div class="field"><label for="mPrecio">Precio / valor factura (opcional)</label><input id="mPrecio" type="number" min="0"></div>
+        </div>
+        <div class="card">
+          <pre class="out" id="mOut"></pre>
+          <div class="row">
+            <button class="btn wa" id="mSend">Abrir en WhatsApp</button>
+            <button class="btn ghost" id="mCopy">Copiar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PIEDRAS NEGRAS -->
+    <section class="panel" id="tab-piedras" hidden>
+      <h2>Aplicación de pago · Piedras Negras</h2>
+      <p class="sub">Cuando el pago ya aparece en negativo en Quiter, arma aquí el correo con el pago negativo y la aplicación por concepto.</p>
+      <div class="grid g2">
+        <div class="card">
+          <div class="grid g2" style="gap:12px">
+            <div class="field"><label for="pCliente">Cliente</label><input id="pCliente" type="text"></div>
+            <div class="field"><label for="pNum">Número de cliente (Quiter)</label><input id="pNum" type="text"></div>
+            <div class="field"><label for="pModelo">Unidad</label><input id="pModelo" type="text"></div>
+            <div class="field"><label for="pFecha">Fecha del pago</label><input id="pFecha" type="date"></div>
+            <div class="field"><label for="pMonto">Monto del pago (negativo)</label><input id="pMonto" type="number" min="0" step="100"></div>
+            <div class="field"><label for="pRecibo">Folio del recibo</label><input id="pRecibo" type="text"></div>
+          </div>
+          <h3>Aplicación por concepto</h3>
+          <div class="grid g2" style="gap:12px">
+            <div class="field"><label for="pFac">Factura (valor factura)</label><input id="pFac" type="number" min="0" step="100" value="0"></div>
+            <div class="field"><label for="pGes">Gestoría (placas)</label><input id="pGes" type="number" min="0" step="100" value="0"></div>
+            <div class="field"><label for="pAcc">Accesorios</label><input id="pAcc" type="number" min="0" step="100" value="0"></div>
+            <div class="field"><label for="pOtro">Otro concepto</label><input id="pOtro" type="number" min="0" step="100" value="0"></div>
+          </div>
+          <div class="verdict" id="pCheck"></div>
+        </div>
+        <div class="card">
+          <div class="field"><label for="pPara">Para</label><input id="pPara" type="email" placeholder="correo de Piedras Negras"></div>
+          <pre class="out" id="pOut"></pre>
+          <div class="row">
+            <a class="btn" id="pMail" href="#">Abrir en correo</a>
+            <button class="btn ghost" id="pCopy">Copiar</button>
+          </div>
+          <p class="hint">Adjunta el comprobante del pago negativo y el recibo aplicado antes de enviar.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CHECKLISTS -->
+    <section class="panel" id="tab-checklists" hidden>
+      <div class="row" style="margin-bottom:12px">
+        <div><h2>Checklists</h2><p class="sub" style="margin:0">Tu guía de capacitación convertida en pasos. Las marcas se guardan en este navegador.</p></div>
+        <div class="spacer"></div>
+        <button class="btn ghost" id="btnResetChecks">Reiniciar marcas</button>
+      </div>
+      <div class="grid g2" id="checklists"></div>
+    </section>
+  </main>
+
+  <dialog id="dlgLead">
+    <form method="dialog" id="leadForm">
+      <h3 id="dlgTitle">Nuevo prospecto</h3>
+      <div class="grid g2" style="gap:10px">
+        <div class="field"><label for="lNombre">Nombre</label><input id="lNombre" type="text" required></div>
+        <div class="field"><label for="lTel">WhatsApp (10 dígitos)</label><input id="lTel" type="tel"></div>
+        <div class="field"><label for="lModelo">Modelo</label><select id="lModelo"></select></div>
+        <div class="field"><label for="lPlaza">Se vende por</label><select id="lPlaza"><option value="MTY">Monterrey</option><option value="PN">Piedras Negras</option></select></div>
+        <div class="field"><label for="lPago">Pago</label><select id="lPago"><option>Crédito</option><option>Contado</option><option>Aún no sé</option></select></div>
+        <div class="field"><label for="lEnganche">Enganche acordado ($)</label><input id="lEnganche" type="number" min="0" step="1000"></div>
+        <div class="field"><label for="lCuando">¿Cuándo?</label><select id="lCuando"><option>Esta semana</option><option>Este mes</option><option>En 1 a 3 meses</option><option>Solo estoy cotizando</option></select></div>
+        <div class="field"><label for="lOrigen">Origen</label><select id="lOrigen"><option>Landing</option><option>Meta Ads</option><option>WhatsApp</option><option>Piso / agencia</option><option>Referido</option><option>Otro</option></select></div>
+        <div class="field"><label for="lNumCliente">Número de cliente Quiter</label><input id="lNumCliente" type="text"></div>
+        <div class="field"><label for="lEtapa">Etapa</label><select id="lEtapa"></select></div>
+      </div>
+      <div class="field"><label for="lNotas">Notas (color interior, versión, bonos, extras)</label><textarea id="lNotas" style="min-height:70px"></textarea></div>
+      <p class="hint">No guardes aquí CURP, RFC ni folio de INE: esos datos van directo a Quiter.</p>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" value="save" id="dlgSave">Guardar</button>
+        <button class="btn ghost" value="cancel" formnovalidate>Cancelar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlgImport">
+    <form method="dialog">
+      <h3>Pegar mensaje de WhatsApp</h3>
+      <p class="hint" style="margin-top:0">Pega el mensaje que te llegó desde la landing. Se crea el prospecto con los datos.</p>
+      <div class="field"><textarea id="impText" placeholder="Hola Omar, quiero cotizar un auto.&#10;• Nombre: ...&#10;• Modelo: ..."></textarea></div>
+      <div class="field"><label for="impTel">WhatsApp del cliente</label><input id="impTel" type="tel" placeholder="8112345678"></div>
+      <div class="row"><button class="btn" value="ok">Crear prospecto</button><button class="btn ghost" value="cancel" formnovalidate>Cancelar</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="dlgBackup">
+    <form method="dialog">
+      <h3>Respaldo de prospectos</h3>
+      <p class="hint" style="margin-top:0">Descarga un archivo con todos tus prospectos o restaura uno anterior (por ejemplo, para pasarlos del celular a la computadora).</p>
+      <div class="row" style="margin-bottom:12px">
+        <button class="btn" type="button" id="bkDownload">Descargar respaldo</button>
+        <label class="btn ghost" style="margin:0">Restaurar archivo<input type="file" id="bkFile" accept="application/json" hidden></label>
+      </div>
+      <button class="btn ghost" value="cancel">Cerrar</button>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+  (function () {
+    var C = window.CONFIG || {};
+    var A = C.asesor || {};
+    var SEP = C.separacion || 5000;
+    var modelos = C.modelos || [];
+    var mxn = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 2 });
+    var $ = function (id) { return document.getElementById(id); };
+    var money = function (n) { return mxn.format(Math.round((Number(n) || 0) * 100) / 100); };
+    var num = function (id) { return Number($(id).value) || 0; };
+    document.getElementById("hdrAsesor").textContent = [A.nombre, A.ciudad].filter(Boolean).join(" · ");
+
+    // ---------- Almacenamiento seguro ----------
+    var store = {
+      get: function (k, d) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+      set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* sin almacenamiento */ } },
+    };
+
+    function toast(t) {
+      var el = $("toast"); el.textContent = t; el.classList.add("show");
+      clearTimeout(toast._t); toast._t = setTimeout(function () { el.classList.remove("show"); }, 1800);
+    }
+    function copy(text) {
+      if (navigator.clipboard) navigator.clipboard.writeText(text).then(function () { toast("Copiado"); }, function () { toast("No se pudo copiar"); });
+    }
+    function waUrl(tel, text) {
+      var t = String(tel || "").replace(/\D/g, "");
+      if (t.length === 10) t = "521" + t;
+      return "https://wa.me/" + t + "?text=" + encodeURIComponent(text || "");
+    }
+
+    // ---------- Pestañas ----------
+    var tabs = document.querySelectorAll("nav.tabs button");
+    function showTab(name) {
+      tabs.forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.tab === name)); });
+      document.querySelectorAll(".panel").forEach(function (p) { p.hidden = p.id !== "tab-" + name; });
+      store.set("panel.tab", name);
+      if (name === "mensajes") fillLeadSelect();
+    }
+    tabs.forEach(function (b) { b.addEventListener("click", function () { showTab(b.dataset.tab); }); });
+
+    // ---------- Etapas del proceso ----------
+    var ETAPAS = [
+      { n: "Cotización", paso: "Manda la cotización y pide documentos: INE, comprobante de domicilio y de ingresos.", tpl: "cotizacion" },
+      { n: "Documentos al banco", paso: "Envía los documentos al banco y da seguimiento. Todavía NO pidas separación.", tpl: "seguimiento" },
+      { n: "Crédito aprobado", paso: "Pide la separación de $5,000 usando el color interior como gancho.", tpl: "separacion" },
+      { n: "Separación pagada", paso: "Alta en Quiter (Comercial → Fichas maestras → Cuentas personales, categoría P). Lleva a caja el formato (concepto Accesorios, código de cliente, tu nombre) y el comprobante impreso.", pn: "Después del recibo: sube con Contabilidad para cancelar el pago y avisa a la cajera que va por Piedras Negras." },
+      { n: "Agendar firma", paso: "Agenda firma y enganche. Recuerda: entrega enganche menos la separación. Cuadra la venta en la calculadora.", tpl: "firma", pn: "Cuando el pago salga en negativo, manda por correo el pago negativo y la aplicación por concepto." },
+      { n: "Firmado · esperando desembolso", paso: "Espera el archivo de desembolso del banco. Aplícalo como pago y manda la captura a la cuenta." },
+      { n: "Listo para entrega", paso: "Revisa que no haya adeudo (calculadora). Entrega en ~4 días; si vendiste placas, cuando lleguen o como lo acuerdes.", tpl: "entrega" },
+      { n: "Entregado", paso: "Pide reseña y referidos. Graba el video de entrega para tu contenido.", tpl: "resena" },
+    ];
+
+    // ---------- Prospectos ----------
+    var leads = store.get("panel.leads", []);
+    var filtro = null;
+    function save() { store.set("panel.leads", leads); render(); }
+    function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+    function prioridad(l) {
+      var s = 0;
+      if (l.cuando === "Esta semana") s += 3; else if (l.cuando === "Este mes") s += 2; else if (l.cuando === "En 1 a 3 meses") s += 1;
+      if (l.pago === "Contado") s += 3; else if (l.pago === "Crédito") s += 2;
+      if (l.etapa >= 2) s += 3;
+      return s >= 6 ? "Caliente" : s >= 4 ? "Tibio" : "Frío";
+    }
+
+    function fillModelSelect(sel, withOther) {
+      sel.innerHTML = "";
+      modelos.forEach(function (m) { var o = document.createElement("option"); o.value = m.nombre; o.textContent = m.nombre; sel.appendChild(o); });
+      if (withOther) { var o = document.createElement("option"); o.value = "Otro / aún no sé"; o.textContent = "Otro / aún no sé"; sel.appendChild(o); }
+    }
+    fillModelSelect($("lModelo"), true);
+    ETAPAS.forEach(function (e, i) { var o = document.createElement("option"); o.value = i; o.textContent = (i + 1) + ". " + e.n; $("lEtapa").appendChild(o); });
+
+    function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+    function render() {
+      var q = $("buscar").value.trim().toLowerCase();
+      var stats = $("stats"); stats.innerHTML = "";
+      var all = el("button", "stat"); all.setAttribute("aria-pressed", String(filtro === null));
+      all.append(el("b", null, leads.length), el("span", null, "Todos"));
+      all.onclick = function () { filtro = null; render(); };
+      stats.appendChild(all);
+      ETAPAS.forEach(function (e, i) {
+        var b = el("button", "stat"); b.setAttribute("aria-pressed", String(filtro === i));
+        b.append(el("b", null, leads.filter(function (l) { return l.etapa === i; }).length), el("span", null, e.n));
+        b.onclick = function () { filtro = filtro === i ? null : i; render(); };
+        stats.appendChild(b);
+      });
+
+      var box = $("leads"); box.innerHTML = "";
+      var list = leads.filter(function (l) {
+        if (filtro !== null && l.etapa !== filtro) return false;
+        if (!q) return true;
+        return [l.nombre, l.telefono, l.modelo, l.notas].join(" ").toLowerCase().indexOf(q) >= 0;
+      }).sort(function (a, b) { return (b.actualizado || 0) - (a.actualizado || 0); });
+
+      if (!list.length) {
+        box.appendChild(el("div", "empty", leads.length ? "No hay prospectos en este filtro." : "Aún no tienes prospectos. Agrega uno o pega el mensaje que te llega de la landing."));
+        return;
+      }
+      list.forEach(function (l) {
+        var card = el("article", "lead");
+        var top = el("div");
+        top.append(el("div", "name", l.nombre));
+        var p = prioridad(l);
+        var tags = el("div");
+        tags.append(el("span", "tag" + (p === "Caliente" ? " hot" : p === "Tibio" ? " warm" : ""), p));
+        if (l.plaza === "PN") tags.append(el("span", "tag pn", "Piedras Negras"));
+        if (l.origen) tags.append(el("span", "tag", l.origen));
+        top.append(tags);
+        var meta = [l.modelo, l.pago, l.enganche ? "Enganche " + money(l.enganche) : "", l.numCliente ? "Cliente #" + l.numCliente : ""].filter(Boolean).join(" · ");
+        top.append(el("div", "meta", meta));
+        if (l.notas) top.append(el("div", "meta", l.notas));
+        card.append(top);
+
+        var e = ETAPAS[l.etapa] || ETAPAS[0];
+        var nx = el("div", "next");
+        nx.append(el("b", null, "Siguiente paso"));
+        nx.append(document.createTextNode(e.paso));
+        if (l.plaza === "PN" && e.pn) { nx.append(el("div", null, "")); nx.lastChild.style.marginTop = "6px"; nx.lastChild.textContent = "Piedras Negras: " + e.pn; }
+        card.append(nx);
+
+        var row = el("div", "row");
+        var sel = el("select"); sel.setAttribute("aria-label", "Etapa de " + l.nombre); sel.style.flex = "1";
+        ETAPAS.forEach(function (et, i) { var o = el("option", null, (i + 1) + ". " + et.n); o.value = i; if (i === l.etapa) o.selected = true; sel.append(o); });
+        sel.onchange = function () { l.etapa = Number(sel.value); l.actualizado = Date.now(); save(); };
+        row.append(sel);
+        if (l.etapa < ETAPAS.length - 1) {
+          var nextBtn = el("button", "btn xs", "Avanzar →");
+          nextBtn.onclick = function () { l.etapa += 1; l.actualizado = Date.now(); save(); toast(l.nombre + ": " + ETAPAS[l.etapa].n); };
+          row.append(nextBtn);
+        }
+        card.append(row);
+
+        var acts = el("div", "row");
+        if (l.telefono) {
+          var tplId = e.tpl;
+          var wa = el("a", "btn wa xs", tplId ? "WhatsApp con mensaje" : "WhatsApp");
+          wa.href = waUrl(l.telefono, tplId ? buildMsg(tplId, l) : "Hola " + firstName(l.nombre) + ", ");
+          wa.target = "_blank"; wa.rel = "noopener";
+          acts.append(wa);
+        }
+        var edit = el("button", "btn ghost xs", "Editar"); edit.onclick = function () { openLead(l); };
+        var calc = el("button", "btn ghost xs", "Calcular cierre"); calc.onclick = function () { loadCalc(l); showTab("calculadora"); };
+        var del = el("button", "btn danger xs", "Borrar");
+        del.onclick = function () { if (confirm("¿Borrar a " + l.nombre + "?")) { leads = leads.filter(function (x) { return x.id !== l.id; }); save(); } };
+        acts.append(edit, calc, el("span", "spacer"), del);
+        card.append(acts);
+        box.append(card);
+      });
+    }
+    $("buscar").addEventListener("input", render);
+
+    var editing = null;
+    function openLead(l) {
+      editing = l || null;
+      $("dlgTitle").textContent = l ? "Editar prospecto" : "Nuevo prospecto";
+      $("lNombre").value = l ? l.nombre : "";
+      $("lTel").value = l ? l.telefono || "" : "";
+      $("lModelo").value = l ? l.modelo : (modelos[0] || {}).nombre;
+      $("lPlaza").value = l ? l.plaza || "MTY" : "MTY";
+      $("lPago").value = l ? l.pago || "Crédito" : "Crédito";
+      $("lEnganche").value = l && l.enganche ? l.enganche : "";
+      $("lCuando").value = l ? l.cuando || "Este mes" : "Este mes";
+      $("lOrigen").value = l ? l.origen || "Otro" : "WhatsApp";
+      $("lNumCliente").value = l ? l.numCliente || "" : "";
+      $("lEtapa").value = l ? l.etapa : 0;
+      $("lNotas").value = l ? l.notas || "" : "";
+      $("dlgLead").showModal();
+    }
+    $("btnNuevo").onclick = function () { openLead(null); };
+    $("dlgLead").addEventListener("close", function () {
+      if ($("dlgLead").returnValue !== "save") return;
+      var nombre = $("lNombre").value.trim();
+      if (!nombre) return;
+      var data = {
+        nombre: nombre, telefono: $("lTel").value.replace(/\D/g, ""), modelo: $("lModelo").value,
+        plaza: $("lPlaza").value, pago: $("lPago").value, enganche: Number($("lEnganche").value) || 0,
+        cuando: $("lCuando").value, origen: $("lOrigen").value, numCliente: $("lNumCliente").value.trim(),
+        etapa: Number($("lEtapa").value), notas: $("lNotas").value.trim(), actualizado: Date.now(),
+      };
+      if (editing) Object.assign(editing, data);
+      else leads.push(Object.assign({ id: uid(), creado: Date.now() }, data));
+      save();
+    });
+
+    // Importar mensaje de la landing
+    $("btnImportWa").onclick = function () { $("impText").value = ""; $("impTel").value = ""; $("dlgImport").showModal(); };
+    $("dlgImport").addEventListener("close", function () {
+      if ($("dlgImport").returnValue !== "ok") return;
+      var t = $("impText").value;
+      function pick(label) { var m = t.match(new RegExp(label + "\\s*:\\s*(.+)", "i")); return m ? m[1].trim() : ""; }
+      var nombre = pick("Nombre");
+      if (!nombre) { toast("No encontré el nombre en el mensaje"); return; }
+      var eng = pick("Enganche disponible");
+      leads.push({
+        id: uid(), creado: Date.now(), actualizado: Date.now(), etapa: 0, plaza: "MTY", origen: "Landing",
+        nombre: nombre, telefono: $("impTel").value.replace(/\D/g, ""), modelo: pick("Modelo") || "Otro / aún no sé",
+        pago: pick("Pago") || "Crédito", cuando: pick("¿Cuándo\\?") || pick("Cuándo") || "Este mes", enganche: 0,
+        notas: [eng ? "Enganche disponible: " + eng : "", pick("Municipio") ? "Municipio: " + pick("Municipio") : ""].filter(Boolean).join(" · "),
+      });
+      save(); toast("Prospecto creado");
+    });
+
+    // CSV y respaldo
+    $("btnCsv").onclick = function () {
+      var cols = ["nombre", "telefono", "modelo", "plaza", "pago", "enganche", "cuando", "origen", "numCliente", "etapa", "notas", "creado"];
+      var rows = [cols.join(",")].concat(leads.map(function (l) {
+        return cols.map(function (c) {
+          var v = c === "etapa" ? ETAPAS[l.etapa].n : c === "creado" ? new Date(l.creado).toLocaleDateString("es-MX") : (l[c] == null ? "" : l[c]);
+          return '"' + String(v).replace(/"/g, '""') + '"';
+        }).join(",");
+      }));
+      download("prospectos.csv", "﻿" + rows.join("\n"), "text/csv");
+    };
+    function download(name, content, type) {
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([content], { type: type }));
+      a.download = name; a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+    }
+    $("btnBackup").onclick = function () { $("dlgBackup").showModal(); };
+    $("bkDownload").onclick = function () { download("respaldo-prospectos.json", JSON.stringify(leads, null, 2), "application/json"); };
+    $("bkFile").onchange = function (e) {
+      var f = e.target.files[0]; if (!f) return;
+      f.text().then(function (txt) {
+        var data = JSON.parse(txt);
+        if (!Array.isArray(data)) throw new Error("formato");
+        var ids = {}; leads.forEach(function (l) { ids[l.id] = true; });
+        data.forEach(function (l) { if (l && l.id && l.nombre && !ids[l.id]) leads.push(l); });
+        save(); toast("Respaldo restaurado"); $("dlgBackup").close();
+      }).catch(function () { toast("El archivo no es un respaldo válido"); });
+    };
+
+    // ---------- Mensajes ----------
+    function firstName(n) { return String(n || "").trim().split(/\s+/)[0] || ""; }
+    var TPLS = {
+      cotizacion: { n: "1. Enviar cotización y pedir documentos", t: "Hola {nombre}, soy {asesor}, tu asesor. Te comparto la cotización del {modelo}{precio}.\n\nPara revisar tu crédito con el banco necesito:\n• INE por ambos lados\n• Comprobante de domicilio reciente\n• Comprobantes de ingresos\n\nMándamelos por aquí y yo me encargo del trámite." },
+      seguimiento: { n: "2. Seguimiento de documentos", t: "Hola {nombre}, ya envié tus documentos al banco para el {modelo}. En cuanto tenga respuesta te aviso por aquí. ¿Tienes alguna duda mientras tanto?" },
+      separacion: { n: "3. Crédito aprobado: pedir separación", t: "¡Buenas noticias, {nombre}! El banco aprobó tu crédito para el {modelo}.\n\nPara apartar tu unidad con el color interior que te gustó solo necesitas una separación de {separacion}, que se descuenta de tu enganche. ¿Te comparto los datos para la transferencia?" },
+      firma: { n: "4. Agendar firma y enganche", t: "Hola {nombre}, ya tenemos todo listo para la firma de tu {modelo}.\n\nEse día firmas contrato y factura, y entregas tu enganche{engRestante}. ¿Qué día y hora te acomoda?" },
+      entrega: { n: "5. Unidad lista para entrega", t: "¡{nombre}, tu {modelo} ya está listo! ¿Qué día te acomoda venir por él? Te lo entrego lavado y te explico todas sus funciones." },
+      resena: { n: "6. Pedir reseña y referidos", t: "Hola {nombre}, ¿cómo te ha ido con tu {modelo}? Me ayudaría mucho una reseña de tu experiencia. Y si conoces a alguien que esté buscando auto, pásale mi número: le doy la misma atención que a ti." },
+      recontacto: { n: "Recontactar prospecto frío", t: "Hola {nombre}, soy {asesor}. Hace unos días platicamos del {modelo}. Este mes hay promociones que te pueden interesar. ¿Te mando la cotización actualizada?" },
+    };
+    function buildMsg(id, l, precio) {
+      var tpl = TPLS[id]; if (!tpl) return "";
+      var modelo = modelos.filter(function (m) { return m.nombre === l.modelo; })[0];
+      var pr = precio || (modelo && modelo.precio) || 0;
+      var restante = l.enganche ? l.enganche - SEP : 0;
+      return tpl.t
+        .replace(/\{nombre\}/g, firstName(l.nombre))
+        .replace(/\{asesor\}/g, A.nombre || "")
+        .replace(/\{modelo\}/g, l.modelo || "auto")
+        .replace(/\{precio\}/g, pr ? " con valor factura de " + mxn.format(pr) : "")
+        .replace(/\{separacion\}/g, mxn.format(SEP))
+        .replace(/\{engRestante\}/g, restante > 0 ? " de " + mxn.format(restante) + " (ya descontada tu separación de " + mxn.format(SEP) + ")" : " (menos la separación que ya diste)");
+    }
+    Object.keys(TPLS).forEach(function (k) { var o = el("option", null, TPLS[k].n); o.value = k; $("mTpl").append(o); });
+    function fillLeadSelect() {
+      var sel = $("mLead"), cur = sel.value; sel.innerHTML = "";
+      if (!leads.length) { var o = el("option", null, "Agrega un prospecto primero"); o.value = ""; sel.append(o); }
+      leads.forEach(function (l) { var o = el("option", null, l.nombre + " · " + ETAPAS[l.etapa].n); o.value = l.id; sel.append(o); });
+      if (cur) sel.value = cur;
+      renderMsg();
+    }
+    function currentLead() { var id = $("mLead").value; return leads.filter(function (l) { return l.id === id; })[0]; }
+    function renderMsg() {
+      var l = currentLead() || { nombre: "{nombre}", modelo: "{modelo}" };
+      $("mOut").textContent = buildMsg($("mTpl").value, l, num("mPrecio"));
+    }
+    $("mLead").onchange = function () { var l = currentLead(); if (l) { var e = ETAPAS[l.etapa]; if (e.tpl) $("mTpl").value = e.tpl; } renderMsg(); };
+    $("mTpl").onchange = renderMsg; $("mPrecio").oninput = renderMsg;
+    $("mCopy").onclick = function () { copy($("mOut").textContent); };
+    $("mSend").onclick = function () {
+      var l = currentLead(); if (!l || !l.telefono) { toast("El prospecto no tiene WhatsApp"); return; }
+      window.open(waUrl(l.telefono, $("mOut").textContent), "_blank", "noopener");
+    };
+
+    // ---------- Calculadora de cierre ----------
+    var EXTRAS = ["Garantía extendida", "Instalación", "Kit de accesorios", "Seguro de llantas", "Placas (gestoría)", "Otro"];
+    EXTRAS.forEach(function (x, i) {
+      var row = el("div", "extra");
+      var cb = el("input"); cb.type = "checkbox"; cb.id = "ex" + i;
+      var lb = el("label", null, x); lb.htmlFor = "ex" + i;
+      var inp = el("input"); inp.type = "number"; inp.min = "0"; inp.step = "100"; inp.id = "exm" + i; inp.placeholder = "$"; inp.setAttribute("aria-label", "Monto " + x);
+      inp.addEventListener("input", function () { cb.checked = Number(inp.value) > 0; calc(); });
+      cb.addEventListener("change", calc);
+      row.append(cb, lb, inp);
+      $("extras").append(row);
+    });
+    fillModelSelect($("cModelo"), false);
+    $("cSeparacion").value = SEP;
+    function onCalcModel() {
+      var m = modelos.filter(function (x) { return x.nombre === $("cModelo").value; })[0];
+      if (m && m.precio) $("cFactura").value = m.precio;
+      calc();
+    }
+    $("cModelo").onchange = onCalcModel;
+
+    function extrasTotal() {
+      var t = 0, det = [];
+      EXTRAS.forEach(function (x, i) { if ($("ex" + i).checked) { var v = num("exm" + i); t += v; det.push({ n: x, v: v }); } });
+      return { total: t, det: det };
+    }
+    var ultimo = {};
+    function calc() {
+      var factura = num("cFactura"), eng = num("cEnganche"), sep = num("cSeparacion");
+      var fr = num("cFrontera");
+      var frontera = $("cFronteraModo").value === "pct" ? factura * fr / 100 : fr;
+      $("cFronteraHint").textContent = $("cFronteraModo").value === "pct"
+        ? fr + " % de " + money(factura) + " = " + money(frontera)
+        : "Pendiente de validar: ¿monto fijo o % del valor factura?";
+      var bonos = num("cBonos") + frontera;
+      var esperado = Math.max(factura - eng - num("cBonos"), 0);
+      var desembolso = $("cDesembolso").value === "" ? esperado : num("cDesembolso");
+      var ex = extrasTotal();
+      var otros = num("cOtros");
+      var cubierto = eng + bonos + desembolso + otros;
+      var cargos = factura + ex.total;
+      var saldo = Math.round((cubierto - cargos) * 100) / 100;
+
+      $("rFactura").textContent = money(factura);
+      $("rEnganche").textContent = "−" + money(eng);
+      $("rBonos").textContent = "−" + money(num("cBonos"));
+      $("rEsperado").textContent = money(esperado);
+      $("rEngFirma").textContent = money(Math.max(eng - sep, 0));
+      $("rExtras").textContent = money(ex.total);
+      $("qEnganche").textContent = money(eng);
+      $("qBonos").textContent = money(bonos);
+      $("qDesembolso").textContent = money(desembolso) + ($("cDesembolso").value === "" ? " (esperado)" : "");
+      $("qOtros").textContent = money(otros);
+      $("qCubierto").textContent = money(cubierto);
+      $("qCargos").textContent = money(cargos);
+
+      var v = $("verdict");
+      v.innerHTML = "";
+      if (saldo >= 0) {
+        v.className = "verdict ok";
+        v.append(el("span", "amt", saldo === 0 ? "Cuadra en $0" : "Sobran " + money(saldo)));
+        v.append(document.createTextNode(saldo === 0 ? "Sin adeudo. El carro puede salir." : "Sin adeudo. El sobrante queda en Accesorios como saldo a favor del cliente (se le devuelve si lo pide). El carro puede salir."));
+      } else {
+        v.className = "verdict bad";
+        v.append(el("span", "amt", "Faltan " + money(-saldo)));
+        v.append(document.createTextNode("Hay adeudo: el carro NO sale hasta liquidarlo. Revisa pagos mal aplicados o liquida la diferencia en caja."));
+      }
+      if (factura && eng + num("cBonos") > factura) {
+        var w = el("div", null, "Ojo: enganche + bonos superan el valor factura."); w.style.marginTop = "8px"; v.append(w);
+      }
+      ultimo = { factura: factura, eng: eng, sep: sep, bonos: bonos, frontera: frontera, esperado: esperado, desembolso: desembolso, ex: ex, otros: otros, cubierto: cubierto, cargos: cargos, saldo: saldo };
+      store.set("panel.calc", readCalcInputs());
+    }
+    var CALC_IDS = ["cModelo", "cFactura", "cEnganche", "cSeparacion", "cBonos", "cFrontera", "cFronteraModo", "cDesembolso", "cOtros"];
+    function readCalcInputs() {
+      var o = {}; CALC_IDS.forEach(function (id) { o[id] = $(id).value; });
+      EXTRAS.forEach(function (x, i) { o["ex" + i] = $("ex" + i).checked; o["exm" + i] = $("exm" + i).value; });
+      return o;
+    }
+    CALC_IDS.forEach(function (id) { $(id).addEventListener("input", calc); $(id).addEventListener("change", calc); });
+
+    var saved = store.get("panel.calc", null);
+    if (saved) {
+      CALC_IDS.forEach(function (id) { if (saved[id] != null) $(id).value = saved[id]; });
+      EXTRAS.forEach(function (x, i) { $("ex" + i).checked = !!saved["ex" + i]; $("exm" + i).value = saved["exm" + i] || ""; });
+      calc();
+    } else onCalcModel();
+
+    var calcLead = null;
+    function loadCalc(l) {
+      calcLead = l;
+      if (modelos.some(function (m) { return m.nombre === l.modelo; })) { $("cModelo").value = l.modelo; onCalcModel(); }
+      if (l.enganche) $("cEnganche").value = l.enganche;
+      calc();
+    }
+
+    $("btnCopyCuadre").onclick = function () {
+      var u = ultimo;
+      var lines = [
+        "CUADRE DE VENTA" + (calcLead ? " · " + calcLead.nombre : "") + " · " + $("cModelo").value,
+        "Valor factura: " + money(u.factura),
+        "Enganche (incluye separación " + money(u.sep) + "): " + money(u.eng),
+        "Bonos: " + money(u.bonos),
+        "Desembolso banco: " + money(u.desembolso),
+        "Otros pagos: " + money(u.otros),
+        "Extras vendidos: " + money(u.ex.total) + (u.ex.det.length ? " (" + u.ex.det.map(function (d) { return d.n + " " + money(d.v); }).join(", ") + ")" : ""),
+        "Total cubierto: " + money(u.cubierto) + " / Cargos: " + money(u.cargos),
+        u.saldo >= 0 ? "Resultado: sin adeudo, sobrante " + money(u.saldo) + " en Accesorios." : "Resultado: ADEUDO de " + money(-u.saldo) + ".",
+      ];
+      copy(lines.join("\n"));
+    };
+    $("btnToPN").onclick = function () {
+      var u = ultimo;
+      var placas = 0, otrosEx = 0;
+      u.ex.det.forEach(function (d) { if (/Placas/.test(d.n)) placas += d.v; else otrosEx += d.v; });
+      if (calcLead) { $("pCliente").value = calcLead.nombre; $("pNum").value = calcLead.numCliente || ""; }
+      $("pModelo").value = $("cModelo").value;
+      $("pMonto").value = u.eng;
+      // El enganche va primero a extras y el resto a factura; ajústalo según lo que indique la agencia.
+      var gest = Math.min(placas, u.eng), acc = Math.min(otrosEx, u.eng - gest);
+      $("pGes").value = gest; $("pAcc").value = acc; $("pFac").value = u.eng - gest - acc; $("pOtro").value = 0;
+      renderPN(); showTab("piedras");
+    };
+
+    // ---------- Piedras Negras ----------
+    var PN_IDS = ["pCliente", "pNum", "pModelo", "pFecha", "pMonto", "pRecibo", "pFac", "pGes", "pAcc", "pOtro", "pPara"];
+    $("pPara").value = C.correoPiedrasNegras || "";
+    $("pFecha").value = new Date().toISOString().slice(0, 10);
+    function renderPN() {
+      var monto = num("pMonto"), fac = num("pFac"), ges = num("pGes"), acc = num("pAcc"), otro = num("pOtro");
+      var suma = fac + ges + acc + otro;
+      var chk = $("pCheck");
+      if (Math.abs(suma - monto) < 0.01 && monto > 0) { chk.className = "verdict ok"; chk.textContent = "La aplicación suma " + money(suma) + " y cuadra con el pago."; }
+      else { chk.className = "verdict bad"; chk.textContent = "La aplicación suma " + money(suma) + " y el pago es de " + money(monto) + ". Diferencia: " + money(monto - suma) + "."; }
+      var asunto = "Aplicación de pago · " + ($("pCliente").value || "Cliente") + " · Cliente " + ($("pNum").value || "#") + " · Piedras Negras";
+      var body = [
+        "Buen día,",
+        "",
+        "Les comparto el pago negativo y la aplicación de pago para la siguiente venta por Piedras Negras:",
+        "",
+        "Cliente: " + ($("pCliente").value || ""),
+        "Número de cliente (Quiter): " + ($("pNum").value || ""),
+        "Unidad: " + ($("pModelo").value || ""),
+        "Fecha del pago: " + ($("pFecha").value || ""),
+        "Folio del recibo: " + ($("pRecibo").value || ""),
+        "Monto del pago (negativo): " + money(monto),
+        "",
+        "Aplicar de la siguiente manera:",
+      ];
+      if (fac) body.push("• Factura (valor factura): " + money(fac));
+      if (ges) body.push("• Gestoría (placas): " + money(ges));
+      if (acc) body.push("• Accesorios: " + money(acc));
+      if (otro) body.push("• Otro: " + money(otro));
+      body.push("Total: " + money(suma), "", "Adjunto comprobante del pago negativo y recibo aplicado.", "", "Saludos,", (A.nombre || "") + (A.titulo ? "\n" + A.titulo : ""));
+      var text = body.join("\n");
+      $("pOut").textContent = "Asunto: " + asunto + "\n\n" + text;
+      $("pMail").href = "mailto:" + encodeURIComponent($("pPara").value) + "?subject=" + encodeURIComponent(asunto) + "&body=" + encodeURIComponent(text);
+    }
+    PN_IDS.forEach(function (id) { $(id).addEventListener("input", renderPN); });
+    $("pCopy").onclick = function () { copy($("pOut").textContent); };
+    renderPN();
+
+    // ---------- Checklists ----------
+    var LISTAS = [
+      { t: "Antes de pedir separación", items: [
+        "Cotización enviada", "Documentos recibidos (INE, domicilio, ingresos)", "Documentos enviados al banco", "Crédito APROBADO por el banco (no pedir separación antes)", "Pedir separación de $5,000 con el color interior como gancho" ] },
+      { t: "Alta en Quiter", items: [
+        "Comercial → Fichas maestras → Cuentas personales", "Buscar si el cliente ya existe", "Categoría: P (personal)", "Datos generales: nombre, apellido paterno, materno, nombre comercial",
+        "Dirección: calle, CP, localidad, colonia, delegación, estado, país (Portal vacío)", "Datos personales: nacimiento, sexo, estado civil, idioma",
+        "Identificación: INE + folio, CURP y RFC", "Contacto: teléfono y email", "Código de cortesía: NO se llena", "Guardar y anotar el número de cliente" ] },
+      { t: "Separación en caja", items: [
+        "Formato físico: concepto ACCESORIOS", "$5,000 y total de accesorios $5,000", "Código de cliente y mi nombre como vendedor", "Imprimir comprobante de la transferencia",
+        "Entregar a la cajera y esperar el recibo aplicado", "Verificar que el pago aparece en la cuenta del cliente en Quiter" ] },
+      { t: "Solo si va por Piedras Negras", items: [
+        "Recibo aplicado en caja", "Subir con Contabilidad para cancelar el pago", "Avisar a la cajera que va por Piedras Negras",
+        "Confirmar que el pago aparece en negativo", "Mandar por correo pago negativo + aplicación por concepto (factura, gestoría, accesorios)" ] },
+      { t: "Día de la firma", items: [
+        "Cuadre en la calculadora sin adeudo", "Enganche recibido (enganche − separación)", "Firma de contrato", "Firma de factura",
+        "Nota separada de extras (garantía, instalación, kit, seguro de llantas, placas)", "No aplicar a factura ningún pago que no sepa a dónde va" ] },
+      { t: "Desembolso y entrega", items: [
+        "Archivo de desembolso del banco recibido", "Desembolso aplicado como pago", "Captura enviada a la cuenta: unidad en $0",
+        "¿Vendí placas? Esperar placas o acordar entrega sin ellas", "Revisión de cuentas con la agencia: desembolso, bonos y extras", "Pedir reseña y referidos · grabar video de entrega" ] },
+      { t: "Pendientes por validar con mi capacitador", items: [
+        "¿El enganche se aplica en caja igual que la separación? ¿A qué concepto?", "¿Quién recibe el archivo de desembolso y a qué correo va la captura?",
+        "¿Qué otros documentos se firman? ¿Qué trae el cliente?", "¿Quién paga la nota de extras y cómo se aplica?", "¿Bono frontera: monto fijo ($25,000) o 6 %?",
+        "¿A qué correo van las aplicaciones de Piedras Negras?", "¿Hay checklist de salida? ¿Quién autoriza la entrega?", "¿Cuánto tardan las placas y quién las tramita?",
+        "¿Cómo y cuándo se paga mi comisión? ¿Sube con los extras?", "¿Qué me permite la agencia/marca en anuncios de Meta?" ] },
+    ];
+    var checks = store.get("panel.checks", {});
+    function renderChecks() {
+      var box = $("checklists"); box.innerHTML = "";
+      LISTAS.forEach(function (lista, li) {
+        var card = el("div", "card");
+        var done = lista.items.filter(function (x, i) { return checks[li + "." + i]; }).length;
+        card.append(el("h3", null, lista.t + " · " + done + "/" + lista.items.length));
+        var ul = el("ul", "check");
+        lista.items.forEach(function (it, i) {
+          var li2 = el("li"); var lb = el("label"); lb.style.display = "flex"; lb.style.gap = "10px"; lb.style.fontWeight = "500"; lb.style.margin = "0"; lb.style.cursor = "pointer";
+          var cb = el("input"); cb.type = "checkbox"; cb.checked = !!checks[li + "." + i];
+          cb.onchange = function () { checks[li + "." + i] = cb.checked; store.set("panel.checks", checks); renderChecks(); };
+          lb.append(cb, el("span", null, it)); li2.append(lb); ul.append(li2);
+        });
+        card.append(ul); box.append(card);
+      });
+    }
+    $("btnResetChecks").onclick = function () { if (confirm("¿Reiniciar todas las marcas?")) { checks = {}; store.set("panel.checks", checks); renderChecks(); } };
+    renderChecks();
+
+    render();
+    showTab(store.get("panel.tab", "prospectos"));
+  })();
+  </script>
+</body>
+</html>
