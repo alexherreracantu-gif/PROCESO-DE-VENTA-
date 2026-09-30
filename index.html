@@ -18,26 +18,36 @@
       :root:not([data-theme="light"]) {
         --bg: #0b1016; --surface: #121a23; --surface-2: #19232f; --text: #e8edf3; --muted: #9aa6b5; --border: #263241;
         --accent: #35c9a5; --accent-strong: #5fdcbc; --accent-soft: #123a33; --on-accent: #06221b; --wa: #2bc766;
-        --ok: #4ade80; --ok-soft: #12321f; --bad: #f87171; --bad-soft: #3a1515; --warn: #f0a44b; --warn-soft: #3a2a10;
+        --ok: #4ade80; --ok-soft: #12321f; --bad: #f87171; --bad-soft: #3a1515; --warn: #f0a44b; --warn-soft: #3a2a10; color-scheme: dark;
       }
     }
     :root[data-theme="dark"] {
       --bg: #0b1016; --surface: #121a23; --surface-2: #19232f; --text: #e8edf3; --muted: #9aa6b5; --border: #263241;
       --accent: #35c9a5; --accent-strong: #5fdcbc; --accent-soft: #123a33; --on-accent: #06221b; --wa: #2bc766;
-      --ok: #4ade80; --ok-soft: #12321f; --bad: #f87171; --bad-soft: #3a1515; --warn: #f0a44b; --warn-soft: #3a2a10;
+      --ok: #4ade80; --ok-soft: #12321f; --bad: #f87171; --bad-soft: #3a1515; --warn: #f0a44b; --warn-soft: #3a2a10; color-scheme: dark;
     }
     * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
     body { margin: 0; font-family: "Inter", system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; -webkit-font-smoothing: antialiased; }
     .wrap { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
     a { color: var(--accent); }
 
-    header.top { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+    header.top { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; }
     header.top .wrap { display: flex; align-items: center; gap: 12px; height: 58px; }
     .logo { font-weight: 800; letter-spacing: -.02em; text-decoration: none; color: var(--text); }
     .logo small { color: var(--muted); font-weight: 500; margin-left: 6px; }
     .topnav { display: flex; gap: 4px; margin-left: auto; }
-    .topnav a { text-decoration: none; color: var(--muted); font-weight: 600; font-size: .9rem; padding: 8px 12px; border-radius: 8px; }
-    .topnav a[aria-current="page"] { color: var(--text); background: var(--surface-2); }
+    .topnav button { font: inherit; border: 0; background: none; cursor: pointer; color: var(--muted); font-weight: 600; font-size: .9rem; padding: 8px 12px; border-radius: 8px; }
+    .topnav button[aria-current="page"] { color: var(--text); background: var(--surface-2); }
+    .sync { font-size: .76rem; font-weight: 600; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
+    .sync::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+    .sync.nube::before { background: var(--ok); }
+    .sync.error::before { background: var(--warn); }
+    .linkbtn { font: inherit; font-size: .85rem; font-weight: 600; color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; }
+    .eyebrow { color: var(--muted); font-size: .76rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 2px; }
+    .rules { margin-bottom: 16px; border-color: var(--bad); }
+    .rules ul { margin: 0; padding-left: 20px; }
+    button:focus-visible, a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     main { padding: 24px 0 80px; }
     h1 { font-size: 1.6rem; letter-spacing: -.02em; margin: 0 0 4px; }
     h2 { font-size: 1.25rem; letter-spacing: -.01em; margin: 0 0 4px; }
@@ -126,6 +136,8 @@
     .errors { background: var(--bad-soft); color: var(--bad); border-radius: 12px; padding: 12px 14px; margin-top: 14px; font-weight: 600; font-size: .9rem; }
     .errors ul { margin: 6px 0 0; padding-left: 18px; font-weight: 500; }
     .done-banner { background: var(--ok-soft); color: var(--ok); border-radius: 12px; padding: 10px 14px; font-weight: 700; margin-bottom: 14px; font-size: .9rem; }
+    .done-banner.muted { background: var(--surface-2); color: var(--muted); }
+    .checkline .req { color: var(--bad); }
     .log { list-style: none; padding: 0; margin: 0; font-size: .85rem; }
     .log li { padding: 6px 0; border-bottom: 1px solid var(--border); color: var(--muted); }
     .log li b { color: var(--text); }
@@ -145,7 +157,6 @@
     .toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 10px;
       font-weight: 600; font-size: .9rem; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 50; max-width: calc(100% - 32px); }
     .toast.show { opacity: 1; }
-    #print { display: none; }
 
     @media (max-width: 860px) {
       .exp { grid-template-columns: 1fr; }
@@ -155,25 +166,21 @@
       .stepper button[aria-current="step"] span.t { display: inline; }
       .fields { grid-template-columns: 1fr; }
       .clients { grid-template-columns: 1fr; }
-      .topnav a { padding: 8px; }
+      .topnav button { padding: 8px; }
       .logo small { display: none; }
-    }
-    @media print {
-      body > *:not(#print) { display: none !important; }
-      #print { display: block; color: #000; font-family: Arial, sans-serif; padding: 24px; }
-      #print table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-      #print td { border: 1px solid #000; padding: 10px; font-size: 14px; }
-      #print td:first-child { font-weight: bold; width: 40%; }
+      header.top .wrap { gap: 8px; }
+      .sync { font-size: 0; gap: 0; }
     }
   </style>
 </head>
 <body>
   <header class="top">
     <div class="wrap">
-      <a class="logo" href="#/">Expedientes <small id="hdrAsesor"></small></a>
+      <div class="logo">Expedientes <small id="hdrAsesor"></small></div>
+      <span class="sync" id="syncState"></span>
       <nav class="topnav">
-        <a href="#/" data-nav="clientes">Clientes</a>
-        <a href="#/aprende" data-nav="aprende">Aprende</a>
+        <button type="button" data-go="/">Clientes</button>
+        <button type="button" data-go="/aprende">Aprende</button>
       </nav>
     </div>
   </header>
@@ -183,14 +190,28 @@
   <dialog id="dlgMsg">
     <form method="dialog">
       <h3 id="msgTitle">Mensaje</h3>
-      <div id="msgPara" hidden style="margin-bottom:10px"><label class="l" for="msgTo">Para</label><input id="msgTo" type="email"></div>
+      <div id="msgPara" hidden style="margin-bottom:10px">
+        <label class="l" for="msgTo">Para</label>
+        <div class="inp"><input id="msgTo" type="email" placeholder="correo de Piedras Negras (pendiente de validar)"><button class="btn ghost sm copy" type="button" id="msgCopyTo">Copiar</button></div>
+      </div>
       <textarea id="msgText" aria-label="Texto del mensaje"></textarea>
-      <p class="hint">Puedes editar el texto antes de enviarlo.</p>
+      <p class="hint" id="msgHelp">Puedes editar el texto antes de enviarlo.</p>
       <div class="row" style="margin-top:10px">
-        <button class="btn" type="button" id="msgGo">Abrir</button>
-        <button class="btn ghost" type="button" id="msgCopy">Copiar</button>
+        <a class="btn" id="msgGo" href="#" target="_blank" rel="noopener">Abrir</a>
+        <button class="btn ghost" type="button" id="msgCopy">Copiar texto</button>
         <span class="spacer"></span>
         <button class="btn ghost" value="close">Cerrar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlgConfirm">
+    <form method="dialog">
+      <h3 id="cfTitle">Confirmar</h3>
+      <p id="cfText" style="margin:0 0 16px;color:var(--muted)"></p>
+      <div class="row">
+        <button class="btn danger" type="button" id="cfOk">Borrar</button>
+        <button class="btn ghost" value="close">Cancelar</button>
       </div>
     </form>
   </dialog>
@@ -198,7 +219,7 @@
   <dialog id="dlgBackup">
     <form method="dialog">
       <h3>Respaldo</h3>
-      <p class="hint" style="margin-top:0">Tus expedientes viven solo en este navegador. Descarga un respaldo seguido, o úsalo para pasarlos a otro dispositivo.</p>
+      <p class="hint" style="margin-top:0">Descarga un archivo con todos tus expedientes, restaura uno anterior o exporta la lista a Excel.</p>
       <div class="row" style="margin:12px 0">
         <button class="btn" type="button" id="bkDown">Descargar respaldo</button>
         <label class="btn ghost" style="margin:0">Restaurar archivo<input type="file" id="bkFile" accept="application/json" hidden></label>
@@ -208,7 +229,6 @@
     </form>
   </dialog>
 
-  <div id="print"></div>
   <div class="toast" id="toast" role="status"></div>
 
   <script src="assets/config.js"></script>

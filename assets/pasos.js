@@ -248,7 +248,7 @@
       ],
       validar: function (e) { if (!e.numeroCliente) return "Primero consigue el número de cliente en el paso «Alta en Quiter»."; },
       acciones: [
-        { tipo: "imprimir", que: "separacion", label: "Imprimir formato de caja" },
+        { tipo: "imprimir", que: "separacion", label: "Ver formato de caja" },
         { tipo: "correo", que: "separacion", label: "Correo a Piedras Negras", show: pn },
       ],
     },
@@ -287,7 +287,7 @@
       },
       acciones: [
         { tipo: "wa", tpl: "firma", label: "WhatsApp: agendar firma" },
-        { tipo: "imprimir", que: "enganche", label: "Imprimir formato de caja" },
+        { tipo: "imprimir", que: "enganche", label: "Ver formato de caja" },
         { tipo: "correo", que: "enganche", label: "Correo a Piedras Negras", show: pn },
       ],
     },

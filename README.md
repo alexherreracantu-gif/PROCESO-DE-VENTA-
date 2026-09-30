@@ -42,11 +42,13 @@ La sección **Aprende** tiene las reglas de oro, los 11 pasos explicados y tus *
 
 ## Dónde abrirla
 
+- **Versión publicada (la más fácil):** https://claude.ai/artifact/PXon5WCWryvEgoRRJBj4xU. Ahí tus expedientes se guardan en el espacio privado de tu cuenta de Claude y se ven igual en el celular y en la compu. Para actualizarla después de cambiar algo: `python3 tools/empaquetar.py expedientes.html` y se vuelve a publicar.
+
 - **En tu compu:** doble clic en `index.html`.
 - **En el celular (recomendado):** publícala gratis con GitHub Pages (**Settings → Pages →** *Deploy from a branch*, carpeta `/ (root)`). Después ábrela en el navegador del celular y usa "Agregar a pantalla de inicio" para tenerla como app.
 
 ## Tus datos
 
-- Los expedientes se guardan **solo en el navegador donde los capturas**. No se suben a ningún lado.
+- En la versión publicada en claude.ai, los expedientes se guardan en tu cuenta, en un espacio privado que solo tú ves. Abierta desde tu compu o GitHub Pages, se guardan **solo en ese navegador**.
 - Usa **Respaldo** seguido: descarga un archivo con todo, restáuralo en otro dispositivo o exporta a Excel (CSV).
 - Al terminar una venta puedes **borrar los datos personales** (CURP, RFC, INE, domicilio) y conservar el registro de la venta.
