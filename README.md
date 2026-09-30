@@ -1,72 +1,52 @@
-# Proceso de venta de autos: landing + panel del vendedor
+# Expedientes de venta: de la cotización a la entrega
 
-Sistema sencillo (HTML estático, sin servidor) para **captar prospectos con Meta Ads** y **llevar cada venta de la cotización a la entrega** sin olvidar ningún paso.
+App personal para **aprender el proceso de venta de autos** y **automatizar el llenado de datos**. Das de alta a un cliente y la app te lleva paso a paso, campo por campo, hasta la entrega. En cada paso te dice qué hacer, calcula las cuentas, arma los mensajes y no te deja avanzar si falta algo.
 
-| Archivo | Para qué sirve | Quién lo ve |
+## Cómo se usa
+
+1. Abre `index.html` → **+ Nuevo cliente**.
+2. Llena los campos del paso. Los que tienen `*` son obligatorios.
+3. Toca **Completar paso →**. Si falta algo, la app te dice qué; si todo está bien, te lleva al siguiente paso.
+4. En el tablero **Mis clientes** ves en qué paso va cada venta, cuál es tu siguiente acción y cuáles llevan días sin movimiento.
+
+## Los 11 pasos
+
+| # | Paso | Qué automatiza la app |
 |---|---|---|
-| `index.html` | Landing pública: modelos, simulador de mensualidad, formulario de precalificación que abre WhatsApp con los datos del cliente | Clientes (tráfico de anuncios) |
-| `panel.html` | Panel del vendedor: CRM por etapas, calculadora de cierre, mensajes de WhatsApp, correo de Piedras Negras y checklists | Solo tú |
-| `assets/config.js` | **El único archivo que tienes que editar**: tu WhatsApp, modelos, precios, webhook, Pixel de Meta | — |
-| `docs/proceso-de-venta.md` | Tu guía de capacitación | Solo tú |
+| 1 | Datos del cliente | Nombre y apellidos que se reutilizan en Quiter. Plaza: Monterrey o Piedras Negras |
+| 2 | Cotización | Pone el precio del modelo y arma el WhatsApp con la cotización y los documentos que necesitas |
+| 3 | Documentos al banco* | Checklist de documentos y WhatsApp que pide solo los que faltan |
+| 4 | Crédito aprobado* | **Bloquea** la separación si el crédito no está aprobado |
+| 5 | Separación | Calcula el enganche que queda pendiente y arma el WhatsApp para pedir los $5,000 con el color interior como gancho |
+| 6 | Alta en Quiter | Campos en el mismo orden que Quiter, con botón **Copiar** en cada uno. Valida CURP y RFC |
+| 7 | Separación en caja | Formato de caja listo para imprimir (Accesorios + código de cliente). Si es Piedras Negras, agrega los pasos extra y arma el correo |
+| 8 | Enganche y firma | ¿Qué le vendí? ¿Qué le di? Calcula el enganche restante, la nota de extras, el bono frontera ($ o %) y el desembolso esperado |
+| 9 | Desembolso del banco* | Compara el desembolso real contra el esperado |
+| 10 | Cuadre sin adeudo | Tabla de cuadre completa. **Bloquea** la entrega si falta aunque sea $1 |
+| 11 | Entrega | Fecha estimada (4 días), placas, reseña y referidos |
 
-## Cómo fluye todo
+\* Se saltan automáticamente si la venta es de **contado**.
 
-```
-Anuncio de Meta ──► Landing ──► Formulario ──┬──► WhatsApp con el mensaje ya armado
-                                             ├──► Webhook (Make / Chattrace / Google Sheets)
-                                             └──► Evento "Lead" en el Pixel de Meta
-                                                      │
-Panel ◄── pegas el mensaje o llega del webhook ◄──────┘
-  │
-  ├─ Prospectos: cada tarjeta dice el SIGUIENTE PASO y abre WhatsApp con el mensaje de esa etapa
-  ├─ Calculadora de cierre: desembolso esperado, enganche el día de la firma y cuadre (¿sobra o falta?)
-  ├─ Piedras Negras: arma el correo con el pago negativo y la aplicación por concepto
-  └─ Checklists: alta en Quiter, caja, firma, desembolso, entrega y pendientes por validar
-```
+La sección **Aprende** tiene las reglas de oro, los 11 pasos explicados y tus **pendientes por validar**, con un espacio para anotar la respuesta de tu capacitador.
 
-## Paso 1: configura tus datos
+## Archivos
 
-Abre `assets/config.js` y cambia:
+| Archivo | Para qué sirve |
+|---|---|
+| `index.html` | La app de expedientes |
+| `assets/pasos.js` | **Los pasos, campos, mensajes y validaciones.** Si tu capacitador te corrige algo, se cambia aquí |
+| `assets/config.js` | Tu nombre, WhatsApp, modelos y precios, monto de separación y correo de Piedras Negras |
+| `assets/app.js` | El motor de la app (no necesitas tocarlo) |
+| `landing.html` | Landing para anuncios de Meta, para cuando quieras conseguir prospectos |
+| `docs/proceso-de-venta.md` | Tu guía de capacitación |
 
-1. `asesor.whatsapp`: tu número con código de país y sin espacios (ej. `5218112345678`).
-2. `modelos`: los modelos que vendes. Si pones `precio: null` sale "Cotiza por WhatsApp".
-3. `tasaAnualReferencia`: la tasa que maneja el banco con el que más trabajas.
-4. `metaPixelId`: el ID de tu Pixel (Administrador de eventos de Meta). Opcional.
-5. `webhookUrl`: la URL de tu escenario de Make o de Chattrace. Opcional.
-6. `correoPiedrasNegras`: cuando lo confirmes con tu capacitador.
+## Dónde abrirla
 
-## Paso 2: publícala gratis con GitHub Pages
+- **En tu compu:** doble clic en `index.html`.
+- **En el celular (recomendado):** publícala gratis con GitHub Pages (**Settings → Pages →** *Deploy from a branch*, carpeta `/ (root)`). Después ábrela en el navegador del celular y usa "Agregar a pantalla de inicio" para tenerla como app.
 
-1. En GitHub: **Settings → Pages**.
-2. En *Source* elige **Deploy from a branch**, la rama y la carpeta `/ (root)`. Guarda.
-3. En un par de minutos queda en `https://<tu-usuario>.github.io/PROCESO-DE-VENTA-/`.
-   - Landing: `.../index.html`
-   - Panel: `.../panel.html` (tiene `noindex`, así que Google no lo muestra)
+## Tus datos
 
-También funciona arrastrando la carpeta a Netlify Drop o subiéndola a Vercel. Con un dominio propio se ve más profesional en los anuncios.
-
-## Paso 3: automatiza con Make (opcional, recomendado)
-
-1. En Make crea un escenario con el módulo **Webhooks → Custom webhook** y copia la URL en `webhookUrl`.
-2. Manda un lead de prueba desde la landing para que Make detecte los campos:
-   `nombre, telefono, modelo, pago, enganche, cuando, municipio, prioridad, fecha, pagina, utm_source, utm_campaign, utm_content, fbclid`.
-3. Conecta lo que quieras después del webhook:
-   - **Google Sheets**: una fila por prospecto (tu CRM compartible).
-   - **Chattrace / WhatsApp API**: disparar el flujo del bot de precalificación.
-   - **Aviso a tu celular** si `prioridad = Caliente`.
-
-La landing manda los datos como formulario (`application/x-www-form-urlencoded`), que Make lee sin configuración extra.
-
-## Paso 4: anuncios en Meta
-
-- Objetivo **Clientes potenciales** o **Ventas** con el Pixel optimizando al evento **Lead**, o **Tráfico** al principio si todavía no hay datos.
-- Pon UTM en la URL del anuncio para saber qué creativo vende:
-  `?utm_source=meta&utm_campaign=king-credito&utm_content=video-color-interior`
-- Segmenta Monterrey y su área metropolitana (radio de 25 a 40 km).
-- **Antes de lanzar**, confirma con la agencia qué te permite la marca: logos, fotos oficiales, precios y promociones.
-
-## Sobre los datos
-
-- El panel guarda los prospectos **solo en tu navegador** (`localStorage`). Usa **Respaldo** para descargarlos o pasarlos a otro dispositivo, y **Exportar CSV** para abrirlos en Excel o Sheets.
-- No guardes CURP, RFC ni folio de INE en el panel: esos van directo a Quiter.
-- La landing trae un aviso de privacidad simplificado. Revísalo y ajústalo con los datos reales antes de publicar.
+- Los expedientes se guardan **solo en el navegador donde los capturas**. No se suben a ningún lado.
+- Usa **Respaldo** seguido: descarga un archivo con todo, restáuralo en otro dispositivo o exporta a Excel (CSV).
+- Al terminar una venta puedes **borrar los datos personales** (CURP, RFC, INE, domicilio) y conservar el registro de la venta.

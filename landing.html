@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Estrena tu auto en Monterrey</title>
+  <meta name="description" content="Cotiza, precalifica tu crédito y aparta tu auto nuevo en Monterrey por WhatsApp. Simulador de mensualidades y asesoría personalizada.">
+  <meta property="og:title" content="Estrena tu auto en Monterrey">
+  <meta property="og:description" content="Cotiza y precalifica tu crédito en minutos por WhatsApp.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="assets/config.js"></script>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --surface: #ffffff;
+      --surface-2: #eef1f5;
+      --text: #0f172a;
+      --muted: #5b6475;
+      --border: #dde2ea;
+      --accent: #0e7c66;
+      --accent-strong: #0a5f4e;
+      --accent-soft: #dff3ee;
+      --on-accent: #ffffff;
+      --wa: #1faa53;
+      --warn: #b45309;
+      --shadow: 0 10px 30px rgba(15, 23, 42, .08);
+      --radius: 16px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #0b1016;
+        --surface: #121a23;
+        --surface-2: #19232f;
+        --text: #e8edf3;
+        --muted: #9aa6b5;
+        --border: #263241;
+        --accent: #35c9a5;
+        --accent-strong: #5fdcbc;
+        --accent-soft: #123a33;
+        --on-accent: #06221b;
+        --wa: #2bc766;
+        --warn: #f0a44b;
+        --shadow: 0 10px 30px rgba(0, 0, 0, .35);
+      }
+    }
+    :root[data-theme="dark"] {
+      --bg: #0b1016;
+      --surface: #121a23;
+      --surface-2: #19232f;
+      --text: #e8edf3;
+      --muted: #9aa6b5;
+      --border: #263241;
+      --accent: #35c9a5;
+      --accent-strong: #5fdcbc;
+      --accent-soft: #123a33;
+      --on-accent: #06221b;
+      --wa: #2bc766;
+      --warn: #f0a44b;
+      --shadow: 0 10px 30px rgba(0, 0, 0, .35);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--accent); }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
+
+    header.top {
+      position: sticky; top: 0; z-index: 20;
+      background: color-mix(in srgb, var(--bg) 88%, transparent);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+    .top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 64px; }
+    .brand { font-weight: 800; letter-spacing: -.02em; font-size: 1.05rem; }
+    .brand small { display: block; font-weight: 500; color: var(--muted); font-size: .78rem; letter-spacing: 0; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      border: 0; border-radius: 999px; padding: 12px 20px;
+      font: inherit; font-weight: 700; cursor: pointer; text-decoration: none;
+      background: var(--accent); color: var(--on-accent);
+      transition: transform .15s ease, background .15s ease;
+    }
+    .btn:hover { background: var(--accent-strong); transform: translateY(-1px); }
+    .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+    .btn.wa { background: var(--wa); color: #fff; }
+    .btn.small { padding: 9px 14px; font-size: .9rem; }
+    .btn svg { width: 18px; height: 18px; flex: none; }
+
+    .hero { padding: 56px 0 40px; }
+    .hero .wrap { display: grid; grid-template-columns: 1.1fr .9fr; gap: 40px; align-items: center; }
+    .eyebrow {
+      display: inline-block; background: var(--accent-soft); color: var(--accent-strong);
+      font-weight: 700; font-size: .8rem; padding: 6px 12px; border-radius: 999px; margin-bottom: 16px;
+    }
+    h1 { font-size: clamp(2rem, 5vw, 3.3rem); line-height: 1.05; letter-spacing: -.03em; margin: 0 0 16px; }
+    h1 em { font-style: normal; color: var(--accent); }
+    .lead { font-size: 1.12rem; color: var(--muted); margin: 0 0 24px; max-width: 34em; }
+    .cta-row { display: flex; flex-wrap: wrap; gap: 12px; }
+    .trust { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 28px; color: var(--muted); font-size: .9rem; }
+    .trust b { color: var(--text); }
+
+    .hero-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 24px;
+      padding: 24px; box-shadow: var(--shadow);
+    }
+    .hero-card h3 { margin: 0 0 4px; font-size: 1rem; }
+    .hero-card p { margin: 0; color: var(--muted); font-size: .9rem; }
+    .steps-mini { list-style: none; padding: 0; margin: 18px 0 0; display: grid; gap: 10px; }
+    .steps-mini li { display: flex; gap: 12px; align-items: center; background: var(--surface-2); border-radius: 12px; padding: 12px 14px; font-weight: 600; font-size: .95rem; }
+    .steps-mini span.n {
+      width: 28px; height: 28px; border-radius: 50%; flex: none; display: grid; place-items: center;
+      background: var(--accent); color: var(--on-accent); font-size: .85rem; font-weight: 800;
+    }
+    .steps-mini small { display: block; color: var(--muted); font-weight: 500; font-size: .8rem; }
+
+    section { padding: 56px 0; }
+    section.alt { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    h2 { font-size: clamp(1.6rem, 3.5vw, 2.3rem); letter-spacing: -.02em; margin: 0 0 8px; line-height: 1.15; }
+    .sub { color: var(--muted); margin: 0 0 32px; max-width: 42em; }
+
+    .models { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+    .model {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 18px; display: flex; flex-direction: column; gap: 6px; cursor: pointer;
+      transition: border-color .15s ease, transform .15s ease;
+      text-align: left; font: inherit; color: inherit;
+    }
+    section.alt .model { background: var(--bg); }
+    .model:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .model .tipo { color: var(--muted); font-size: .85rem; }
+    .model .nombre { font-weight: 800; font-size: 1.1rem; }
+    .model .precio { font-weight: 700; color: var(--accent); margin-top: auto; padding-top: 8px; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 24px; box-shadow: var(--shadow); }
+    section.alt .card { background: var(--bg); box-shadow: none; }
+
+    label { display: block; font-weight: 600; font-size: .9rem; margin: 0 0 6px; }
+    .field { margin-bottom: 16px; }
+    input[type="text"], input[type="tel"], input[type="number"], select, textarea {
+      width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text); font: inherit;
+    }
+    section.alt input, section.alt select { background: var(--surface); }
+    input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+    input[type="range"] { width: 100%; accent-color: var(--accent); }
+    .range-head { display: flex; justify-content: space-between; align-items: baseline; }
+    .range-head output { font-weight: 800; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chips input { position: absolute; opacity: 0; pointer-events: none; }
+    .chips label {
+      margin: 0; padding: 9px 14px; border-radius: 999px; border: 1px solid var(--border);
+      font-weight: 600; font-size: .88rem; cursor: pointer; background: var(--surface);
+    }
+    .chips input:checked + label { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+    .chips input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .result { background: var(--accent-soft); border-radius: 16px; padding: 18px; margin-top: 8px; }
+    .result .big { font-size: 2.1rem; font-weight: 800; letter-spacing: -.02em; color: var(--accent-strong); }
+    .result dl { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; margin: 12px 0 0; font-size: .92rem; }
+    .result dt { color: var(--muted); }
+    .result dd { margin: 0; font-weight: 700; text-align: right; }
+    .fine { color: var(--muted); font-size: .8rem; margin-top: 12px; }
+
+    .steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; counter-reset: s; }
+    .step { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; }
+    section.alt .step { background: var(--bg); }
+    .step::before {
+      counter-increment: s; content: counter(s);
+      display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%;
+      background: var(--accent-soft); color: var(--accent-strong); font-weight: 800; margin-bottom: 12px;
+    }
+    .step h3 { margin: 0 0 6px; font-size: 1rem; }
+    .step p { margin: 0; color: var(--muted); font-size: .9rem; }
+
+    .faq details { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; margin-bottom: 10px; }
+    .faq summary { font-weight: 700; cursor: pointer; }
+    .faq p { color: var(--muted); margin: 10px 0 0; }
+
+    .form-msg { margin-top: 12px; font-size: .9rem; color: var(--warn); min-height: 1.2em; }
+
+    footer { padding: 32px 0 96px; color: var(--muted); font-size: .85rem; border-top: 1px solid var(--border); }
+    footer p { margin: 0 0 8px; }
+
+    .fab {
+      position: fixed; right: 16px; bottom: 16px; z-index: 30;
+      width: 58px; height: 58px; border-radius: 50%; background: var(--wa); color: #fff;
+      display: grid; place-items: center; box-shadow: 0 8px 24px rgba(0,0,0,.25);
+    }
+    .fab svg { width: 30px; height: 30px; }
+
+    dialog { border: 1px solid var(--border); border-radius: 18px; background: var(--surface); color: var(--text); max-width: 640px; width: calc(100% - 32px); padding: 24px; }
+    dialog::backdrop { background: rgba(0,0,0,.5); }
+
+    @media (max-width: 900px) {
+      .hero .wrap, .grid-2 { grid-template-columns: 1fr; }
+      .steps { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 560px) {
+      .steps { grid-template-columns: 1fr; }
+      .top .btn span.hide-sm { display: none; }
+      .hero { padding-top: 32px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="wrap">
+      <div class="brand"><span data-asesor-nombre>Omar</span> · <span data-marca>BYD</span>
+        <small><span data-asesor-titulo>Asesor automotriz</span> en <span data-ciudad>Monterrey</span></small>
+      </div>
+      <a class="btn wa small" href="#" data-wa-link>
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.3 14.2c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.4.6-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1.1c.2-.3.4-.2.7-.1l2 .9c.3.2.5.2.5.4.1.1.1.7-.1 1.2Z"/></svg>
+        <span class="hide-sm">WhatsApp</span>
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="wrap">
+        <div>
+          <span class="eyebrow">Crédito automotriz · Monterrey y área metropolitana</span>
+          <h1>Estrena tu <span data-marca>BYD</span> sin vueltas: <em>cotiza y precalifica hoy</em>.</h1>
+          <p class="lead">Te mando tu cotización por WhatsApp, reviso tu crédito con el banco y te acompaño hasta la entrega. Sin filas y sin letras chiquitas.</p>
+          <div class="cta-row">
+            <a class="btn" href="#precalifica">Quiero mi cotización</a>
+            <a class="btn ghost" href="#simulador">Calcular mensualidad</a>
+          </div>
+          <div class="trust">
+            <div><b>$<span data-separacion>5,000</span></b> para apartar, se descuentan de tu enganche</div>
+            <div><b>Atención 1 a 1</b> por WhatsApp</div>
+          </div>
+        </div>
+        <aside class="hero-card" aria-label="Cómo funciona">
+          <h3>Así de fácil</h3>
+          <p>Todo el proceso, de principio a fin:</p>
+          <ol class="steps-mini">
+            <li><span class="n">1</span><div>Cotización por WhatsApp<small>En minutos, con el modelo que te interesa</small></div></li>
+            <li><span class="n">2</span><div>Aprobación de crédito<small>Mandas tus documentos y yo los llevo al banco</small></div></li>
+            <li><span class="n">3</span><div>Apartas tu unidad<small>Con tu separación eliges color y versión</small></div></li>
+            <li><span class="n">4</span><div>Firma y entrega<small>Te aviso en cuanto esté lista tu unidad</small></div></li>
+          </ol>
+        </aside>
+      </div>
+    </section>
+
+    <section class="alt" id="modelos">
+      <div class="wrap">
+        <h2>Elige tu modelo</h2>
+        <p class="sub">Toca un modelo para simular tu mensualidad. Los precios son de referencia; te confirmo el precio vigente, versiones y promociones en tu cotización.</p>
+        <div class="models" id="modelGrid"></div>
+      </div>
+    </section>
+
+    <section id="simulador">
+      <div class="wrap grid-2">
+        <div>
+          <h2>Simula tu mensualidad</h2>
+          <p class="sub">Mueve el enganche y el plazo. Es un cálculo de referencia; la tasa final la define el banco al aprobar tu crédito.</p>
+          <div class="card">
+            <div class="field">
+              <label for="simModelo">Modelo</label>
+              <select id="simModelo"></select>
+            </div>
+            <div class="field">
+              <label for="simPrecio">Precio del auto (MXN)</label>
+              <input id="simPrecio" type="number" min="0" step="1000" inputmode="numeric">
+            </div>
+            <div class="field">
+              <div class="range-head"><label for="simEng">Enganche</label><output id="simEngOut">20 %</output></div>
+              <input id="simEng" type="range" min="10" max="60" step="5" value="20">
+            </div>
+            <div class="field">
+              <div class="range-head"><label for="simPlazo">Plazo</label><output id="simPlazoOut">48 meses</output></div>
+              <input id="simPlazo" type="range" min="12" max="72" step="12" value="48">
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="result" aria-live="polite">
+              <div style="color:var(--muted);font-weight:600">Mensualidad estimada</div>
+              <div class="big" id="simMensual">$0</div>
+              <dl>
+                <dt>Enganche</dt><dd id="simEngMonto">$0</dd>
+                <dt>Separación (incluida en el enganche)</dt><dd id="simSep">$5,000</dd>
+                <dt>Monto a financiar</dt><dd id="simFin">$0</dd>
+                <dt>Tasa anual de referencia</dt><dd id="simTasa">0 %</dd>
+              </dl>
+            </div>
+            <p class="fine">Incluye IVA sobre intereses. No incluye seguro, comisión por apertura ni otros cargos del banco. Sujeto a aprobación de crédito.</p>
+            <button class="btn wa" style="width:100%;margin-top:8px" id="simCta" type="button">Quiero esta cotización por WhatsApp</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="alt" id="precalifica">
+      <div class="wrap grid-2">
+        <div>
+          <h2>Precalifica en 30 segundos</h2>
+          <p class="sub">Contesta cinco preguntas y te escribo por WhatsApp con tu cotización y los requisitos exactos para tu crédito.</p>
+          <div class="faq" style="margin-top:8px">
+            <details open>
+              <summary>¿Qué documentos voy a necesitar?</summary>
+              <p>Por lo general: INE por ambos lados, comprobante de domicilio reciente y comprobantes de ingresos. Te confirmo la lista exacta según el banco.</p>
+            </details>
+            <details>
+              <summary>¿La separación es un pago extra?</summary>
+              <p>No. Se descuenta de tu enganche. Si tu enganche es de $80,000 y ya separaste con $5,000, el día de la firma entregas $75,000. Solo te la pido cuando el banco ya aprobó tu crédito.</p>
+            </details>
+          </div>
+        </div>
+        <form class="card" id="leadForm" novalidate>
+          <div class="field">
+            <label for="fNombre">Nombre</label>
+            <input id="fNombre" name="nombre" type="text" autocomplete="name" required placeholder="Tu nombre y apellido">
+          </div>
+          <div class="field">
+            <label for="fTel">WhatsApp</label>
+            <input id="fTel" name="telefono" type="tel" autocomplete="tel" inputmode="tel" required placeholder="81 1234 5678">
+          </div>
+          <div class="field">
+            <label for="fModelo">¿Qué modelo te interesa?</label>
+            <select id="fModelo" name="modelo"></select>
+          </div>
+          <div class="field">
+            <label id="lblPago">¿Cómo quieres pagar?</label>
+            <div class="chips" role="radiogroup" aria-labelledby="lblPago">
+              <input type="radio" name="pago" id="pCredito" value="Crédito" checked><label for="pCredito">Crédito</label>
+              <input type="radio" name="pago" id="pContado" value="Contado"><label for="pContado">Contado</label>
+              <input type="radio" name="pago" id="pNoSe" value="Aún no sé"><label for="pNoSe">Aún no sé</label>
+            </div>
+          </div>
+          <div class="field">
+            <label for="fEnganche">Enganche disponible</label>
+            <select id="fEnganche" name="enganche">
+              <option>Menos de $50,000</option>
+              <option selected>$50,000 a $100,000</option>
+              <option>$100,000 a $150,000</option>
+              <option>Más de $150,000</option>
+            </select>
+          </div>
+          <div class="field">
+            <label id="lblCuando">¿Cuándo quieres estrenar?</label>
+            <div class="chips" role="radiogroup" aria-labelledby="lblCuando">
+              <input type="radio" name="cuando" id="cSemana" value="Esta semana"><label for="cSemana">Esta semana</label>
+              <input type="radio" name="cuando" id="cMes" value="Este mes" checked><label for="cMes">Este mes</label>
+              <input type="radio" name="cuando" id="c3m" value="En 1 a 3 meses"><label for="c3m">1 a 3 meses</label>
+              <input type="radio" name="cuando" id="cCot" value="Solo estoy cotizando"><label for="cCot">Solo cotizando</label>
+            </div>
+          </div>
+          <div class="field">
+            <label for="fMunicipio">Municipio</label>
+            <select id="fMunicipio" name="municipio">
+              <option>Monterrey</option><option>Guadalupe</option><option>San Nicolás de los Garza</option>
+              <option>San Pedro Garza García</option><option>Apodaca</option><option>Escobedo</option>
+              <option>Santa Catarina</option><option>García</option><option>Juárez</option><option>Otro</option>
+            </select>
+          </div>
+          <label style="display:flex;gap:10px;align-items:flex-start;font-weight:500;font-size:.85rem;color:var(--muted)">
+            <input type="checkbox" id="fAviso" required style="margin-top:4px">
+            <span>Acepto el <a href="#" id="openAviso">aviso de privacidad</a> y que me contacten por WhatsApp.</span>
+          </label>
+          <button class="btn wa" type="submit" style="width:100%;margin-top:16px">Enviar y abrir WhatsApp</button>
+          <div class="form-msg" id="formMsg" role="alert"></div>
+        </form>
+      </div>
+    </section>
+
+    <section id="proceso">
+      <div class="wrap">
+        <h2>Así es comprar tu auto conmigo</h2>
+        <p class="sub">Un proceso claro, sin sorpresas. Siempre sabes en qué paso vas.</p>
+        <div class="steps">
+          <div class="step"><h3>Cotización</h3><p>Te mando precio, versiones y promociones vigentes por WhatsApp.</p></div>
+          <div class="step"><h3>Crédito</h3><p>Me mandas tus documentos y yo los llevo al banco para su análisis.</p></div>
+          <div class="step"><h3>Separación</h3><p>Con el crédito aprobado, apartas tu unidad y color con $5,000 que se descuentan de tu enganche.</p></div>
+          <div class="step"><h3>Firma</h3><p>Entregas tu enganche, firmas contrato y factura, y el banco paga el resto a la agencia.</p></div>
+          <div class="step"><h3>Entrega</h3><p>Normalmente unos días después de firmar. Si incluyes placas, cuando lleguen o como lo acordemos.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="alt faq" id="faq">
+      <div class="wrap">
+        <h2>Preguntas frecuentes</h2>
+        <p class="sub">Si tienes otra duda, escríbeme y te contesto por WhatsApp.</p>
+        <details><summary>¿Cuánto tarda la aprobación del crédito?</summary><p>Depende del banco y de que tus documentos estén completos. En cuanto tenga respuesta te aviso por WhatsApp.</p></details>
+        <details><summary>¿Puedo elegir el color interior y exterior?</summary><p>Sí. Al hacer tu separación apartamos la unidad con la combinación que elijas, sujeto a disponibilidad.</p></details>
+        <details><summary>¿Cuándo entrego mi enganche?</summary><p>Cuando tu crédito ya esté aprobado. Ese mismo día firmas el contrato y la factura. Tú eliges la fecha.</p></details>
+        <details><summary>¿Puedo agregar garantía extendida, accesorios o placas?</summary><p>Sí. Pregúntame por garantía extendida, kit de accesorios, instalación, seguro de llantas y trámite de placas. Todo va desglosado en tu cotización.</p></details>
+        <details><summary>¿Cuándo me entregan el auto?</summary><p>Por lo general unos días después de la firma, cuando el banco liberó el crédito y la unidad está en la agencia. Si contrataste placas, se entrega al llegar o sin ellas si así lo acordamos.</p></details>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <p><b><span data-asesor-nombre>Omar</span></b> · <span data-asesor-titulo>Asesor automotriz</span> · <span data-ciudad>Monterrey, N.L.</span></p>
+      <p>Sitio de asesor de ventas. Precios, promociones y tasas de referencia sujetos a cambio y a aprobación de crédito. Las marcas mencionadas pertenecen a sus respectivos dueños.</p>
+      <p><a href="#" id="openAviso2">Aviso de privacidad</a></p>
+    </div>
+  </footer>
+
+  <a class="fab" href="#" data-wa-link aria-label="Escríbeme por WhatsApp">
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.3 14.2c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.4.6-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1.1c.2-.3.4-.2.7-.1l2 .9c.3.2.5.2.5.4.1.1.1.7-.1 1.2Z"/></svg>
+  </a>
+
+  <dialog id="aviso">
+    <h3 style="margin-top:0">Aviso de privacidad simplificado</h3>
+    <p><span data-asesor-nombre>Omar</span>, <span data-asesor-titulo>asesor automotriz</span> con domicilio en <span data-ciudad>Monterrey, N.L.</span>, es responsable del tratamiento de los datos que nos compartes (nombre, teléfono y preferencias de compra).</p>
+    <p>Los usamos únicamente para enviarte tu cotización, darle seguimiento a tu solicitud de crédito y contactarte sobre tu compra. No los vendemos ni los compartimos con terceros, salvo con la institución financiera cuando tú lo autorizas para tramitar tu crédito.</p>
+    <p>Puedes solicitar el acceso, corrección o eliminación de tus datos (derechos ARCO) escribiendo por WhatsApp al número de este sitio.</p>
+    <form method="dialog"><button class="btn">Entendido</button></form>
+  </dialog>
+
+  <script>
+    (function () {
+      var C = window.CONFIG || {};
+      var A = C.asesor || {};
+      var modelos = C.modelos || [];
+      var mxn = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 });
+
+      // Textos configurables
+      function fill(sel, value) {
+        if (!value) return;
+        document.querySelectorAll(sel).forEach(function (el) { el.textContent = value; });
+      }
+      fill("[data-asesor-nombre]", A.nombre);
+      fill("[data-asesor-titulo]", A.titulo);
+      fill("[data-ciudad]", A.ciudad);
+      fill("[data-marca]", C.marca);
+      fill("[data-separacion]", new Intl.NumberFormat("es-MX").format(C.separacion || 5000));
+
+      function waUrl(text) {
+        return "https://wa.me/" + (A.whatsapp || "") + (text ? "?text=" + encodeURIComponent(text) : "");
+      }
+      var saludo = "Hola " + (A.nombre || "") + ", vi tu página y quiero información de un auto nuevo.";
+      document.querySelectorAll("[data-wa-link]").forEach(function (a) {
+        a.href = waUrl(saludo);
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.addEventListener("click", function () { track("Contact"); });
+      });
+
+      // UTM y origen del anuncio (Meta Ads)
+      var params = new URLSearchParams(location.search);
+      var utm = {};
+      ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "fbclid"].forEach(function (k) {
+        if (params.get(k)) utm[k] = params.get(k);
+      });
+
+      // Pixel de Meta (solo si hay ID)
+      if (C.metaPixelId) {
+        !function (f, b, e, v, n, t, s) {
+          if (f.fbq) return; n = f.fbq = function () { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments); };
+          if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = "2.0"; n.queue = [];
+          t = b.createElement(e); t.async = !0; t.src = v; s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s);
+        }(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
+        window.fbq("init", C.metaPixelId);
+        window.fbq("track", "PageView");
+      }
+      function track(evt, data) {
+        if (window.fbq) window.fbq("track", evt, data || {});
+      }
+
+      // Modelos
+      var grid = document.getElementById("modelGrid");
+      var simModelo = document.getElementById("simModelo");
+      var fModelo = document.getElementById("fModelo");
+      modelos.forEach(function (m) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "model";
+        var t = document.createElement("span"); t.className = "tipo"; t.textContent = m.tipo || "";
+        var n = document.createElement("span"); n.className = "nombre"; n.textContent = m.nombre;
+        var p = document.createElement("span"); p.className = "precio";
+        p.textContent = m.precio ? "Desde " + mxn.format(m.precio) : "Cotiza por WhatsApp";
+        b.append(t, n, p);
+        b.addEventListener("click", function () {
+          simModelo.value = m.id; fModelo.value = m.id; onModelo();
+          document.getElementById("simulador").scrollIntoView();
+        });
+        grid.appendChild(b);
+        [simModelo, fModelo].forEach(function (sel) {
+          var o = document.createElement("option"); o.value = m.id; o.textContent = m.nombre; sel.appendChild(o);
+        });
+      });
+      var otro = document.createElement("option"); otro.value = "otro"; otro.textContent = "Otro / aún no sé";
+      fModelo.appendChild(otro);
+
+      function modeloById(id) { return modelos.filter(function (m) { return m.id === id; })[0]; }
+
+      // Simulador
+      var simPrecio = document.getElementById("simPrecio");
+      var simEng = document.getElementById("simEng");
+      var simPlazo = document.getElementById("simPlazo");
+      var tasa = C.tasaAnualReferencia || 0.139;
+      document.getElementById("simTasa").textContent = (tasa * 100).toFixed(1) + " %";
+      document.getElementById("simSep").textContent = mxn.format(C.separacion || 5000);
+
+      function onModelo() {
+        var m = modeloById(simModelo.value);
+        simPrecio.value = m && m.precio ? m.precio : "";
+        simPrecio.placeholder = m && m.precio ? "" : "Escribe el precio que te cotizaron";
+        calc();
+      }
+      function calc() {
+        var precio = Number(simPrecio.value) || 0;
+        var pct = Number(simEng.value) / 100;
+        var n = Number(simPlazo.value);
+        var enganche = Math.round(precio * pct);
+        var fin = Math.max(precio - enganche, 0);
+        var r = tasa * 1.16 / 12; // IVA sobre intereses
+        var pago = fin > 0 ? fin * r / (1 - Math.pow(1 + r, -n)) : 0;
+        document.getElementById("simEngOut").textContent = simEng.value + " %";
+        document.getElementById("simPlazoOut").textContent = n + " meses";
+        document.getElementById("simEngMonto").textContent = mxn.format(enganche);
+        document.getElementById("simFin").textContent = mxn.format(fin);
+        document.getElementById("simMensual").textContent = precio ? mxn.format(pago) : "Escribe el precio";
+      }
+      simModelo.addEventListener("change", function () { fModelo.value = simModelo.value; onModelo(); });
+      [simPrecio, simEng, simPlazo].forEach(function (el) { el.addEventListener("input", calc); });
+      onModelo();
+
+      document.getElementById("simCta").addEventListener("click", function () {
+        var m = modeloById(simModelo.value);
+        var precio = Number(simPrecio.value) || 0;
+        var txt = "Hola " + (A.nombre || "") + ", simulé en tu página:\n" +
+          "• Modelo: " + (m ? m.nombre : "") + "\n" +
+          (precio ? "• Precio: " + mxn.format(precio) + "\n" : "") +
+          "• Enganche: " + simEng.value + " %" + (precio ? " (" + mxn.format(Math.round(precio * simEng.value / 100)) + ")" : "") + "\n" +
+          "• Plazo: " + simPlazo.value + " meses\n" +
+          "¿Me mandas la cotización formal?";
+        track("Contact");
+        window.open(waUrl(txt), "_blank", "noopener");
+      });
+
+      // Aviso de privacidad
+      var aviso = document.getElementById("aviso");
+      ["openAviso", "openAviso2"].forEach(function (id) {
+        document.getElementById(id).addEventListener("click", function (e) { e.preventDefault(); aviso.showModal(); });
+      });
+
+      // Formulario de precalificación
+      var form = document.getElementById("leadForm");
+      var msg = document.getElementById("formMsg");
+      function radio(name) { var el = form.querySelector('input[name="' + name + '"]:checked'); return el ? el.value : ""; }
+
+      function score(d) {
+        var s = 0;
+        if (d.cuando === "Esta semana") s += 3; else if (d.cuando === "Este mes") s += 2; else if (d.cuando === "En 1 a 3 meses") s += 1;
+        if (d.pago === "Contado") s += 3; else if (d.pago === "Crédito") s += 2;
+        if (/150,000|100,000 a/.test(d.enganche)) s += 2; else if (/50,000 a/.test(d.enganche)) s += 1;
+        return s >= 6 ? "Caliente" : s >= 4 ? "Tibio" : "Frío";
+      }
+
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var nombre = form.nombre.value.trim();
+        var tel = form.telefono.value.replace(/\D/g, "");
+        if (nombre.length < 2) { msg.textContent = "Escribe tu nombre."; form.nombre.focus(); return; }
+        if (tel.length < 10) { msg.textContent = "Escribe tu WhatsApp a 10 dígitos."; form.telefono.focus(); return; }
+        if (!document.getElementById("fAviso").checked) { msg.textContent = "Acepta el aviso de privacidad para continuar."; return; }
+        msg.textContent = "";
+
+        var m = modeloById(fModelo.value);
+        var d = {
+          nombre: nombre,
+          telefono: tel,
+          modelo: m ? m.nombre : "Otro / aún no sé",
+          pago: radio("pago"),
+          enganche: form.enganche.value,
+          cuando: radio("cuando"),
+          municipio: form.municipio.value,
+        };
+        d.prioridad = score(d);
+
+        // 1) Webhook al CRM (Make / Chattrace / Sheets)
+        if (C.webhookUrl) {
+          var body = new URLSearchParams(Object.assign({}, d, utm, {
+            fecha: new Date().toISOString(),
+            pagina: location.href.split("?")[0],
+          }));
+          try { fetch(C.webhookUrl, { method: "POST", mode: "no-cors", body: body, keepalive: true }); } catch (err) { /* sin bloquear al cliente */ }
+        }
+        // 2) Evento de conversión en Meta
+        track("Lead", { content_name: d.modelo });
+
+        // 3) WhatsApp con el mensaje prellenado (el panel lo puede importar tal cual)
+        var txt = "Hola " + (A.nombre || "") + ", quiero cotizar un auto.\n" +
+          "• Nombre: " + d.nombre + "\n" +
+          "• Modelo: " + d.modelo + "\n" +
+          "• Pago: " + d.pago + "\n" +
+          "• Enganche disponible: " + d.enganche + "\n" +
+          "• ¿Cuándo?: " + d.cuando + "\n" +
+          "• Municipio: " + d.municipio;
+        window.location.href = waUrl(txt);
+      });
+    })();
+  </script>
+</body>
+</html>
