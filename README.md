@@ -47,6 +47,10 @@ La sección **Aprende** tiene las reglas de oro, los 11 pasos explicados y tus *
 - **En tu compu:** doble clic en `index.html`.
 - **En el celular (recomendado):** publícala gratis con GitHub Pages (**Settings → Pages →** *Deploy from a branch*, carpeta `/ (root)`). Después ábrela en el navegador del celular y usa "Agregar a pantalla de inicio" para tenerla como app.
 
+## CLASSIC 24 (app de preparación física)
+
+La carpeta `classic24/` tiene una app aparte para tu preparación de Classic Physique en 24 semanas: entreno, comida, posing y un panel de cumplimiento. Ábrela aquí: https://claude.ai/artifact/VK3QDf3avSbb7dJY3zjZqs. Detalles en `classic24/README.md`.
+
 ## Tus datos
 
 - En la versión publicada en claude.ai, los expedientes se guardan en tu cuenta, en un espacio privado que solo tú ves. Abierta desde tu compu o GitHub Pages, se guardan **solo en ese navegador**.
