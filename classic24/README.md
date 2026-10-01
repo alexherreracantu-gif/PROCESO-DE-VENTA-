@@ -17,7 +17,7 @@ App para iPhone con tu preparación natural de Classic Physique en 24 semanas. P
 | **Entreno** | Tu split de 6 días. Cada ejercicio muestra lo que cargaste **la última vez** y te avisa cuándo subir peso. Al marcar una serie arranca el temporizador de descanso (suena y sigue bien aunque bloquees el iPhone). Si perdiste una sesión, eliges cuál recuperar ese día. |
 | **Comida** | Macros restantes, porciones rápidas (pollo, arroz, avena, tortillas…), alimento propio y "Repetir ayer". Creatina, whey y cafeína. |
 | **Progreso** | **Panel de cumplimiento:** dona semanal, anillo por día, mapa de las 24 semanas y "Cómo recuperarlo" para cada meta fallada. Además: marcador semanal (peso ↓, cintura ↓, fuerza =/↑), ajuste sugerido de calorías con botón para aplicarlo, gráficas de peso y cintura, fuerza en los 5 básicos y check-in del domingo. |
-| **Prep** | Roadmap de las 7 fases, posing del día con timer y reglas de ajuste. |
+| **Camino al escenario** (tarjeta café en Inicio) | Roadmap de las 7 fases, posing del día con timer y reglas de ajuste. El botón **+** del centro registra peso, pasos, sueño, cardio, posing, agua o creatina en un toque. |
 
 ## Cómo se calcula el cumplimiento
 
