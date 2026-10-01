@@ -7,7 +7,12 @@ App para iPhone con tu preparación natural de Classic Physique en 24 semanas. P
 - **Versión publicada (recomendada):** https://claude.ai/artifact/VK3QDf3avSbb7dJY3zjZqs
   Tus datos se guardan en el espacio privado de tu cuenta de Claude y se ven igual en el iPhone y en la compu.
   En el iPhone: ábrela en Safari → **Compartir** → **Agregar a pantalla de inicio**.
-- **Como app independiente (sin internet):** publica esta carpeta en GitHub Pages (**Settings → Pages →** *Deploy from a branch*, carpeta `/ (root)`), abre `https://<tu-usuario>.github.io/<repo>/classic24/` en Safari y agrégala a la pantalla de inicio. Así los datos viven **solo en ese iPhone**: exporta un respaldo cada semana (Ajustes → Exportar respaldo).
+- **Como app independiente, gratis (GitHub Pages):**
+  1. En GitHub: **Settings → Pages → Build and deployment → Source: Deploy from a branch**. Rama `claude/determined-allen-avcsip`, carpeta `/ (root)` → **Save**.
+  2. Espera 1–2 minutos y abre en Safari: https://alexherreracantu-gif.github.io/PROCESO-DE-VENTA-/classic24/
+  3. **Compartir → Agregar a pantalla de inicio**. Se abre en pantalla completa con su ícono y funciona sin internet.
+
+  En esta versión los datos viven **solo en ese iPhone**. Exporta un respaldo cada domingo (Ajustes → Exportar respaldo → Guardar en Archivos o iCloud). No borres la app de la pantalla de inicio sin antes exportar.
 
 ## Qué hace
 

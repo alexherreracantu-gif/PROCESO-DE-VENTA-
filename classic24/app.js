@@ -1048,6 +1048,11 @@ async function exportData() {
     } catch (e) { if (e && e.code === 'declined') return; }
   }
   if (EMBED) { toast('La descarga no está disponible aquí'); return; }
+  // En el iPhone, el menú de compartir permite guardarlo en Archivos/iCloud o mandarlo por WhatsApp.
+  try {
+    const file = new File([data], filename, { type: 'application/json' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'Respaldo CLASSIC 24' }); toast('Respaldo listo'); return; }
+  } catch (e) { if (e && e.name === 'AbortError') return; }
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
   a.download = filename; document.body.appendChild(a); a.click(); a.remove();
