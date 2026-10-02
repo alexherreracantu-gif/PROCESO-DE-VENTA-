@@ -6,7 +6,7 @@ Hecho con **Next.js 16 + Supabase (Postgres, Auth, permisos por fila) + Vercel**
 
 Identidad **BYD Grupo TEC** en colores claros: fondo blanco, barra lateral blanca y azul de marca `#159BE6` en acentos. Logo en `public/marca/` (azul para fondos claros, blanco para el reporte descargable) e íconos de la app en `public/iconos/`. Si cambia el logo, reemplaza esos archivos.
 
-**Partes escondidas por ahora:** el Agente IA (menú) y la tarjeta *Seguimientos para hoy* del Inicio. Siguen en el código y funcionando; para mostrarlas, cambia a `true` lo que corresponda en `VISIBLE` (`src/lib/config.ts`).
+**Partes escondidas por ahora:** el Agente IA (menú), la tarjeta *Seguimientos para hoy* del Inicio y el CEO en el inicio de sesión (entran Jorge, Mariana, Leonardo y Omar; Jorge administra). Siguen en el código y funcionando; para mostrarlas, cambia a `true` lo que corresponda en `VISIBLE` (`src/lib/config.ts`).
 
 ## Qué hace
 
@@ -14,6 +14,7 @@ Identidad **BYD Grupo TEC** en colores claros: fondo blanco, barra lateral blanc
 |---|---|
 | **Inicio** | Te dice quién eres, tu avance del mes (unidades, faltan, ritmo por semana, productos por unidad), ranking del equipo, seguimientos de hoy y ventas en proceso. |
 | **Ventas** | Alta de cada venta (se guarda completa o no se guarda): fecha, vendedor, cliente, número de cliente, VIN (valida 17 caracteres y que no se repita), modelo, color y nombre comercial, forma de pago, plaza, estatus, fecha de entrega y productos. Cada venta tiene su **expediente de 11 pasos**, su **cuadre sin adeudo** (enganche restante, desembolso esperado contra real, saldo y si el carro sale) y un **historial de cambios**. |
+| **Dashboard general** (`/panel`) | El tablero de todo el equipo **sin iniciar sesión**, de solo lectura: indicadores, ranking, productos, modelos, colores y detalle de ventas. Se actualiza solo cada 5 minutos (para dejarlo en una pantalla). Es público: cualquiera con el enlace ve las cifras y el detalle. |
 | **Tablero de reporte** | Por mes y por vendedor: unidades contra meta y contra el mes anterior, penetración por producto, ranking, modelos, colores y detalle. **Descargar imagen** (PNG), **Compartir** desde el celular y **Exportar Excel** (CSV). |
 | **Objetivos** | Meta de unidades por vendedor y meta de penetración por producto, por mes. Dirección las edita; el equipo ve su avance. |
 | **Corte de piso** | Contadores del día (clientes nuevos, citas, demos, solicitudes…) que se guardan solos; texto listo para WhatsApp. Dirección ve el corte de todos. |

@@ -4,8 +4,9 @@ import type { Sesion } from "@/lib/sesion";
 import type { Corte, FilaRanking, Metas, Modelo, Perfil, Producto, ProgresoAcademia, Prospecto, Venta } from "@/lib/tipos";
 
 /**
- * Lecturas de la base. Todas usan el cliente con la sesión del usuario,
- * así que cada quien recibe solo lo que sus permisos le dejan ver.
+ * Lecturas de la base. Usan el cliente con la sesión del usuario, así que cada quien recibe
+ * solo lo que sus permisos le dejan ver. Las que también usa el dashboard público (sin sesión,
+ * con el cliente de servicio) filtran además por agencia.
  */
 
 const COLS_VENTA = "id, folio, fecha, vendedor_id, cliente, num_cliente, telefono, vin, modelo_id, color, color_nombre, forma_pago, plaza, estatus, fecha_entrega, valor_factura, notas, expediente, cuadre, created_at, venta_productos(producto_id)";
@@ -21,14 +22,14 @@ function revisar<T>(r: { data: T | null; error: { message: string } | null }, qu
 }
 
 export async function equipo(s: Sesion): Promise<Perfil[]> {
-  const r = await s.sb.from("perfiles").select("id, agencia_id, usuario, nombre, nombre_corto, rol, vende, activo, telefono").order("rol").order("nombre");
+  const r = await s.sb.from("perfiles").select("id, agencia_id, usuario, nombre, nombre_corto, rol, vende, activo, telefono").eq("agencia_id", s.agencia.id).order("rol").order("nombre");
   const orden = { ceo: 0, gerente: 1, asesor: 2 } as const;
   return revisar<Perfil[]>(r, "el equipo").sort((a, b) => orden[a.rol] - orden[b.rol] || a.nombre.localeCompare(b.nombre));
 }
 
 export async function catalogo(s: Sesion, incluirInactivos = false) {
-  let qm = s.sb.from("modelos").select("id, clave, nombre, anio, motor, precio, bono, descripcion, activo, orden, banorte_submarca, banorte_anio, banorte_modelo").order("orden").order("nombre");
-  let qp = s.sb.from("productos").select("id, clave, nombre, nombre_corto, precio, activo, orden").order("orden");
+  let qm = s.sb.from("modelos").select("id, clave, nombre, anio, motor, precio, bono, descripcion, activo, orden, banorte_submarca, banorte_anio, banorte_modelo").eq("agencia_id", s.agencia.id).order("orden").order("nombre");
+  let qp = s.sb.from("productos").select("id, clave, nombre, nombre_corto, precio, activo, orden").eq("agencia_id", s.agencia.id).order("orden");
   if (!incluirInactivos) { qm = qm.eq("activo", true); qp = qp.eq("activo", true); }
   const [m, p] = await Promise.all([qm, qp]);
   const modelos = revisar<Modelo[]>(m, "los modelos").map((x) => ({ ...x, precio: Number(x.precio), bono: Number(x.bono) }));
@@ -38,7 +39,7 @@ export async function catalogo(s: Sesion, incluirInactivos = false) {
 
 export async function ventasDelMes(s: Sesion, mes: string, vendedor?: string | null): Promise<Venta[]> {
   const { desde, hasta } = rangoMes(mes);
-  let q = s.sb.from("ventas").select(COLS_VENTA).gte("fecha", desde).lt("fecha", hasta).order("fecha", { ascending: false }).order("folio", { ascending: false });
+  let q = s.sb.from("ventas").select(COLS_VENTA).eq("agencia_id", s.agencia.id).gte("fecha", desde).lt("fecha", hasta).order("fecha", { ascending: false }).order("folio", { ascending: false });
   if (vendedor) q = q.eq("vendedor_id", vendedor);
   return revisar<FilaVenta[]>(await q, "las ventas").map(aVenta);
 }
@@ -67,8 +68,8 @@ export async function historialVenta(s: Sesion, id: string) {
 export async function metasDelMes(s: Sesion, mes: string): Promise<Metas> {
   const { desde } = rangoMes(mes);
   const [u, p] = await Promise.all([
-    s.sb.from("metas").select("vendedor_id, unidades").eq("mes", desde),
-    s.sb.from("metas_producto").select("producto_id, porcentaje").eq("mes", desde),
+    s.sb.from("metas").select("vendedor_id, unidades").eq("agencia_id", s.agencia.id).eq("mes", desde),
+    s.sb.from("metas_producto").select("producto_id, porcentaje").eq("agencia_id", s.agencia.id).eq("mes", desde),
   ]);
   const filasU = revisar<{ vendedor_id: string; unidades: number }[]>(u, "las metas");
   const filasP = revisar<{ producto_id: string; porcentaje: number }[]>(p, "las metas por producto");

@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
-import { configurado } from "@/lib/config";
+import Link from "next/link";
+import { BarChart3 } from "lucide-react";
+import { VISIBLE, configurado } from "@/lib/config";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { iniciales } from "@/lib/dominio/formato";
 import { ROLES, type Rol } from "@/lib/dominio/catalogos";
@@ -19,7 +21,10 @@ async function directorio(): Promise<{ usuarios: UsuarioDirectorio[]; agencia: s
     const { data, error } = await admin.from("perfiles").select("usuario, nombre, nombre_corto, rol, vende, agencias!perfiles_agencia_id_fkey(nombre)").eq("activo", true);
     if (error) return { error: "No se pudo leer el equipo. Revisa que la base de datos esté configurada (npm run setup)." };
     const orden: Record<Rol, number> = { ceo: 0, gerente: 1, asesor: 2 };
-    const filas = (data ?? []) as unknown as { usuario: string; nombre: string; nombre_corto: string; rol: Rol; vende: boolean; agencias: { nombre: string } | null }[];
+    const todas = (data ?? []) as unknown as { usuario: string; nombre: string; nombre_corto: string; rol: Rol; vende: boolean; agencias: { nombre: string } | null }[];
+    // Si el CEO es el único usuario, se muestra igual para no dejar el portal sin acceso.
+    const sinCeo = todas.filter((f) => f.rol !== "ceo");
+    const filas = VISIBLE.ceoEnLogin || !sinCeo.length ? todas : sinCeo;
     filas.sort((a, b) => orden[a.rol] - orden[b.rol] || a.nombre.localeCompare(b.nombre));
     return {
       agencia: filas[0]?.agencias?.nombre ?? "",
@@ -68,6 +73,11 @@ export default async function Login(props: PageProps<"/login">) {
           ) : (
             <SelectorAcceso usuarios={dir.usuarios} />
           )}
+          <Link href="/panel" className="flex items-center gap-3 rounded-2xl border border-dashed border-line px-4 py-3 text-sm text-muted transition hover:border-accent hover:text-fg">
+            <BarChart3 className="size-5 shrink-0 text-accent" aria-hidden />
+            <span className="flex-1"><strong className="block text-fg">Dashboard general</strong>Ver los números del mes sin iniciar sesión</span>
+            <span aria-hidden>→</span>
+          </Link>
         </div>
       </section>
     </main>
