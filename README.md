@@ -1,3 +1,16 @@
+# Portal BYD Park Point (control interno)
+
+`portal.html` es la SaaS interna del equipo de BYD Cumbres · Park Point. Publicada en https://claude.ai/artifact/MRhdyyADYxEcSZvFyZuoPL
+
+- **Inicio de sesión por usuario:** al entrar eliges quién eres (CEO, Jorge Cabral · Gerente, Mariana, Leonardo u Omar · Asesores) y escribes tu PIN de 4 dígitos (la primera vez lo creas). La app te dice con quién entraste y cada quien tiene su sesión.
+- **Permisos:** los asesores ven solo sus ventas, prospectos y cortes. Jorge y el CEO ven todo el equipo. Jorge también aparece como vendedor.
+- **Ventas:** fecha, vendedor, cliente, número de cliente, VIN (valida 17 caracteres y duplicados), modelo, color (y nombre comercial, ej. Time Grey), forma de pago, plaza, estatus, fecha de entrega y los productos (KPIs): garantía extendida, accesorios, Cerocible, seguro de llantas, trámite de placas, seguro y llanta de refacción.
+- **Tablero de reporte:** unidades contra meta, penetración por producto, ranking de vendedores, unidades por modelo y por color, detalle de ventas. Botón **Descargar imagen** (PNG listo para WhatsApp) y **Exportar CSV**.
+- **Objetivos:** meta de unidades por vendedor y meta de penetración por producto, por mes (las edita dirección).
+- **Corte de piso**, **CRM** de prospectos, **Cotizador** Banorte, **Guiones**, **Agente IA**, **Academia BYD** (de Dealer OS) y **Equipo** (dirección: avance de cada quien y restablecer PIN).
+
+Datos: en claude.ai se comparten con todo el equipo en la base de datos del portal; fuera de ahí se guardan en el navegador. Para que el equipo capture, compárteles el portal con acceso de colaborador. Los datos y el catálogo se editan en `assets/portal-datos.js`; la academia en `assets/portal-academia.js`. Para republicar: `python3 tools/empaquetar.py portal.html salida.html`.
+
 # Expedientes de venta: de la cotización a la entrega
 
 App personal para **aprender el proceso de venta de autos** y **automatizar el llenado de datos**. Das de alta a un cliente y la app te lleva paso a paso, campo por campo, hasta la entrega. En cada paso te dice qué hacer, calcula las cuentas, arma los mensajes y no te deja avanzar si falta algo.
@@ -33,6 +46,8 @@ La sección **Aprende** tiene las reglas de oro, los 11 pasos explicados y tus *
 
 | Archivo | Para qué sirve |
 |---|---|
+| `portal.html` | Portal BYD Park Point (sesión por usuario, ventas y KPIs, tablero, objetivos, CRM, academia) |
+| `assets/portal*.js` | Datos, academia y motor del portal |
 | `index.html` | La app de expedientes |
 | `assets/pasos.js` | **Los pasos, campos, mensajes y validaciones.** Si tu capacitador te corrige algo, se cambia aquí |
 | `assets/config.js` | Tu nombre, WhatsApp, modelos y precios, monto de separación y correo de Piedras Negras |
