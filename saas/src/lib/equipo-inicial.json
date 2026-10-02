@@ -1,0 +1,10 @@
+{
+  "agencia_id": "0b7d0c3e-5f1a-4c8e-9a51-3c2d7e1f0a01",
+  "usuarios": [
+    { "usuario": "ceo", "nombre": "Dirección general", "nombre_corto": "CEO", "rol": "ceo", "vende": false },
+    { "usuario": "jorge", "nombre": "Jorge Cabral", "nombre_corto": "Jorge", "rol": "gerente", "vende": true },
+    { "usuario": "mariana", "nombre": "Mariana", "nombre_corto": "Mariana", "rol": "asesor", "vende": true },
+    { "usuario": "leonardo", "nombre": "Leonardo", "nombre_corto": "Leonardo", "rol": "asesor", "vende": true },
+    { "usuario": "omar", "nombre": "Omar Cantú", "nombre_corto": "Omar", "rol": "asesor", "vende": true }
+  ]
+}

@@ -1,0 +1,228 @@
+@import "tailwindcss";
+@import "@fontsource/barlow-condensed/500.css";
+@import "@fontsource/barlow-condensed/600.css";
+@import "@fontsource/barlow-condensed/700.css";
+@import "@fontsource/ibm-plex-sans/400.css";
+@import "@fontsource/ibm-plex-sans/500.css";
+@import "@fontsource/ibm-plex-sans/600.css";
+@import "@fontsource/ibm-plex-sans/700.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+
+/*
+ * Identidad BYD Grupo TEC: azul de marca (#159BE6) en el login, la bienvenida y las barras;
+ * barra lateral azul marino fija en ambos temas; área de trabajo clara u oscura.
+ * Números grandes en condensada; datos con cifras tabulares.
+ */
+:root {
+  --bg: #eef2f6;
+  --surface: #ffffff;
+  --surface-2: #e7ecf2;
+  --fg: #11141a;
+  --muted: #586070;
+  --subtle: #8b93a2;
+  --line: #d7dee7;
+  --ink: #11141a;
+  --on-ink: #f4f2ed;
+  --accent: #0b6fb3;
+  --accent-soft: #e1f1fc;
+  --on-accent: #ffffff;
+  --bar: #159be6;
+  --bar-track: #e2e8ef;
+  --ok: #23774a;
+  --ok-soft: #dcf0e3;
+  --warn: #9a5f0e;
+  --warn-soft: #f8ead2;
+  --bad: #b3362d;
+  --bad-soft: #f8e1de;
+  --wa: #1f9d55;
+  --brand: #159be6;
+  --brand-deep: #0d7fc4;
+  --side: #0b1d2e;
+  --side-2: #14304a;
+  --side-fg: #eef6fc;
+  --side-muted: #8eaec7;
+  --shadow: 0 1px 2px rgb(16 20 28 / 0.06), 0 6px 24px -12px rgb(16 20 28 / 0.18);
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #090d12;
+    --surface: #111820;
+    --surface-2: #18212c;
+    --fg: #ecebe7;
+    --muted: #9aa1ad;
+    --subtle: #687080;
+    --line: #243140;
+    --ink: #ecebe7;
+    --on-ink: #0b0d11;
+    --accent: #5cc0f5;
+    --accent-soft: #0f2a40;
+    --on-accent: #06121d;
+    --bar: #3fb0ef;
+    --bar-track: #1f2a36;
+    --ok: #86c39b;
+    --ok-soft: #15291d;
+    --warn: #e0b16c;
+    --warn-soft: #2f2412;
+    --bad: #ec8d84;
+    --bad-soft: #351b19;
+    --wa: #3cc276;
+    --side: #07131f;
+    --side-2: #112a40;
+    --side-fg: #eef6fc;
+    --side-muted: #7e9bb3;
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 28px -14px rgb(0 0 0 / 0.7);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #090d12;
+  --surface: #111820;
+  --surface-2: #18212c;
+  --fg: #ecebe7;
+  --muted: #9aa1ad;
+  --subtle: #687080;
+  --line: #243140;
+  --ink: #ecebe7;
+  --on-ink: #0b0d11;
+  --accent: #5cc0f5;
+  --accent-soft: #0f2a40;
+  --on-accent: #06121d;
+  --bar: #3fb0ef;
+  --bar-track: #1f2a36;
+  --ok: #86c39b;
+  --ok-soft: #15291d;
+  --warn: #e0b16c;
+  --warn-soft: #2f2412;
+  --bad: #ec8d84;
+  --bad-soft: #351b19;
+  --wa: #3cc276;
+  --side: #07131f;
+  --side-2: #112a40;
+  --side-fg: #eef6fc;
+  --side-muted: #7e9bb3;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 28px -14px rgb(0 0 0 / 0.7);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-on-ink: var(--on-ink);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-on-accent: var(--on-accent);
+  --color-bar: var(--bar);
+  --color-bar-track: var(--bar-track);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+  --color-wa: var(--wa);
+  --color-brand: var(--brand);
+  --color-brand-deep: var(--brand-deep);
+  --color-side: var(--side);
+  --color-side-2: var(--side-2);
+  --color-side-fg: var(--side-fg);
+  --color-side-muted: var(--side-muted);
+  --font-sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --shadow-card: var(--shadow);
+}
+
+@layer base {
+  html,
+  body {
+    background: var(--bg);
+    color: var(--fg);
+  }
+  body {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled),
+  summary,
+  label[for] {
+    cursor: pointer;
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+  dialog::backdrop {
+    background: rgb(8 10 14 / 0.55);
+    backdrop-filter: blur(2px);
+  }
+  ::selection {
+    background: var(--accent-soft);
+  }
+}
+
+@utility num {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: 0.005em;
+}
+@utility eyebrow {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+@utility campo {
+  width: 100%;
+  min-width: 0;
+  min-height: 2.6rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.65rem;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-size: 0.94rem;
+  transition: border-color 0.15s;
+  &:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 0;
+    border-color: transparent;
+  }
+  &:disabled {
+    background: var(--surface-2);
+    color: var(--muted);
+  }
+  &[aria-invalid="true"] {
+    border-color: var(--bad);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
