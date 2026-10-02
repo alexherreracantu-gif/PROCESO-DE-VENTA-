@@ -187,4 +187,23 @@ d("permisos por rol (RLS)", () => {
       const e2 = await tx.savepoint((sp) => sp`select public.guardar_venta(${tx.json({ id: x.ventaMariana, vendedor_id: x.omar, cliente: "Robada", modelo_id: x.modA, color: "Azul", forma_pago: "Contado", plaza: "Monterrey", estatus: "facturada" })}, ${[]}::uuid[])`).catch((e) => e);
       expect(String(e2)).toMatch(/no tienes permiso/);
     }));
+
+  it("las fotos de modelos: dirección las sube, el equipo las ve, nadie de otra agencia", () =>
+    escenario(async (tx, x) => {
+      await como(tx, x.omar);
+      const e1 = await tx.savepoint((sp) => sp`insert into public.modelo_fotos (modelo_id, posicion, datos, miniatura) values (${x.modA}, 1, 'AAAA', 'AAAA')`).catch((e) => e);
+      expect(String(e1)).toMatch(/row-level security/);
+      await como(tx, x.jorge);
+      await tx`insert into public.modelo_fotos (modelo_id, posicion, datos, miniatura) values (${x.modA}, 1, 'AAAA', 'AAAA')`;
+      await como(tx, x.omar);
+      expect(await tx`select posicion from public.modelo_fotos where modelo_id = ${x.modA}`).toHaveLength(1);
+      await tx`delete from public.modelo_fotos where modelo_id = ${x.modA}`;
+      await como(tx, x.ajeno);
+      expect(await tx`select 1 from public.modelo_fotos where modelo_id = ${x.modA}`).toHaveLength(0);
+      await como(tx, null);
+      const e2 = await tx.savepoint((sp) => sp`select 1 from public.modelo_fotos`).catch((e) => e);
+      expect(String(e2)).toMatch(/permission denied/);
+      await como(tx, x.jorge);
+      expect(await tx`select 1 from public.modelo_fotos where modelo_id = ${x.modA}`).toHaveLength(1);
+    }));
 });

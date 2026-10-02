@@ -21,7 +21,7 @@ export default async function Academia() {
         <TituloTarjeta titulo="Tu avance"><Pastilla tono={hechos === MODULOS.length ? "ok" : "acc"}>{hechos} de {MODULOS.length} módulos</Pastilla></TituloTarjeta>
         <Progreso valor={hechos / MODULOS.length} className="h-2.5" />
       </Tarjeta>
-      <ol className="grid gap-2.5">
+      <ol className="grid gap-2.5 grid-cols-[minmax(0,1fr)]">
         {MODULOS.map((m, i) => {
           const e = estados[i];
           return (

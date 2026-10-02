@@ -40,7 +40,7 @@ export function Contador({ fecha, nombre, inicial }: { fecha: string; nombre: st
     <div className="grid gap-5 lg:grid-cols-2">
       <Tarjeta>
         <TituloTarjeta titulo="Tu corte" nota={etiquetaEstado} />
-        <ul className="grid gap-2">
+        <ul className="grid gap-2 grid-cols-[minmax(0,1fr)]">
           {CORTE.map((c) => (
             <li key={c.id} className="flex items-center gap-3 rounded-xl border border-line px-3.5 py-2">
               <span className="flex-1 text-[0.92rem]">{c.label}</span>

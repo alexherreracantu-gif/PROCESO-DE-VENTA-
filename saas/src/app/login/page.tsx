@@ -56,7 +56,7 @@ export default async function Login(props: PageProps<"/login">) {
         </div>
         <div className="relative grid gap-6">
           <p className="max-w-[20ch] font-display text-[3.6rem] font-semibold leading-[0.95]">Cada venta, cada meta, en un solo lugar.</p>
-          <ul className="grid gap-2 text-[0.95rem] text-muted">
+          <ul className="grid gap-2 text-[0.95rem] text-muted grid-cols-[minmax(0,1fr)]">
             <li>Ventas con VIN, cliente y productos</li>
             <li>Tablero del mes listo para WhatsApp</li>
             <li>Objetivos y corte de piso por asesor</li>

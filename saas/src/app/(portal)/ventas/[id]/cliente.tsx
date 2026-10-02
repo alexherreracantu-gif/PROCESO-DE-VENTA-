@@ -45,7 +45,7 @@ export function Expediente({ ventaId, formaPago, expediente }: { ventaId: string
   const pasos = pasosAplicables(formaPago);
   const siguiente = pasos.find((p) => !expediente[p.id])?.id;
   return (
-    <ol className="grid gap-1">
+    <ol className="grid gap-1 grid-cols-[minmax(0,1fr)]">
       {pasos.map((p, i) => {
         const hecho = !!expediente[p.id];
         return (

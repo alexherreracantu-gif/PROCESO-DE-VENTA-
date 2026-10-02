@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import {
   BarChart3, BookOpenCheck, Calculator, CarFront, ClipboardList, Cog, Home, KanbanSquare, LogOut, Menu,
-  MessagesSquare, Sparkles, Target, UserRound, Users, X, type LucideIcon,
+  Images, MessagesSquare, Sparkles, Target, UserRound, Users, X, type LucideIcon,
 } from "lucide-react";
 import { Avatar, cx } from "@/components/ui";
 import { Insignia, Logo } from "@/components/marca";
@@ -23,6 +23,7 @@ const GRUPOS: { titulo: string; items: Item[] }[] = [
   { titulo: "Vender", items: [
     { href: "/crm", texto: "Prospectos", icono: KanbanSquare },
     { href: "/cotizador", texto: "Cotizador", icono: Calculator },
+    { href: "/fotos", texto: "Fotos de modelos", icono: Images },
     { href: "/guiones", texto: "Guiones", icono: MessagesSquare },
     { href: "/agente", texto: "Agente IA", icono: Sparkles, oculto: !VISIBLE.agente },
   ] },
@@ -67,7 +68,7 @@ export function Marco({ usuario, agencia, direccion, children }: {
                 return (
                   <Link key={i.href} href={i.href} aria-current={activo ? "page" : undefined} onClick={() => setMenu(false)}
                     className={cx("relative flex h-10 items-center gap-3 rounded-lg px-3 text-[0.9rem] font-medium transition",
-                      activo ? "bg-side-2 font-semibold text-accent" : "text-side-muted hover:bg-side-2/60 hover:text-side-fg")}>
+                      activo ? "bg-side-2 font-semibold text-accent" : "text-side-muted hover:translate-x-0.5 hover:bg-side-2/60 hover:text-side-fg")}>
                     {activo ? <span className="absolute inset-y-2 left-0 w-[3px] rounded-r bg-brand" aria-hidden /> : null}
                     <Icono className="size-[18px] shrink-0" strokeWidth={1.8} aria-hidden />
                     {i.texto}
@@ -88,7 +89,7 @@ export function Marco({ usuario, agencia, direccion, children }: {
           </form>
         </div>
       </aside>
-      {menu ? <button type="button" aria-label="Cerrar menú" className="fixed inset-0 z-30 bg-black/25 lg:hidden" onClick={() => setMenu(false)} /> : null}
+      {menu ? <button type="button" aria-label="Cerrar menú" className="fixed inset-0 z-30 bg-black/25 lg:hidden [animation:aparecer_0.2s_ease-out]" onClick={() => setMenu(false)} /> : null}
 
       <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-line bg-surface/95 px-4 pb-2.5 pt-[calc(10px+env(safe-area-inset-top))] backdrop-blur lg:hidden">
         <button type="button" onClick={() => setMenu(true)} aria-label="Abrir menú" className="grid size-9 place-items-center rounded-lg border border-line"><Menu className="size-[18px]" /></button>
@@ -97,7 +98,7 @@ export function Marco({ usuario, agencia, direccion, children }: {
       </header>
 
       <main className="px-4 pb-20 pt-5 sm:px-6 lg:ml-[248px] lg:px-8 lg:pt-8">
-        <div className="mx-auto grid max-w-[1180px] gap-6">{children}</div>
+        <div className="escalonado mx-auto grid max-w-[1180px] grid-cols-[minmax(0,1fr)] gap-6">{children}</div>
       </main>
     </div>
   );

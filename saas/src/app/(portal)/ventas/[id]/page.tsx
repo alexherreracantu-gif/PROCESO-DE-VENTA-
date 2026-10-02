@@ -81,7 +81,7 @@ export default async function DetalleVenta(props: PageProps<"/ventas/[id]">) {
         <Tarjeta>
           <TituloTarjeta titulo="Historial de cambios" nota="Visible solo para dirección" />
           {historial.length ? (
-            <ol className="grid gap-2 text-sm">
+            <ol className="grid gap-2 text-sm grid-cols-[minmax(0,1fr)]">
               {historial.map((h) => (
                 <li key={h.id} className="flex flex-wrap gap-x-2 border-b border-line pb-2 last:border-0">
                   <span className="text-muted">{fechaCorta(h.created_at.slice(0, 10))} · {new Date(h.created_at).toLocaleTimeString("es-MX", { timeZone: "America/Monterrey", hour: "2-digit", minute: "2-digit" })}</span>

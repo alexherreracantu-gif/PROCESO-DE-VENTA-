@@ -21,7 +21,7 @@ export function ProveedorAvisos({ children }: { children: ReactNode }) {
       {children}
       <div role="status" aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-[max(16px,env(safe-area-inset-bottom))] z-[80] flex justify-center px-4">
         {aviso ? (
-          <div key={aviso.id} className={cx("max-w-full rounded-xl px-4 py-2.5 text-[0.88rem] font-semibold shadow-card", aviso.tono === "error" ? "bg-bad text-white" : "bg-ink text-on-ink")}>
+          <div key={aviso.id} className={cx("max-w-full rounded-xl px-4 py-2.5 [animation:entrar_0.25s_ease-out] text-[0.88rem] font-semibold shadow-card", aviso.tono === "error" ? "bg-bad text-white" : "bg-ink text-on-ink")}>
             {aviso.texto}
           </div>
         ) : null}

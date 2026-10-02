@@ -30,11 +30,11 @@ export function SelectorAcceso({ usuarios }: { usuarios: UsuarioDirectorio[] }) 
           <h1 className="font-display text-[2.6rem] font-semibold leading-none">¿Quién eres?</h1>
           <p className="mt-2 text-muted">Elige tu usuario para entrar a tu sesión.</p>
         </div>
-        <ul className="grid gap-2.5 sm:grid-cols-2">
+        <ul className="escalonado grid gap-2.5 sm:grid-cols-2">
           {usuarios.map((u) => (
             <li key={u.usuario}>
               <button type="button" onClick={() => setElegido(u)}
-                className="flex w-full items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3.5 text-left shadow-card transition hover:-translate-y-px hover:border-accent">
+                className="flex w-full items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3.5 text-left shadow-card transition hover:-translate-y-0.5 hover:border-accent hover:shadow-lg active:scale-[0.98]">
                 <Avatar texto={u.iniciales} destacado={u.destacado} tamano="lg" />
                 <span className="min-w-0">
                   <strong className="block truncate">{u.nombre}</strong>

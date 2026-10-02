@@ -3,6 +3,8 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   devIndicators: { position: "bottom-right" },
   poweredByHeader: false,
+  // Las fotos de los modelos se suben comprimidas desde el navegador (≈ 300 KB + miniatura).
+  experimental: { serverActions: { bodySizeLimit: "4mb" } },
   async headers() {
     return [
       {
