@@ -46,7 +46,7 @@ Los permisos se aplican **en la base de datos** (Row Level Security), no solo en
 3. **Configura el portal desde el navegador.** Abre tu enlace de Vercel: te lleva a *Configurar el portal*. Escribe el código de instalación, crea tu contraseña de CEO y marca al equipo (Jorge, Mariana, Leonardo, Omar). Te muestra **una contraseña temporal por persona** (solo esa vez): cópialas y mándaselas; cada quien la cambia en *Mi perfil*. Esta pantalla se cierra sola en cuanto hay usuarios.
 
 Opcional:
-- **Agente IA:** agrega `ANTHROPIC_API_KEY` (de [console.anthropic.com](https://console.anthropic.com)) y vuelve a desplegar.
+- **Agente IA:** agrega `ANTHROPIC_API_KEY` (Claude, de [console.anthropic.com](https://console.anthropic.com)) u `OPENAI_API_KEY` (ChatGPT, de [platform.openai.com](https://platform.openai.com/api-keys)) y vuelve a desplegar. Si están las dos, usa Claude.
 - **Dominio propio:** *Settings → Domains* (por ejemplo `portal.tuagencia.mx`).
 - **En el celular:** abre el enlace y usa *Agregar a pantalla de inicio*.
 
@@ -59,7 +59,8 @@ Opcional:
 | `POSTGRES_URL` (o `DATABASE_URL`) | La integración de Supabase | Crear y actualizar las tablas en cada despliegue |
 | `CODIGO_INSTALACION` | Tú | Proteger la configuración inicial |
 | `LEADS_TOKEN` | Tú | Recibir prospectos automáticos |
-| `ANTHROPIC_API_KEY` | Anthropic (opcional) | Agente IA |
+| `ANTHROPIC_API_KEY` u `OPENAI_API_KEY` | Anthropic u OpenAI (opcional) | Agente IA (Claude o ChatGPT) |
+| `OPENAI_MODEL` | Tú (opcional) | Modelo de ChatGPT; por omisión `gpt-4o-mini` |
 
 ### Sin la integración de Vercel (alternativa)
 

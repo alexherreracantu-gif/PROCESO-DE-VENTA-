@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
+import { proveedorAgente } from "@/lib/config";
 import { obtenerSesion } from "@/lib/sesion";
 import { catalogo, metaUnidades, metasDelMes, seguimientosPendientes, ventasDelMes } from "@/lib/datos";
 import { ROLES } from "@/lib/dominio/catalogos";
@@ -37,14 +38,58 @@ async function sistema(s: NonNullable<Awaited<ReturnType<typeof obtenerSesion>>>
   return lineas.join("\n");
 }
 
+const TEXTO = { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" };
+
+/** ChatGPT (OpenAI) como alternativa cuando solo hay OPENAI_API_KEY. */
+async function respuestaOpenAI(system: string, mensajes: z.infer<typeof Entrada>["mensajes"], signal: AbortSignal) {
+  const r = await fetch(`${process.env.OPENAI_BASE_URL || "https://api.openai.com/v1"}/chat/completions`, {
+    method: "POST",
+    signal,
+    headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+      stream: true,
+      messages: [{ role: "system", content: system }, ...mensajes],
+    }),
+  }).catch(() => null);
+  if (!r?.ok || !r.body) {
+    const msg = r?.status === 429 ? "Demasiadas preguntas seguidas. Espera un momento." : "El agente no está disponible en este momento.";
+    return new Response(msg, { status: 200, headers: TEXTO });
+  }
+  return new Response(r.body.pipeThrough(new TextDecoderStream()).pipeThrough(textoDeSSE()).pipeThrough(new TextEncoderStream()), { headers: TEXTO });
+}
+
+/** Convierte el flujo SSE de OpenAI ("data: {...}") en texto plano. */
+function textoDeSSE() {
+  let resto = "";
+  return new TransformStream<string, string>({
+    transform(trozo, control) {
+      const lineas = (resto + trozo).split("\n");
+      resto = lineas.pop() ?? "";
+      for (const l of lineas) {
+        const dato = l.startsWith("data:") ? l.slice(5).trim() : "";
+        if (!dato || dato === "[DONE]") continue;
+        try {
+          const t = JSON.parse(dato).choices?.[0]?.delta?.content;
+          if (t) control.enqueue(t);
+        } catch { /* línea incompleta o de control */ }
+      }
+    },
+  });
+}
+
 export async function POST(request: Request) {
   const s = await obtenerSesion();
   if (!s) return new Response("Tu sesión terminó. Vuelve a entrar.", { status: 401 });
-  if (!process.env.ANTHROPIC_API_KEY) return new Response("El agente no está configurado. Falta ANTHROPIC_API_KEY.", { status: 503 });
+  const proveedor = proveedorAgente();
+  if (!proveedor) return new Response("El agente no está configurado. Falta ANTHROPIC_API_KEY u OPENAI_API_KEY.", { status: 503 });
   const datos = Entrada.safeParse(await request.json().catch(() => null));
   if (!datos.success) return new Response("Mensaje inválido.", { status: 400 });
   const mensajes = datos.data.mensajes;
   if (mensajes[0].role !== "user" || mensajes[mensajes.length - 1].role !== "user") return new Response("Mensaje inválido.", { status: 400 });
+
+  const system = await sistema(s);
+  if (proveedor === "openai") return respuestaOpenAI(system, mensajes, request.signal);
 
   const client = new Anthropic();
   const flujo = client.beta.messages.stream({
@@ -53,7 +98,7 @@ export async function POST(request: Request) {
     betas: ["server-side-fallback-2026-07-01"],
     fallbacks: "default",
     output_config: { effort: "low" },
-    system: await sistema(s),
+    system,
     messages: mensajes,
   });
 
@@ -75,5 +120,5 @@ export async function POST(request: Request) {
     },
     cancel() { flujo.abort(); },
   });
-  return new Response(cuerpo, { headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" } });
+  return new Response(cuerpo, { headers: TEXTO });
 }
