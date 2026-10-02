@@ -42,22 +42,22 @@ export default async function Login(props: PageProps<"/login">) {
   const dir = await directorio();
   return (
     <main className="relative grid min-h-dvh lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
-      <aside className="relative hidden overflow-hidden bg-brand p-10 text-white lg:flex lg:flex-col lg:justify-between">
-        <div aria-hidden className="pointer-events-none absolute -right-40 -top-40 size-[520px] rounded-full border-[56px] border-white/10" />
-        <div aria-hidden className="pointer-events-none absolute -bottom-56 -left-24 size-[560px] rounded-full bg-brand-deep/40" />
+      <aside className="relative hidden overflow-hidden border-r border-line bg-accent-soft p-10 text-fg lg:flex lg:flex-col lg:justify-between">
+        <div aria-hidden className="pointer-events-none absolute -right-40 -top-40 size-[520px] rounded-full border-[56px] border-brand/10" />
+        <div aria-hidden className="pointer-events-none absolute -bottom-56 -left-24 size-[560px] rounded-full bg-white/70" />
         <div className="relative">
-          <Logo ancho={260} prioridad />
-          <p className="mt-6 text-sm font-semibold uppercase tracking-[0.14em] text-white/80">Portal Park Point · {"agencia" in dir && dir.agencia ? dir.agencia.replace(" · Park Point", "") : "BYD Cumbres"}</p>
+          <Logo tono="azul" ancho={260} prioridad />
+          <p className="mt-6 text-sm font-semibold uppercase tracking-[0.14em] text-accent">Portal Park Point · {"agencia" in dir && dir.agencia ? dir.agencia.replace(" · Park Point", "") : "BYD Cumbres"}</p>
         </div>
         <div className="relative grid gap-6">
           <p className="max-w-[20ch] font-display text-[3.6rem] font-semibold leading-[0.95]">Cada venta, cada meta, en un solo lugar.</p>
-          <ul className="grid gap-2 text-[0.95rem] text-white/85">
+          <ul className="grid gap-2 text-[0.95rem] text-muted">
             <li>Ventas con VIN, cliente y productos</li>
             <li>Tablero del mes listo para WhatsApp</li>
-            <li>Objetivos, CRM y corte de piso por asesor</li>
+            <li>Objetivos y corte de piso por asesor</li>
           </ul>
         </div>
-        <p className="relative text-xs text-white/70">Uso interno del equipo.</p>
+        <p className="relative text-xs text-subtle">Uso interno del equipo.</p>
       </aside>
       <section className="grid content-center px-4 py-10 sm:px-10">
         <div className="mx-auto grid w-full max-w-[560px] gap-7">

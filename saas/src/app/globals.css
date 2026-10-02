@@ -9,18 +9,18 @@
 @import "@fontsource/ibm-plex-mono/500.css";
 
 /*
- * Identidad BYD Grupo TEC: azul de marca (#159BE6) en el login, la bienvenida y las barras;
- * barra lateral azul marino fija en ambos temas; área de trabajo clara u oscura.
+ * Identidad BYD Grupo TEC en colores claros: fondo blanco y gris muy claro, barra lateral blanca
+ * y el azul de marca (#159BE6) en acentos, barras y botones. Sin modo oscuro.
  * Números grandes en condensada; datos con cifras tabulares.
  */
 :root {
-  --bg: #eef2f6;
+  --bg: #f5f8fb;
   --surface: #ffffff;
-  --surface-2: #e7ecf2;
+  --surface-2: #edf2f7;
   --fg: #11141a;
   --muted: #586070;
   --subtle: #8b93a2;
-  --line: #d7dee7;
+  --line: #e0e7ef;
   --ink: #11141a;
   --on-ink: #f4f2ed;
   --accent: #0b6fb3;
@@ -37,73 +37,12 @@
   --wa: #1f9d55;
   --brand: #159be6;
   --brand-deep: #0d7fc4;
-  --side: #0b1d2e;
-  --side-2: #14304a;
-  --side-fg: #eef6fc;
-  --side-muted: #8eaec7;
-  --shadow: 0 1px 2px rgb(16 20 28 / 0.06), 0 6px 24px -12px rgb(16 20 28 / 0.18);
+  --side: #ffffff;
+  --side-2: #e8f4fd;
+  --side-fg: #11141a;
+  --side-muted: #5b6676;
+  --shadow: 0 1px 2px rgb(16 20 28 / 0.05), 0 6px 24px -14px rgb(16 20 28 / 0.14);
   color-scheme: light;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #090d12;
-    --surface: #111820;
-    --surface-2: #18212c;
-    --fg: #ecebe7;
-    --muted: #9aa1ad;
-    --subtle: #687080;
-    --line: #243140;
-    --ink: #ecebe7;
-    --on-ink: #0b0d11;
-    --accent: #5cc0f5;
-    --accent-soft: #0f2a40;
-    --on-accent: #06121d;
-    --bar: #3fb0ef;
-    --bar-track: #1f2a36;
-    --ok: #86c39b;
-    --ok-soft: #15291d;
-    --warn: #e0b16c;
-    --warn-soft: #2f2412;
-    --bad: #ec8d84;
-    --bad-soft: #351b19;
-    --wa: #3cc276;
-    --side: #07131f;
-    --side-2: #112a40;
-    --side-fg: #eef6fc;
-    --side-muted: #7e9bb3;
-    --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 28px -14px rgb(0 0 0 / 0.7);
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #090d12;
-  --surface: #111820;
-  --surface-2: #18212c;
-  --fg: #ecebe7;
-  --muted: #9aa1ad;
-  --subtle: #687080;
-  --line: #243140;
-  --ink: #ecebe7;
-  --on-ink: #0b0d11;
-  --accent: #5cc0f5;
-  --accent-soft: #0f2a40;
-  --on-accent: #06121d;
-  --bar: #3fb0ef;
-  --bar-track: #1f2a36;
-  --ok: #86c39b;
-  --ok-soft: #15291d;
-  --warn: #e0b16c;
-  --warn-soft: #2f2412;
-  --bad: #ec8d84;
-  --bad-soft: #351b19;
-  --wa: #3cc276;
-  --side: #07131f;
-  --side-2: #112a40;
-  --side-fg: #eef6fc;
-  --side-muted: #7e9bb3;
-  --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 28px -14px rgb(0 0 0 / 0.7);
-  color-scheme: dark;
 }
 
 @theme inline {

@@ -4,7 +4,9 @@ App para el equipo de **BYD Cumbres · Park Point**: cada quien entra con su usu
 
 Hecho con **Next.js 16 + Supabase (Postgres, Auth, permisos por fila) + Vercel**.
 
-Identidad **BYD Grupo TEC**: azul de marca `#159BE6`, logo en `public/marca/` (blanco para fondos azules u oscuros, azul para fondos claros) e íconos de la app en `public/iconos/`. Si cambia el logo, reemplaza esos archivos.
+Identidad **BYD Grupo TEC** en colores claros: fondo blanco, barra lateral blanca y azul de marca `#159BE6` en acentos. Logo en `public/marca/` (azul para fondos claros, blanco para el reporte descargable) e íconos de la app en `public/iconos/`. Si cambia el logo, reemplaza esos archivos.
+
+**Partes escondidas por ahora:** el Agente IA (menú) y la tarjeta *Seguimientos para hoy* del Inicio. Siguen en el código y funcionando; para mostrarlas, cambia a `true` lo que corresponda en `VISIBLE` (`src/lib/config.ts`).
 
 ## Qué hace
 
