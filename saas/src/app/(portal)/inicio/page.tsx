@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { VISIBLE } from "@/lib/config";
 import { BarChart3, Calculator, ClipboardList, Plus } from "lucide-react";
 import { catalogo, cortesDelDia, equipo, metaProducto, metaUnidades, metasDelMes, ranking, seguimientosPendientes, ventasDelMes, ventasEnProceso, ventasRecientes } from "@/lib/datos";
 import { requerirSesion } from "@/lib/sesion";
@@ -17,10 +18,11 @@ export default async function Inicio() {
   const mes = mesActual(), fecha = hoy();
   const [cat, eq, metas, filasRanking, recientes, enProceso, seguimientos, misVentas, cortes] = await Promise.all([
     catalogo(s), equipo(s), metasDelMes(s, mes), ranking(s, mes), ventasRecientes(s, 6), ventasEnProceso(s),
-    perfil.vende ? seguimientosPendientes(s, fecha, perfil.id) : Promise.resolve([]),
+    perfil.vende && VISIBLE.seguimientosEnInicio ? seguimientosPendientes(s, fecha, perfil.id) : Promise.resolve([]),
     perfil.vende ? ventasDelMes(s, mes, perfil.id) : Promise.resolve([]),
     direccion ? cortesDelDia(s, fecha) : Promise.resolve([]),
   ]);
+  const mostrarSeguimientos = perfil.vende && VISIBLE.seguimientosEnInicio;
   const vendedores = eq.filter((p) => p.vende && p.activo);
   const nombreModelo = new Map(cat.modelos.map((m) => [m.id, `${m.nombre} ${m.anio}`]));
   const corto = new Map(eq.map((p) => [p.id, p.nombre_corto]));
@@ -84,7 +86,7 @@ export default async function Inicio() {
       <Ranking filas={filas} titulo={`Ranking de ${nombreMes(mes)}`} />
 
       <div className="grid gap-5 lg:grid-cols-2">
-        {perfil.vende ? (
+        {mostrarSeguimientos ? (
           <Tarjeta>
             <TituloTarjeta titulo="Seguimientos para hoy"><BotonEnlace href="/crm" variante="secundario" tamano="sm">Abrir CRM</BotonEnlace></TituloTarjeta>
             {seguimientos.length ? (
@@ -123,7 +125,7 @@ export default async function Inicio() {
           ) : <p className="text-sm text-muted">No hay ventas abiertas. Las ventas apartadas o facturadas aparecen aquí con su siguiente paso.</p>}
         </Tarjeta>
 
-        <Tarjeta className={perfil.vende ? "lg:col-span-2" : ""}>
+        <Tarjeta className={mostrarSeguimientos ? "lg:col-span-2" : ""}>
           <TituloTarjeta titulo={direccion ? "Últimas ventas del equipo" : "Tus últimas ventas"}><BotonEnlace href="/ventas" variante="secundario" tamano="sm">Ver todas</BotonEnlace></TituloTarjeta>
           {recientes.length ? (
             <ul className="grid gap-x-6 sm:grid-cols-2">

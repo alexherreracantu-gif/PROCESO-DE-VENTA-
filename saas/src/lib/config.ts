@@ -10,3 +10,14 @@ export function proveedorAgente(): "anthropic" | "openai" | null {
   if (process.env.OPENAI_API_KEY) return "openai";
   return null;
 }
+
+/**
+ * Partes que están listas pero escondidas por ahora. Cambia a `true` para volver a mostrarlas;
+ * el código y los datos siguen funcionando aunque no se vean.
+ */
+export const VISIBLE = {
+  /** Agente IA en el menú (necesita saldo en OpenAI o Anthropic). */
+  agente: false,
+  /** Tarjeta "Seguimientos para hoy" de prospectos en el Inicio. */
+  seguimientosEnInicio: false,
+};

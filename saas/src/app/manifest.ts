@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Portal interno de ventas del equipo.",
     start_url: "/inicio",
     display: "standalone",
-    background_color: "#159be6",
-    theme_color: "#0b1d2e",
+    background_color: "#ffffff",
+    theme_color: "#ffffff",
     lang: "es-MX",
     icons: [
       { src: "/iconos/icono-192.png", sizes: "192x192", type: "image/png" },
