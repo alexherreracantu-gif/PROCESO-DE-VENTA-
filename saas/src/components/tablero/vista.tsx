@@ -125,7 +125,7 @@ export async function VistaTablero({ s, mes, vendedor, base, publico = false, ti
                     <tr key={v.id} className={v.estatus === "cancelada" ? "opacity-50" : ""}>
                       <td className="whitespace-nowrap">{fechaCorta(v.fecha)}</td>
                       {!vendedor ? <td>{corto.get(v.vendedor_id)}</td> : null}
-                      <td className="min-w-[160px]">{publico ? <strong>{v.cliente}</strong> : <Link href={`/ventas/${v.id}`} className="font-semibold hover:underline">{v.cliente}</Link>}{v.num_cliente ? <span className="block text-[0.76rem] text-muted">Cliente {v.num_cliente}</span> : null}</td>
+                      <td className="min-w-[160px]">{publico ? <strong>{v.cliente}</strong> : <Link href={`/ventas/${v.id}`} className="inline-block py-1.5 font-semibold hover:underline">{v.cliente}</Link>}{v.num_cliente ? <span className="block text-[0.76rem] text-muted">Cliente {v.num_cliente}</span> : null}</td>
                       <td className="whitespace-nowrap font-mono text-[0.78rem]">{v.vin ?? "—"}</td>
                       <td className="whitespace-nowrap">{nombreModelo.get(v.modelo_id)}</td>
                       <td className="whitespace-nowrap"><span className="inline-flex items-center gap-1.5"><MuestraColor hex={colorHex(v.color)} />{v.color_nombre || v.color}</span></td>

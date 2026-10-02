@@ -19,6 +19,7 @@ Identidad **BYD Grupo TEC** en colores claros: fondo blanco, barra lateral blanc
 | **Objetivos** | Meta de unidades por vendedor y meta de penetración por producto, por mes. Dirección las edita; el equipo ve su avance. |
 | **Corte de piso** | Contadores del día (clientes nuevos, citas, demos, solicitudes…) que se guardan solos; texto listo para WhatsApp. Dirección ve el corte de todos. |
 | **Prospectos (CRM)** | Tablero de Nuevo a Referidor con siguiente acción y fecha; avisa los vencidos; **Convertir en venta** con un clic. Recibe prospectos automáticos de la landing y de Meta, repartidos por turno. |
+| **Fotos de modelos** | 4 fotos por modelo (3 exterior, 1 interior). Dirección las sube desde el celular o la compu (se comprimen solas); cualquier asesor toca **Enviar al cliente** y en el celular se abre compartir con las 4 fotos (WhatsApp); en la compu se descargan. También desde el cotizador. |
 | **Cotizador** | Fórmulas Banorte Plan Tradicional (convenio por % de enganche, comisión × 1.16, bono desde 5%), modo "quiere pagar X a la firma", plazos lado a lado y aviso de cuánto aportar para bajar de tasa. |
 | **Guiones**, **Academia BYD**, **Agente IA** | Guiones para copiar, 7 módulos con quiz y examen final (avance por persona) y un asistente con Claude que conoce el catálogo del mes y tus seguimientos. |
 | **Equipo** *(dirección)* | Altas con contraseña temporal, roles, quién vende, bajas, nueva contraseña; avance de cada quien. |

@@ -27,7 +27,7 @@ export default async function Panel(props: PageProps<"/panel">) {
         </div>
       </header>
       <main className="px-4 pb-20 pt-5 sm:px-6 lg:px-8 lg:pt-8">
-        <div className="mx-auto grid max-w-[1180px] gap-6">
+        <div className="escalonado mx-auto grid max-w-[1180px] grid-cols-[minmax(0,1fr)] gap-6">
           {s ? <VistaTablero s={s} mes={mes} vendedor={vendedor} base="/panel" publico titulo="Dashboard general" /> : <p className="text-muted">El portal todavía no está configurado.</p>}
         </div>
       </main>

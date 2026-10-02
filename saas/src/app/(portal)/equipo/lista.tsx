@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { KeyRound, Pencil, UserPlus, Users } from "lucide-react";
-import { Avatar, Boton, Campo, Pastilla, Tabla, Tarjeta } from "@/components/ui";
+import { Avatar, Boton, Campo, Pastilla, Tabla, Tarjeta, cx } from "@/components/ui";
 import { BotonCopiar, Confirmar, Dialogo, useAviso } from "@/components/cliente";
 import { ROLES, type Rol } from "@/lib/dominio/catalogos";
 import { decimal, iniciales } from "@/lib/dominio/formato";
@@ -24,11 +24,39 @@ export function ListaEquipo({ personas, yo }: { personas: Persona[]; yo: { id: s
 
   return (
     <>
-      <div className="flex flex-wrap justify-end gap-2">
+      <div className="flex flex-wrap justify-end gap-2 max-sm:grid max-sm:grid-cols-1">
         <Boton variante="secundario" icono={Users} onClick={() => setComun(true)}>Misma contraseña para todos</Boton>
         <Boton icono={UserPlus} onClick={() => setEditar("nueva")}>Dar de alta</Boton>
       </div>
-      <Tarjeta className="p-2 sm:p-3">
+      {/* En celular: una tarjeta por persona */}
+      <ul className="escalonado grid gap-2.5 sm:hidden grid-cols-[minmax(0,1fr)]">
+        {personas.map((p) => (
+          <li key={p.id} className={cx("rounded-2xl border border-line bg-surface p-4 shadow-card", !p.activo && "opacity-55")}>
+            <div className="flex items-center gap-3">
+              <Avatar texto={p.rol === "ceo" ? "CEO" : iniciales(p.nombre)} destacado={p.rol !== "asesor"} />
+              <div className="min-w-0 flex-1">
+                <strong className="block truncate">{p.rol === "ceo" ? p.nombre_corto : p.nombre}{p.id === yo.id ? <Pastilla className="ml-1.5">Tú</Pastilla> : null}</strong>
+                <span className="block truncate text-[0.8rem] text-muted">{ROLES[p.rol]}{p.rol !== "asesor" && p.vende ? " · vende" : ""} · <span className="font-mono">{p.usuario}</span></span>
+              </div>
+              {!p.activo ? <Pastilla tono="bad">Baja</Pastilla> : null}
+            </div>
+            {p.vende ? (
+              <dl className="mt-3 grid grid-cols-3 gap-2 text-center">
+                <div className="rounded-xl bg-surface-2 px-2 py-2"><dt className="text-[0.7rem] text-muted">Unidades</dt><dd className="m-0 font-semibold tabular-nums">{p.unidades}{p.meta != null ? <span className="font-normal text-muted"> / {p.meta}</span> : null}</dd></div>
+                <div className="rounded-xl bg-surface-2 px-2 py-2"><dt className="text-[0.7rem] text-muted">Prod./unidad</dt><dd className="m-0 font-semibold tabular-nums">{p.unidades ? decimal(p.productos / p.unidades) : "—"}</dd></div>
+                <div className="rounded-xl bg-surface-2 px-2 py-2"><dt className="text-[0.7rem] text-muted">Corte hoy</dt><dd className={cx("m-0 font-semibold", p.corteHoy ? "text-ok" : "text-warn")}>{p.corteHoy ? "Listo" : "Falta"}</dd></div>
+              </dl>
+            ) : null}
+            {puede(p) ? (
+              <div className="mt-3 flex gap-2">
+                <Boton variante="secundario" tamano="sm" icono={Pencil} className="flex-1" onClick={() => setEditar(p)}>Editar</Boton>
+                {p.id !== yo.id ? <Boton variante="secundario" tamano="sm" icono={KeyRound} className="flex-1" onClick={() => setReset(p)}>Contraseña</Boton> : null}
+              </div>
+            ) : null}
+          </li>
+        ))}
+      </ul>
+      <Tarjeta className="p-2 max-sm:hidden sm:p-3">
         <Tabla>
           <thead><tr><th>Persona</th><th>Usuario</th><th>Rol</th><th className="!text-right">Unidades del mes</th><th className="!text-right">Prod./unidad</th><th>Corte hoy</th><th>Academia</th><th /></tr></thead>
           <tbody>

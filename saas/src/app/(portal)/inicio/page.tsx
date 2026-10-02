@@ -90,7 +90,7 @@ export default async function Inicio() {
           <Tarjeta>
             <TituloTarjeta titulo="Seguimientos para hoy"><BotonEnlace href="/crm" variante="secundario" tamano="sm">Abrir CRM</BotonEnlace></TituloTarjeta>
             {seguimientos.length ? (
-              <ul className="grid">
+              <ul className="grid grid-cols-[minmax(0,1fr)]">
                 {seguimientos.map((p) => (
                   <li key={p.id} className="flex items-center gap-3 border-t border-line py-2.5 first:border-0">
                     <div className="min-w-0 flex-1"><strong className="block truncate">{p.nombre}</strong><span className="block truncate text-[0.8rem] text-muted">{p.siguiente_accion || "Sin acción definida"}{p.modelo_id ? ` · ${nombreModelo.get(p.modelo_id) ?? ""}` : ""}</span></div>
@@ -105,7 +105,7 @@ export default async function Inicio() {
         <Tarjeta>
           <TituloTarjeta titulo={direccion ? "Ventas en proceso del equipo" : "Tus ventas en proceso"} nota="Apartadas y facturadas" />
           {enProceso.length ? (
-            <ul className="grid">
+            <ul className="grid grid-cols-[minmax(0,1fr)]">
               {enProceso.slice(0, 6).map((v) => {
                 const av = avanceExpediente(v.forma_pago, v.expediente);
                 return (

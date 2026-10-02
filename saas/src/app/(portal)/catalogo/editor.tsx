@@ -21,7 +21,7 @@ export function EditorCatalogo({ modelos, productos, parametros }: { modelos: Mo
           <tbody>
             {modelos.map((m) => (
               <tr key={m.id} className={m.activo ? "" : "opacity-55"}>
-                <td><strong>{m.nombre}</strong> <span className="text-muted">{m.anio}</span></td>
+                <td className="min-w-[150px]"><strong>{m.nombre}</strong> <span className="text-muted">{m.anio}</span></td>
                 <td>{m.motor === "electrico" ? "Eléctrico" : "Híbrido"}</td>
                 <td className="text-right">{dinero(m.precio)}</td>
                 <td className="text-right">{m.bono ? dinero(m.bono) : "—"}</td>

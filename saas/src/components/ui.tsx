@@ -2,6 +2,7 @@ import Link from "next/link";
 import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
+import { Cifra } from "@/components/cifra";
 
 export const cx = clsx;
 
@@ -22,7 +23,7 @@ const TAMANOS: Record<Tamano, string> = {
   lg: "h-12 px-5 text-base rounded-xl gap-2",
 };
 export function claseBoton(variante: Variante = "primario", tamano: Tamano = "md", extra?: string) {
-  return cx("inline-flex items-center justify-center whitespace-nowrap border font-semibold transition disabled:opacity-50 disabled:pointer-events-none", VARIANTES[variante], TAMANOS[tamano], extra);
+  return cx("inline-flex items-center justify-center whitespace-nowrap border font-semibold transition active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none", VARIANTES[variante], TAMANOS[tamano], extra);
 }
 
 type PropsBoton = { variante?: Variante; tamano?: Tamano; icono?: LucideIcon } & ComponentProps<"button">;
@@ -54,9 +55,9 @@ export function Tarjeta({ className, ...p }: ComponentProps<"section">) {
 
 export function TituloTarjeta({ titulo, children, nota }: { titulo: ReactNode; children?: ReactNode; nota?: ReactNode }) {
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-3">
-      <h2 className="flex-1 text-[0.98rem] font-semibold">{titulo}</h2>
-      {nota ? <span className="text-xs text-muted">{nota}</span> : null}
+    <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1">
+      <h2 className="min-w-0 flex-1 text-[0.98rem] font-semibold">{titulo}</h2>
+      {nota ? <span className="text-xs text-muted max-sm:order-last max-sm:w-full">{nota}</span> : null}
       {children}
     </div>
   );
@@ -78,7 +79,7 @@ export function Indicador({ etiqueta, valor, nota, tono }: { etiqueta: string; v
   return (
     <div className="flex min-w-0 flex-col gap-1.5 rounded-2xl border border-line bg-surface px-4 py-3.5 shadow-card">
       <span className="text-[0.8rem] font-medium text-muted">{etiqueta}</span>
-      <span className={cx("num text-[2.35rem]", tono === "ok" && "text-ok", tono === "warn" && "text-warn", tono === "bad" && "text-bad")}>{valor}</span>
+      <span className={cx("num text-[2.35rem]", tono === "ok" && "text-ok", tono === "warn" && "text-warn", tono === "bad" && "text-bad")}>{typeof valor === "string" || typeof valor === "number" ? <Cifra key={String(valor)} valor={String(valor)} /> : valor}</span>
       {nota ? <span className="text-[0.8rem] text-muted">{nota}</span> : null}
     </div>
   );
@@ -144,8 +145,8 @@ export function FilaBarra({ etiqueta, valor, max, texto, meta, muestra, titulo }
         <span className="truncate">{etiqueta}</span>
       </span>
       <span className="relative h-3 rounded-[4px] bg-bar-track">
-        {ancho > 0 ? <i className="absolute inset-y-0 left-0 min-w-[3px] rounded-r-[4px] bg-bar" style={{ width: `${ancho}%` }} /> : null}
-        {meta != null && max > 0 ? <b className="absolute -inset-y-1 w-0.5 rounded-sm bg-fg" style={{ left: `calc(${Math.min(meta / max, 1) * 100}% - 1px)` }} aria-label="Meta" /> : null}
+        {ancho > 0 ? <i className="barra-crece absolute inset-y-0 left-0 min-w-[3px] rounded-r-[4px] bg-bar" style={{ width: `${ancho}%` }} /> : null}
+        {meta != null && max > 0 ? <b className="aparece absolute -inset-y-1 w-0.5 rounded-sm bg-fg" style={{ left: `calc(${Math.min(meta / max, 1) * 100}% - 1px)` }} aria-label="Meta" /> : null}
       </span>
       <span className="min-w-[52px] text-right font-semibold tabular-nums">{texto}</span>
     </div>
@@ -164,7 +165,7 @@ export function Leyenda() {
 export function Progreso({ valor, className }: { valor: number; className?: string }) {
   return (
     <span className={cx("relative block h-2 overflow-hidden rounded-full bg-bar-track", className)}>
-      <i className="absolute inset-y-0 left-0 rounded-full bg-bar" style={{ width: `${Math.min(Math.max(valor, 0), 1) * 100}%` }} />
+      <i className="barra-crece absolute inset-y-0 left-0 rounded-full bg-bar" style={{ width: `${Math.min(Math.max(valor, 0), 1) * 100}%` }} />
     </span>
   );
 }

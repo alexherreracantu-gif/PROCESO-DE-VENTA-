@@ -63,7 +63,8 @@ export function Cotizador({ modelos, parametros, asesor }: { modelos: ModeloC[];
             {modelos.map((m) => <option key={m.id} value={m.id}>{m.nombre} {m.anio} · {dinero(m.precio)}</option>)}
           </select>
         </Campo>
-        <p className="rounded-xl bg-accent-soft px-4 py-3 text-[0.88rem]"><strong>{modelo.motor === "electrico" ? "Eléctrico" : "Híbrido"}</strong>{modelo.bono ? ` · bono ${dinero(modelo.bono)} financiando` : " · sin bono este mes"}{modelo.descripcion ? ` · ${modelo.descripcion}` : ""}</p>
+        <p className="rounded-xl bg-accent-soft px-4 py-3 text-[0.88rem]"><strong>{modelo.motor === "electrico" ? "Eléctrico" : "Híbrido"}</strong>{modelo.bono ? ` · bono ${dinero(modelo.bono)} financiando` : " · sin bono este mes"}{modelo.descripcion ? ` · ${modelo.descripcion}` : ""}
+          <a href={`/fotos#${modelo.clave}`} className="mt-1 inline-block py-1.5 font-semibold text-accent hover:underline">Ver y enviar fotos del {modelo.nombre} →</a></p>
         <div className="inline-flex w-fit rounded-xl bg-surface-2 p-1" role="group" aria-label="Cómo calcular">
           {([["aportacion", "Cliente aporta"], ["firma", "Quiere pagar a la firma"]] as const).map(([v, t]) => (
             <button key={v} type="button" aria-pressed={modo === v} onClick={() => setModo(v)} className={cx("rounded-lg px-3 py-1.5 text-[0.84rem] font-semibold", modo === v ? "bg-surface shadow-sm" : "text-muted")}>{t}</button>
