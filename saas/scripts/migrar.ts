@@ -13,7 +13,25 @@ const raiz = join(import.meta.dirname, "..");
 
 /** Conexión directa a Postgres: la de `.env.local` o la que inyecta la integración Supabase de Vercel. */
 export function urlBaseDatos() {
-  return process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.POSTGRES_URL_NON_POOLING || "";
+  // Para cambios de esquema conviene la conexión sin pooler de transacciones (NON_POOLING).
+  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL || "";
+  return url ? limpiarUrl(url) : "";
+}
+
+/**
+ * La integración de Vercel agrega parámetros propios (p. ej. `supa=base-pooler.x`) que
+ * postgres.js mandaría al servidor como configuración y que Postgres rechaza.
+ */
+export function limpiarUrl(url: string) {
+  try {
+    const u = new URL(url);
+    for (const k of [...u.searchParams.keys()]) {
+      if (k !== "sslmode") u.searchParams.delete(k);
+    }
+    return u.toString();
+  } catch {
+    return url;
+  }
 }
 
 export async function aplicarMigraciones(url: string, log: (t: string) => void = console.log) {
