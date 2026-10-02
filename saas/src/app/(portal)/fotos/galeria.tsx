@@ -9,9 +9,19 @@ import { dinero } from "@/lib/dominio/formato";
 import { POSICIONES, nombreFoto } from "@/lib/fotos";
 import { guardarFoto, quitarFoto } from "./acciones";
 
-export type ModeloGaleria = { id: string; clave: string; nombre: string; precio: number; bono: number; fotos: Record<number, number> };
+/** `fotos`: subidas en el portal (posición → versión). `incluidas`: fotos de fábrica (posición → id del archivo en /modelos). */
+export type ModeloGaleria = { id: string; clave: string; nombre: string; precio: number; bono: number; fotos: Record<number, number>; incluidas: Partial<Record<number, string>> };
 
-const url = (m: ModeloGaleria, n: number, extra = "") => `/api/fotos/${m.id}/${n}?v=${m.fotos[n]}${extra}`;
+/** De dónde sale cada foto: la subida en el portal manda; si no hay, la de fábrica. */
+function fuente(m: ModeloGaleria, n: number) {
+  if (m.fotos[n]) {
+    const base = `/api/fotos/${m.id}/${n}?v=${m.fotos[n]}`;
+    return { grande: base, mini: `${base}&t=mini`, descarga: `${base}&descargar=1`, propia: true };
+  }
+  const id = m.incluidas[n];
+  if (!id) return null;
+  return { grande: `/modelos/${id}.jpg`, mini: `/modelos/${id}-mini.jpg`, descarga: `/modelos/${id}.jpg`, propia: false };
+}
 
 /** Reduce la imagen en el navegador: JPEG del lado largo indicado, en base64 sin encabezado. */
 async function comprimir(archivo: File, lado: number, calidad: number) {
@@ -47,14 +57,14 @@ export function Galeria({ modelos, editar }: { modelos: ModeloGaleria[]; editar:
 function TarjetaModelo({ m, editar }: { m: ModeloGaleria; editar: boolean }) {
   const avisar = useAviso();
   const [enviando, setEnviando] = useState(false);
-  const hay = POSICIONES.filter((p) => m.fotos[p.n]);
+  const hay = POSICIONES.filter((p) => fuente(m, p.n));
 
   async function enviar() {
     if (!hay.length) return;
     setEnviando(true);
     try {
       const archivos = await Promise.all(hay.map(async (p) => {
-        const r = await fetch(url(m, p.n));
+        const r = await fetch(fuente(m, p.n)!.grande);
         if (!r.ok) throw new Error("No se pudo bajar una foto.");
         return new File([await r.blob()], nombreFoto(m.nombre, p.n), { type: "image/jpeg" });
       }));
@@ -93,7 +103,7 @@ function Casilla({ m, n, etiqueta, editar }: { m: ModeloGaleria; n: number; etiq
   const avisar = useAviso();
   const entrada = useRef<HTMLInputElement>(null);
   const [ocupado, iniciar] = useTransition();
-  const tiene = Boolean(m.fotos[n]);
+  const f = fuente(m, n);
 
   function subir(archivo: File | undefined) {
     if (!archivo) return;
@@ -113,9 +123,9 @@ function Casilla({ m, n, etiqueta, editar }: { m: ModeloGaleria; n: number; etiq
   return (
     <figure className="m-0 grid gap-1.5">
       <div className={cx("group relative aspect-[4/3] overflow-hidden rounded-xl border border-line bg-surface-2", ocupado && "animate-pulse")}>
-        {tiene ? (
+        {f ? (
           // eslint-disable-next-line @next/next/no-img-element -- imagen privada servida por la API con la sesión
-          <img src={url(m, n, "&t=mini")} alt={`${m.nombre}, ${etiqueta.toLowerCase()}`} loading="lazy" decoding="async"
+          <img src={f.mini} alt={`${m.nombre}, ${etiqueta.toLowerCase()}`} loading="lazy" decoding="async"
             className="size-full object-cover transition duration-300 group-hover:scale-[1.04]" />
         ) : (
           <button type="button" disabled={!editar} onClick={() => entrada.current?.click()}
@@ -126,16 +136,16 @@ function Casilla({ m, n, etiqueta, editar }: { m: ModeloGaleria; n: number; etiq
             </span>
           </button>
         )}
-        {tiene ? (
+        {f ? (
           <div className="absolute inset-x-1.5 bottom-1.5 flex justify-end gap-1.5">
-            <a href={url(m, n, "&descargar=1")} download={nombreFoto(m.nombre, n)} aria-label={`Descargar ${etiqueta}`} title="Descargar"
+            <a href={f.descarga} download={nombreFoto(m.nombre, n)} aria-label={`Descargar ${etiqueta}`} title="Descargar"
               className="grid size-9 place-items-center rounded-lg bg-surface/90 text-fg shadow-sm backdrop-blur transition hover:bg-surface active:scale-95"><Download className="size-4" /></a>
             {editar ? <>
               <button type="button" onClick={() => entrada.current?.click()} aria-label={`Cambiar ${etiqueta}`} title="Cambiar"
                 className="grid size-9 place-items-center rounded-lg bg-surface/90 text-fg shadow-sm backdrop-blur transition hover:bg-surface active:scale-95"><ImagePlus className="size-4" /></button>
-              <button type="button" aria-label={`Quitar ${etiqueta}`} title="Quitar"
+              {f.propia ? <button type="button" aria-label={`Quitar ${etiqueta}`} title="Quitar la foto subida"
                 onClick={() => iniciar(async () => { const r = await quitarFoto(m.id, n); if (!r.ok) avisar(r.error, "error"); else router.refresh(); })}
-                className="grid size-9 place-items-center rounded-lg bg-surface/90 text-bad shadow-sm backdrop-blur transition hover:bg-surface active:scale-95"><Trash2 className="size-4" /></button>
+                className="grid size-9 place-items-center rounded-lg bg-surface/90 text-bad shadow-sm backdrop-blur transition hover:bg-surface active:scale-95"><Trash2 className="size-4" /></button> : null}
             </> : null}
           </div>
         ) : null}
