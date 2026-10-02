@@ -1,7 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-
-const PUBLICAS = ["/login", "/configurar", "/salir", "/instalar", "/api/leads"];
+import { decidirAcceso } from "@/lib/dominio/acceso";
 
 /** Refresca la sesión de Supabase en cada visita y manda al login a quien no la tenga. */
 export async function proxy(request: NextRequest) {
@@ -23,14 +22,13 @@ export async function proxy(request: NextRequest) {
     },
   });
   const { data } = await supabase.auth.getUser();
-  const publica = PUBLICAS.some((p) => ruta.startsWith(p));
-  if (!data.user && ruta.startsWith("/api/")) return new NextResponse("Tu sesión terminó. Vuelve a entrar.", { status: 401 });
-  if (!data.user && !publica) {
-    const destino = new URL("/login", request.url);
-    return NextResponse.redirect(destino);
+  // Las rutas públicas (incluido el webhook /api/leads, que valida su LEADS_TOKEN) pasan sin sesión.
+  switch (decidirAcceso(ruta, Boolean(data.user))) {
+    case "no-autorizado": return new NextResponse("Tu sesión terminó. Vuelve a entrar.", { status: 401 });
+    case "al-login": return NextResponse.redirect(new URL("/login", request.url));
+    case "al-inicio": return NextResponse.redirect(new URL("/inicio", request.url));
+    default: return respuesta;
   }
-  if (data.user && ruta === "/login") return NextResponse.redirect(new URL("/inicio", request.url));
-  return respuesta;
 }
 
 export const config = {
