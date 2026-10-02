@@ -1,6 +1,6 @@
 -- =====================================================================
 -- Datos iniciales: agencia BYD Cumbres · Park Point y su catálogo.
--- Precios y bonos: oferta de septiembre 2026. Se actualizan cada mes
+-- Precios y bonos: oferta de octubre 2026 (OC-2610-1). Se actualizan cada mes
 -- desde la pantalla Catálogo (no hace falta volver a correr esto).
 -- Es seguro correrlo varias veces.
 -- =====================================================================
@@ -12,12 +12,12 @@ insert into public.agencias (id, nombre, marca, grupo, ciudad, parametros) value
 ) on conflict (id) do nothing;
 
 insert into public.modelos (agencia_id, clave, nombre, anio, motor, precio, bono, orden, banorte_submarca, banorte_anio, banorte_modelo, descripcion) values
-  ('0b7d0c3e-5f1a-4c8e-9a51-3c2d7e1f0a01', 'dolphin-mini-300', 'Dolphin Mini 300 km', 2026, 'electrico', 399800, 25000, 1, '93288', '3006', 'BY2603A123576', 'Entrada tecnológica a BYD. Eléctrico, compacto y bien equipado.'),
+  ('0b7d0c3e-5f1a-4c8e-9a51-3c2d7e1f0a01', 'dolphin-mini-300', 'Dolphin Mini 300 km', 2026, 'electrico', 399800, 0, 1, '93288', '3006', 'BY2603A123576', 'Entrada tecnológica a BYD. Eléctrico, compacto y bien equipado.'),
   ('0b7d0c3e-5f1a-4c8e-9a51-3c2d7e1f0a01', 'dolphin-mini-380', 'Dolphin Mini 380 km', 2026, 'electrico', 415800, 30000, 2, '93288', '3006', 'BY2603A123577', 'Más autonomía para trayectos metropolitanos.'),
   ('0b7d0c3e-5f1a-4c8e-9a51-3c2d7e1f0a01', 'yuan-pro-dmi', 'Yuan Pro DM-i', 2027, 'hibrido', 519999, 20000, 3, '95630', '3362', 'BY2713A125715', 'SUV compacto híbrido.'),
   ('0b7d0c3e-5f1a-4c8e-9a51-3c2d7e1f0a01', 'king-gl', 'King GL DM-i', 2027, 'hibrido', 524900, 25000, 4, '93388', '3362', 'BY2709A125999', 'Producto héroe de Park Point. Tasa 7.18% con 50% de enganche.'),
-  ('0b7d0c3e-5f1a-4c8e-9a51-3c2d7e1f0a01', 'yuan-pro-ev', 'Yuan Pro EV', 2026, 'electrico', 536500, 0, 5, '95630', '3006', 'BY2613A125550', 'SUV 100% eléctrico.'),
-  ('0b7d0c3e-5f1a-4c8e-9a51-3c2d7e1f0a01', 'king-gs', 'King GS DM-i', 2027, 'hibrido', 579900, 0, 6, '93388', '3362', 'BY2709A126000', 'King con más equipo.'),
+  ('0b7d0c3e-5f1a-4c8e-9a51-3c2d7e1f0a01', 'yuan-pro-ev', 'Yuan Pro EV', 2026, 'electrico', 536500, 0, 5, '95630', '3006', 'BY2613A125550', 'SUV 100% eléctrico. Precio especial de octubre.'),
+  ('0b7d0c3e-5f1a-4c8e-9a51-3c2d7e1f0a01', 'king-gs', 'King GS DM-i', 2027, 'hibrido', 579900, 25000, 6, '93388', '3362', 'BY2709A126000', 'King con más equipo. Bono flexible de octubre solo con interior gris/azul.'),
   ('0b7d0c3e-5f1a-4c8e-9a51-3c2d7e1f0a01', 'song-pro', 'Song Pro DM-i', 2026, 'hibrido', 599880, 35000, 7, '95628', '3006', 'BY2612A125074', 'SUV familiar con DM-i.'),
   ('0b7d0c3e-5f1a-4c8e-9a51-3c2d7e1f0a01', 'seal-rwd', 'Seal RWD', 2026, 'electrico', 778800, 0, 8, '92208', '3006', 'BY2607A124660', 'Sedán eléctrico de manejo.'),
   ('0b7d0c3e-5f1a-4c8e-9a51-3c2d7e1f0a01', 'song-plus', 'Song Plus DM-i', 2026, 'hibrido', 778800, 78000, 9, '95629', '3006', 'BY2608A123723', 'SUV de volumen premium. El bono más visible del piso.'),
