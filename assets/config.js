@@ -19,7 +19,7 @@ window.CONFIG = {
   // Déjala vacía si todavía no la tienes: la landing seguirá mandando al cliente a WhatsApp.
   // Con el portal pro desplegado: "https://TU-PORTAL.vercel.app/api/leads?token=TU_LEADS_TOKEN"
   // (el prospecto entra directo al CRM y se asigna por turno a un asesor).
-  webhookUrl: "",
+  webhookUrl: "https://park-point-two.vercel.app/api/leads?token=pp-kxbur-hkkkm-bgwtt-fs94p-68mz7-spyej",
 
   // ID del Pixel de Meta. Déjalo vacío para no cargarlo.
   metaPixelId: "",
