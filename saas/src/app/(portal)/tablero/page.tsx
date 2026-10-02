@@ -3,7 +3,7 @@ import { Plus } from "lucide-react";
 import { catalogo, equipo, metaProducto, metaUnidades, metasDelMes, ventasDelMes } from "@/lib/datos";
 import { requerirSesion } from "@/lib/sesion";
 import { colorHex, estatusInfo } from "@/lib/dominio/catalogos";
-import { esMes, fechaCorta, fechaLarga, hoy, horaMty, mesActual, nombreMes } from "@/lib/dominio/fechas";
+import { esMes, fechaCorta, fechaLarga, hoy, horaMty, mesActual, mesAnterior, nombreMes } from "@/lib/dominio/fechas";
 import { decimal, dinero, porcentaje } from "@/lib/dominio/formato";
 import { penetracion, resumir } from "@/lib/dominio/reportes";
 import { BotonEnlace, Encabezado, FilaBarra, Indicador, Leyenda, MuestraColor, Pastilla, Segmentos, Tabla, Tarjeta, TituloTarjeta, Vacio } from "@/components/ui";
@@ -14,6 +14,7 @@ import type { DatosImagen } from "@/components/tablero/imagen-reporte";
 
 export const metadata = { title: "Tablero de reporte" };
 
+const MESES_CORTOS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
 const csvCelda = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
 
 export default async function Tablero(props: PageProps<"/tablero">) {
@@ -21,10 +22,12 @@ export default async function Tablero(props: PageProps<"/tablero">) {
   const sp = await props.searchParams;
   const mes = esMes(sp.mes as string) ? (sp.mes as string) : mesActual();
   const vendedor = s.direccion ? (typeof sp.vendedor === "string" && sp.vendedor !== "todos" ? sp.vendedor : null) : s.perfil.id;
-  const [cat, eq, metas, ventas] = await Promise.all([catalogo(s, true), equipo(s), metasDelMes(s, mes), ventasDelMes(s, mes, vendedor)]);
+  const [cat, eq, metas, ventas, anteriores] = await Promise.all([catalogo(s, true), equipo(s), metasDelMes(s, mes), ventasDelMes(s, mes, vendedor), ventasDelMes(s, mesAnterior(mes), vendedor)]);
   const productos = cat.productos.filter((p) => p.activo);
   const vendedores = eq.filter((p) => p.vende && p.activo);
   const r = resumir(ventas, productos);
+  const previo = resumir(anteriores, productos);
+  const delta = r.unidades - previo.unidades;
   const meta = vendedor ? metaUnidades(s, metas, vendedor) : vendedores.reduce((t, v) => t + metaUnidades(s, metas, v.id), 0);
   const quien = vendedor ? eq.find((p) => p.id === vendedor)?.nombre ?? "" : "Equipo completo";
   const nombreModelo = new Map(cat.modelos.map((m) => [m.id, `${m.nombre} ${m.anio}`]));
@@ -36,9 +39,9 @@ export default async function Tablero(props: PageProps<"/tablero">) {
   const ranking = !vendedor ? vendedores.map((v) => ({ id: v.id, nombre: v.nombre, unidades: r.porVendedor[v.id]?.unidades ?? 0, productos: r.porVendedor[v.id]?.productos ?? 0, meta: metaUnidades(s, metas, v.id) })) : null;
 
   const indicadores = [
-    { etiqueta: "Unidades vendidas", valor: String(r.unidades), nota: `Meta: ${meta}` },
+    { etiqueta: "Unidades vendidas", valor: String(r.unidades), nota: `Meta: ${meta} · ${MESES_CORTOS[Number(mesAnterior(mes).slice(5)) - 1]}: ${previo.unidades} (${delta >= 0 ? "+" : ""}${delta})` },
     { etiqueta: "Cumplimiento", valor: porcentaje(meta ? r.unidades / meta : 0), nota: r.unidades >= meta && meta ? "Meta cumplida" : `Faltan ${Math.max(meta - r.unidades, 0)}` },
-    { etiqueta: "Productos por unidad", valor: decimal(r.productosPorUnidad), nota: `${r.totalProductos} productos` },
+    { etiqueta: "Productos por unidad", valor: decimal(r.productosPorUnidad), nota: `${r.totalProductos} productos · antes ${decimal(previo.productosPorUnidad)}` },
     { etiqueta: "Entregadas", valor: String(r.entregadas), nota: `${r.unidades - r.entregadas} por entregar` },
   ];
   const datosImagen: DatosImagen = {

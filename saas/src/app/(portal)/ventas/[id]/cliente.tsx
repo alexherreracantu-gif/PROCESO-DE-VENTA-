@@ -3,13 +3,14 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Pencil, Trash2 } from "lucide-react";
-import { Boton, BotonEnlace, cx } from "@/components/ui";
+import { Boton, BotonEnlace, Campo, cx } from "@/components/ui";
 import { Confirmar, useAviso } from "@/components/cliente";
 import { FormularioVenta, type ContextoVenta } from "@/components/ventas/formulario-venta";
 import { pasosAplicables } from "@/lib/dominio/catalogos";
 import { fechaCorta } from "@/lib/dominio/fechas";
-import { enlaceWhatsApp } from "@/lib/dominio/formato";
-import { borrarVenta, marcarPaso } from "../acciones";
+import { dinero2, enlaceWhatsApp } from "@/lib/dominio/formato";
+import { calcularCuadre, type DatosCuadre } from "@/lib/dominio/cuadre";
+import { borrarVenta, guardarCuadre, marcarPaso } from "../acciones";
 import type { Venta } from "@/lib/tipos";
 
 export function AccionesVenta({ venta, ctx, puedeBorrar }: { venta: Venta; ctx: ContextoVenta; puedeBorrar: boolean }) {
@@ -69,5 +70,55 @@ export function Expediente({ ventaId, formaPago, expediente }: { ventaId: string
         );
       })}
     </ol>
+  );
+}
+
+export function Cuadre({ venta, separacionDefault }: { venta: Venta; separacionDefault: number }) {
+  const router = useRouter();
+  const avisar = useAviso();
+  const [ocupado, iniciar] = useTransition();
+  const ini = (v: number | null | undefined) => (v == null ? "" : String(v));
+  const [f, setF] = useState({
+    valor_factura: ini(venta.valor_factura), enganche: ini(venta.cuadre.enganche), separacion: ini(venta.cuadre.separacion ?? separacionDefault),
+    bonos: ini(venta.cuadre.bonos), desembolso_real: ini(venta.cuadre.desembolso_real), pagos_adicionales: ini(venta.cuadre.pagos_adicionales), extras: ini(venta.cuadre.extras),
+  });
+  const num = (v: string) => (v.trim() === "" ? null : Number(v));
+  const datos = Object.fromEntries(Object.entries(f).map(([k, v]) => [k, num(v)])) as DatosCuadre;
+  const c = calcularCuadre(datos, venta.forma_pago, separacionDefault);
+  const contado = venta.forma_pago === "Contado";
+  const campo = (k: keyof typeof f, etiqueta: string, ayuda?: string) => (
+    <Campo etiqueta={etiqueta} htmlFor={`cu-${k}`} ayuda={ayuda}>
+      <input id={`cu-${k}`} type="number" min={0} step={100} inputMode="decimal" className="campo" value={f[k]} onChange={(e) => setF({ ...f, [k]: e.target.value })} />
+    </Campo>
+  );
+  const fila = (k: string, v: string, fuerte?: boolean) => <div className="flex justify-between gap-3 text-[0.9rem]"><span className="text-muted">{k}</span><span className={cx("tabular-nums", fuerte && "font-semibold")}>{v}</span></div>;
+  return (
+    <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2">
+        {campo("valor_factura", "Valor factura")}
+        {campo("enganche", contado ? "Pagos del cliente" : "Enganche total", contado ? "Todo lo que ha pagado." : "Incluye la separación.")}
+        {campo("separacion", "Separación")}
+        {campo("bonos", "Bonos de agencia y frontera")}
+        {contado ? null : campo("desembolso_real", "Desembolso real del banco", `Esperado: ${dinero2(c.desembolsoEsperado)}`)}
+        {campo("extras", "Extras vendidos", "Garantía, accesorios, seguros…")}
+        {campo("pagos_adicionales", "Pagos adicionales", "Lo que liquidó en caja para cuadrar.")}
+      </div>
+      <div className="grid h-fit gap-2.5 rounded-2xl bg-surface-2 p-4">
+        {fila(contado ? "Pagos" : "Enganche restante a la firma", dinero2(contado ? num(f.enganche) ?? 0 : c.engancheRestante))}
+        {contado ? null : fila("Desembolso esperado", dinero2(c.desembolsoEsperado))}
+        {c.diferenciaDesembolso != null && c.diferenciaDesembolso !== 0 ? fila("Diferencia del desembolso", dinero2(c.diferenciaDesembolso)) : null}
+        {fila("Total a cubrir (factura + extras)", dinero2(c.total))}
+        {fila("Cubierto", dinero2(c.cubierto))}
+        <div className={cx("mt-1 grid gap-1 rounded-xl px-4 py-3", !c.completo ? "bg-surface" : c.sale ? "bg-ok-soft text-ok" : "bg-bad-soft text-bad")}>
+          <span className="text-[0.8rem] font-semibold">{!c.completo ? "Captura el valor factura" : c.sale ? (c.saldo > 0 ? `Sin adeudo · saldo a favor de ${dinero2(c.saldo)} (queda en Accesorios)` : "Sin adeudo") : "Hay adeudo: el carro no sale"}</span>
+          <span className="num text-[2rem]">{c.completo ? dinero2(Math.abs(c.saldo)) : "—"}</span>
+        </div>
+        <Boton disabled={ocupado} onClick={() => iniciar(async () => {
+          const r = await guardarCuadre(venta.id, datos);
+          avisar(r.ok ? r.mensaje ?? "Guardado" : r.error, r.ok ? "ok" : "error");
+          if (r.ok) router.refresh();
+        })}>{ocupado ? "Guardando…" : "Guardar cuadre"}</Boton>
+      </div>
+    </div>
   );
 }

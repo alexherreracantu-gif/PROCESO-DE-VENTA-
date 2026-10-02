@@ -8,11 +8,11 @@ import type { Corte, FilaRanking, Metas, Modelo, Perfil, Producto, ProgresoAcade
  * así que cada quien recibe solo lo que sus permisos le dejan ver.
  */
 
-const COLS_VENTA = "id, folio, fecha, vendedor_id, cliente, num_cliente, telefono, vin, modelo_id, color, color_nombre, forma_pago, plaza, estatus, fecha_entrega, valor_factura, notas, expediente, created_at, venta_productos(producto_id)";
+const COLS_VENTA = "id, folio, fecha, vendedor_id, cliente, num_cliente, telefono, vin, modelo_id, color, color_nombre, forma_pago, plaza, estatus, fecha_entrega, valor_factura, notas, expediente, cuadre, created_at, venta_productos(producto_id)";
 type FilaVenta = Omit<Venta, "productos"> & { venta_productos: { producto_id: string }[] | null };
 const aVenta = (f: FilaVenta): Venta => {
   const { venta_productos, ...resto } = f;
-  return { ...resto, valor_factura: resto.valor_factura == null ? null : Number(resto.valor_factura), expediente: resto.expediente ?? {}, productos: (venta_productos ?? []).map((p) => p.producto_id) };
+  return { ...resto, valor_factura: resto.valor_factura == null ? null : Number(resto.valor_factura), expediente: resto.expediente ?? {}, cuadre: resto.cuadre ?? {}, productos: (venta_productos ?? []).map((p) => p.producto_id) };
 };
 
 function revisar<T>(r: { data: T | null; error: { message: string } | null }, que: string): T {

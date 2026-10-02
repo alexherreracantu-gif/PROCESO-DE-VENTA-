@@ -175,4 +175,16 @@ d("permisos por rol (RLS)", () => {
       expect(filas.map((f) => f.accion)).toEqual(["insert", "update"]);
       expect(filas[1].usuario_id).toBe(x.omar);
     }));
+
+  it("guardar_venta guarda venta y productos juntos, con los permisos de quien la llama", () =>
+    escenario(async (tx, x) => {
+      await como(tx, x.omar);
+      const [r] = await tx`select public.guardar_venta(${tx.json({ vendedor_id: x.omar, cliente: "Por RPC", modelo_id: x.modA, color: "Azul", forma_pago: "Contado", plaza: "Monterrey", estatus: "apartada" })}, ${[x.prodA]}::uuid[]) as id`;
+      const [v] = await tx`select cliente, (select count(*) from public.venta_productos where venta_id = ${r.id})::int as prods from public.ventas where id = ${r.id}`;
+      expect(v).toMatchObject({ cliente: "Por RPC", prods: 1 });
+      const e1 = await tx.savepoint((sp) => sp`select public.guardar_venta(${tx.json({ vendedor_id: x.mariana, cliente: "Ajena", modelo_id: x.modA, color: "Azul", forma_pago: "Contado", plaza: "Monterrey" })}, ${[]}::uuid[])`).catch((e) => e);
+      expect(String(e1)).toMatch(/row-level security/);
+      const e2 = await tx.savepoint((sp) => sp`select public.guardar_venta(${tx.json({ id: x.ventaMariana, vendedor_id: x.omar, cliente: "Robada", modelo_id: x.modA, color: "Azul", forma_pago: "Contado", plaza: "Monterrey", estatus: "facturada" })}, ${[]}::uuid[])`).catch((e) => e);
+      expect(String(e2)).toMatch(/no tienes permiso/);
+    }));
 });

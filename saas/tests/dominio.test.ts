@@ -138,3 +138,50 @@ describe("formato", () => {
     expect(enlaceWhatsApp("81 1234 5678", "Hola")).toBe("https://wa.me/528112345678?text=Hola");
   });
 });
+
+import { calcularCuadre } from "@/lib/dominio/cuadre";
+describe("cuadre", () => {
+  it("crédito: calcula enganche restante, desembolso esperado y veredicto", () => {
+    const c = calcularCuadre({ valor_factura: 524900, enganche: 80000, bonos: 25000, extras: 9082 }, "Crédito Banorte");
+    expect(c.engancheRestante).toBe(75000);
+    expect(c.desembolsoEsperado).toBe(419900);
+    expect(c.total).toBe(533982);
+    expect(c.saldo).toBe(-9082);
+    expect(c.sale).toBe(false);
+    const pagado = calcularCuadre({ valor_factura: 524900, enganche: 80000, bonos: 25000, extras: 9082, pagos_adicionales: 9082 }, "Crédito Banorte");
+    expect(pagado.saldo).toBe(0);
+    expect(pagado.sale).toBe(true);
+  });
+  it("compara el desembolso real contra el esperado", () => {
+    const c = calcularCuadre({ valor_factura: 500000, enganche: 100000, desembolso_real: 399000 }, "Crédito Banorte");
+    expect(c.diferenciaDesembolso).toBe(-1000);
+    expect(c.sale).toBe(false);
+  });
+  it("contado: no hay desembolso y el saldo sale de pagos y bonos", () => {
+    const c = calcularCuadre({ valor_factura: 399800, enganche: 380000, bonos: 25000 }, "Contado", 5000);
+    expect(c.desembolso).toBe(0);
+    expect(c.saldo).toBe(5200);
+    expect(c.sale).toBe(true);
+  });
+  it("sin valor factura no da veredicto", () => {
+    expect(calcularCuadre({}, "Contado").sale).toBe(false);
+    expect(calcularCuadre({}, "Contado").completo).toBe(false);
+  });
+});
+
+import { buscarModelo, elegirAsesor, normalizarLead } from "@/lib/dominio/leads";
+describe("prospectos entrantes", () => {
+  it("normaliza la landing y Meta", () => {
+    const l = normalizarLead({ nombre: "Ana López", telefono: "+52 1 81 1234 5678", modelo: "BYD King GL DM-i", utm_source: "facebook", cuando: "Esta semana", municipio: "San Nicolás" });
+    expect(l).toMatchObject({ nombre: "Ana López", telefono: "8112345678", origen: "Meta Ads", calor: "alta" });
+    expect("notas" in l && l.notas).toContain("Municipio: San Nicolás");
+    expect(normalizarLead({ full_name: "Sin tel" })).toEqual({ error: "Falta un teléfono de 10 dígitos." });
+  });
+  it("encuentra el modelo y reparte por turno", () => {
+    const modelos = [{ id: "a", nombre: "King GL DM-i" }, { id: "b", nombre: "Song Plus DM-i" }];
+    expect(buscarModelo("BYD King GL DM-i", modelos)?.id).toBe("a");
+    expect(buscarModelo("song plus", modelos)?.id).toBe("b");
+    expect(buscarModelo("Otro / aún no sé", modelos)).toBeNull();
+    expect(elegirAsesor([{ id: "omar", hoy: 2, total: 9 }, { id: "mariana", hoy: 1, total: 12 }, { id: "leo", hoy: 1, total: 4 }])).toBe("leo");
+  });
+});

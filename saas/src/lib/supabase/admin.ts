@@ -8,7 +8,7 @@ import { SUPABASE_URL } from "@/lib/config";
  * después de verificar quién está pidiendo el cambio.
  */
 export function supabaseAdmin() {
-  const llave = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const llave = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
   if (!llave) throw new Error("Falta SUPABASE_SERVICE_ROLE_KEY en las variables de entorno.");
   return createClient(SUPABASE_URL, llave, { auth: { persistSession: false, autoRefreshToken: false } });
 }

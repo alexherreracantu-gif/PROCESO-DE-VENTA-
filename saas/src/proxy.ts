@@ -1,11 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLICAS = ["/login", "/configurar", "/salir"];
+const PUBLICAS = ["/login", "/configurar", "/salir", "/instalar", "/api/leads"];
 
 /** Refresca la sesión de Supabase en cada visita y manda al login a quien no la tenga. */
 export async function proxy(request: NextRequest) {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL, llave = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL, llave = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   const ruta = request.nextUrl.pathname;
   if (!url || !llave) {
     return ruta === "/configurar" ? NextResponse.next() : NextResponse.redirect(new URL("/configurar", request.url));

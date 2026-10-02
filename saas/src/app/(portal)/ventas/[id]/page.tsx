@@ -8,7 +8,7 @@ import { avanceExpediente, colorHex, estatusInfo } from "@/lib/dominio/catalogos
 import { fechaCorta, fechaLarga } from "@/lib/dominio/fechas";
 import { dinero } from "@/lib/dominio/formato";
 import { Encabezado, MuestraColor, Pastilla, Progreso, Tarjeta, TituloTarjeta } from "@/components/ui";
-import { AccionesVenta, Expediente } from "./cliente";
+import { AccionesVenta, Cuadre, Expediente } from "./cliente";
 
 export const metadata = { title: "Venta" };
 
@@ -71,6 +71,11 @@ export default async function DetalleVenta(props: PageProps<"/ventas/[id]">) {
           <Expediente ventaId={v.id} formaPago={v.forma_pago} expediente={v.expediente} />
         </Tarjeta>
       </div>
+
+      <Tarjeta>
+        <TituloTarjeta titulo="Cuadre sin adeudo" nota={v.forma_pago === "Contado" ? "Venta de contado" : `Crédito · ${v.forma_pago}`} />
+        <Cuadre venta={v} separacionDefault={s.agencia.parametros.separacion ?? 5000} />
+      </Tarjeta>
 
       {s.direccion ? (
         <Tarjeta>

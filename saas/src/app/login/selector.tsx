@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { ArrowLeft, LogIn } from "lucide-react";
-import { Avatar, Boton } from "@/components/ui";
+import { Avatar, Boton, BotonEnlace } from "@/components/ui";
 import { iniciarSesion, type EstadoLogin } from "./acciones";
 
 export type UsuarioDirectorio = { usuario: string; nombre: string; rol: string; iniciales: string; destacado: boolean };
@@ -14,7 +14,13 @@ export function SelectorAcceso({ usuarios }: { usuarios: UsuarioDirectorio[] }) 
   useEffect(() => { if (elegido) ref.current?.focus(); }, [elegido]);
 
   if (!usuarios.length) {
-    return <p className="rounded-xl bg-warn-soft px-4 py-3 text-sm">Todavía no hay usuarios. Corre <code>npm run setup</code> para crear al equipo.</p>;
+    return (
+      <div className="grid gap-3 rounded-2xl border border-line bg-surface p-6 shadow-card">
+        <h1 className="font-display text-[2rem] font-semibold leading-none">Bienvenido al portal</h1>
+        <p className="text-muted">Todavía no hay usuarios. Configura tu acceso de CEO y el del equipo en un paso.</p>
+        <div><BotonEnlace href="/instalar">Configurar el portal</BotonEnlace></div>
+      </div>
+    );
   }
 
   if (!elegido) {

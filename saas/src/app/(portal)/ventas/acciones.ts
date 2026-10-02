@@ -37,7 +37,7 @@ export type EntradaVenta = z.input<typeof EntradaVenta>;
 function mensajeError(e: { message: string; code?: string }): string {
   if (e.code === "23505" || /ventas_vin_unico/.test(e.message)) return "Ese VIN ya está registrado en otra venta.";
   if (/no pertenece/.test(e.message)) return e.message + ".";
-  if (/row-level security|permission/.test(e.message)) return "No tienes permiso para registrar ventas a nombre de otra persona.";
+  if (/row-level security|permission|42501/.test(e.message + (e.code ?? ""))) return "No tienes permiso para registrar o editar esa venta.";
   return "No se pudo guardar: " + e.message;
 }
 
@@ -48,30 +48,10 @@ export async function guardarVenta(entrada: EntradaVenta): Promise<Resultado> {
   const { id: ventaId, productos, prospecto_id, ...datos } = r.data;
   if (!s.direccion && datos.vendedor_id !== s.perfil.id) return { ok: false, error: "Solo puedes registrar ventas a tu nombre." };
 
-  let idFinal = ventaId;
-  if (ventaId) {
-    const { error } = await s.sb.from("ventas").update(datos).eq("id", ventaId);
-    if (error) return { ok: false, error: mensajeError(error) };
-  } else {
-    const expediente = { cliente: datos.fecha };
-    const { data, error } = await s.sb.from("ventas").insert({ ...datos, expediente }).select("id").single();
-    if (error || !data) return { ok: false, error: mensajeError(error ?? { message: "sin respuesta" }) };
-    idFinal = data.id as string;
-  }
-
-  // Productos: se guarda el precio de catálogo del momento.
-  const precios = new Map<string, number | null>();
-  if (productos.length) {
-    const { data: catalogo } = await s.sb.from("productos").select("id, precio").in("id", productos);
-    (catalogo ?? []).forEach((p) => precios.set(p.id as string, p.precio as number | null));
-  }
-  const { error: e1 } = await s.sb.from("venta_productos").delete().eq("venta_id", idFinal!);
-  if (e1) return { ok: false, error: mensajeError(e1) };
-  if (productos.length) {
-    const { error: e2 } = await s.sb.from("venta_productos").insert(productos.map((p) => ({ venta_id: idFinal, producto_id: p, precio: precios.get(p) ?? null })));
-    if (e2) return { ok: false, error: mensajeError(e2) };
-  }
-  if (prospecto_id) await s.sb.from("prospectos").update({ venta_id: idFinal, etapa: datos.estatus === "entregada" ? "entregado" : "apartado" }).eq("id", prospecto_id);
+  // Venta, productos y prospecto se guardan en una sola transacción (función guardar_venta).
+  const { data, error } = await s.sb.rpc("guardar_venta", { p_venta: { ...datos, id: ventaId ?? null }, p_productos: productos, p_prospecto: prospecto_id ?? null });
+  if (error || !data) return { ok: false, error: mensajeError(error ?? { message: "sin respuesta" }) };
+  const idFinal = data as string;
 
   revalidatePath("/", "layout");
   return { ok: true, id: idFinal, mensaje: ventaId ? "Venta actualizada" : "Venta registrada" };
@@ -99,4 +79,23 @@ export async function marcarPaso(ventaId: string, paso: string, hecho: boolean):
   if (e2) return { ok: false, error: mensajeError(e2) };
   revalidatePath("/", "layout");
   return { ok: true };
+}
+
+const monto = z.number().nonnegative().max(50_000_000).nullable().optional();
+const EntradaCuadre = z.object({
+  valor_factura: monto, enganche: monto, separacion: monto, bonos: monto,
+  desembolso_real: monto, pagos_adicionales: monto, extras: monto,
+});
+
+export async function guardarCuadre(ventaId: string, entrada: z.input<typeof EntradaCuadre>): Promise<Resultado> {
+  const s = await requerirSesion();
+  const r = EntradaCuadre.safeParse(entrada);
+  if (!r.success) return { ok: false, error: "Revisa los montos: deben ser números positivos." };
+  const { valor_factura, ...cuadre } = r.data;
+  const limpio = Object.fromEntries(Object.entries(cuadre).filter(([, v]) => v != null));
+  const { error, count } = await s.sb.from("ventas").update({ cuadre: limpio, valor_factura: valor_factura ?? null }, { count: "exact" }).eq("id", ventaId);
+  if (error) return { ok: false, error: mensajeError(error) };
+  if (!count) return { ok: false, error: "No se encontró la venta." };
+  revalidatePath("/", "layout");
+  return { ok: true, mensaje: "Cuadre guardado" };
 }

@@ -2,11 +2,12 @@
  * Configura la base de datos de Supabase de un jalón:
  *   1. Aplica las migraciones de supabase/migrations (solo las que falten).
  *   2. Carga la agencia y el catálogo (supabase/seed.sql).
- *   3. Crea los usuarios del equipo (scripts/equipo.json) con contraseña temporal.
+ *   3. Crea los usuarios del equipo (src/lib/equipo-inicial.json) con contraseña temporal.
  *
  * Uso: npm run setup   (lee .env.local)
  */
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync } from "node:fs";
+import { aplicarMigraciones, urlBaseDatos } from "./migrar";
 import { join } from "node:path";
 import { randomInt } from "node:crypto";
 import { config } from "dotenv";
@@ -16,7 +17,9 @@ import { createClient } from "@supabase/supabase-js";
 config({ path: ".env.local", quiet: true });
 
 const raiz = join(import.meta.dirname, "..");
-const { DATABASE_URL, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env;
+const DATABASE_URL = urlBaseDatos();
+const { NEXT_PUBLIC_SUPABASE_URL } = process.env;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
 
 function falta(nombre: string): never {
   console.error(`\n✖ Falta ${nombre} en .env.local. Revisa el README (paso 2).\n`);
@@ -38,30 +41,11 @@ async function main() {
 
   const sql = postgres(DATABASE_URL, { max: 1, onnotice: () => {}, prepare: false });
   try {
-    // 1. Migraciones
-    await sql`create schema if not exists interno`;
-    await sql`create table if not exists interno.migraciones (nombre text primary key, aplicada timestamptz not null default now())`;
-    const hechas = new Set((await sql<{ nombre: string }[]>`select nombre from interno.migraciones`).map((r) => r.nombre));
-    const dir = join(raiz, "supabase", "migrations");
-    const archivos = readdirSync(dir).filter((f) => f.endsWith(".sql")).sort();
-    for (const f of archivos) {
-      if (hechas.has(f)) continue;
-      process.stdout.write(`→ Migración ${f} … `);
-      await sql.begin(async (tx) => {
-        await tx.unsafe(readFileSync(join(dir, f), "utf8"));
-        await tx`insert into interno.migraciones (nombre) values (${f})`;
-      });
-      console.log("ok");
-    }
-
-    // 2. Datos iniciales
-    process.stdout.write("→ Agencia y catálogo … ");
-    await sql.unsafe(readFileSync(join(raiz, "supabase", "seed.sql"), "utf8"));
-    console.log("ok");
-    try { await sql`notify pgrst, 'reload schema'`; } catch { /* no aplica */ }
+    // 1 y 2. Migraciones, agencia y catálogo
+    await aplicarMigraciones(DATABASE_URL);
 
     // 3. Equipo
-    const equipo = JSON.parse(readFileSync(join(raiz, "scripts", "equipo.json"), "utf8")) as { agencia_id: string; usuarios: UsuarioEquipo[] };
+    const equipo = JSON.parse(readFileSync(join(raiz, "src", "lib", "equipo-inicial.json"), "utf8")) as { agencia_id: string; usuarios: UsuarioEquipo[] };
     const admin = createClient(NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
     const existentes = new Set((await sql<{ usuario: string }[]>`select usuario from public.perfiles`).map((r) => r.usuario));
     const creados: { usuario: string; nombre: string; rol: string; contrasena: string }[] = [];

@@ -17,6 +17,8 @@ window.CONFIG = {
 
   // URL de webhook (Make.com, Zapier, n8n o Chattrace) que recibe cada prospecto.
   // Déjala vacía si todavía no la tienes: la landing seguirá mandando al cliente a WhatsApp.
+  // Con el portal pro desplegado: "https://TU-PORTAL.vercel.app/api/leads?token=TU_LEADS_TOKEN"
+  // (el prospecto entra directo al CRM y se asigna por turno a un asesor).
   webhookUrl: "",
 
   // ID del Pixel de Meta. Déjalo vacío para no cargarlo.
