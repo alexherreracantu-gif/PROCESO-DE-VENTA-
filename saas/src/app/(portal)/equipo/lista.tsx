@@ -2,13 +2,13 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { KeyRound, Pencil, UserPlus } from "lucide-react";
+import { KeyRound, Pencil, UserPlus, Users } from "lucide-react";
 import { Avatar, Boton, Campo, Pastilla, Tabla, Tarjeta } from "@/components/ui";
 import { BotonCopiar, Confirmar, Dialogo, useAviso } from "@/components/cliente";
 import { ROLES, type Rol } from "@/lib/dominio/catalogos";
 import { decimal, iniciales } from "@/lib/dominio/formato";
 import type { Perfil } from "@/lib/tipos";
-import { actualizarUsuario, crearUsuario, restablecerContrasena } from "./acciones";
+import { actualizarUsuario, contrasenaParaTodos, crearUsuario, restablecerContrasena } from "./acciones";
 
 type Persona = Perfil & { unidades: number; productos: number; meta: number | null; corteHoy: boolean; academia: string };
 
@@ -19,11 +19,15 @@ export function ListaEquipo({ personas, yo }: { personas: Persona[]; yo: { id: s
   const [reset, setReset] = useState<Persona | null>(null);
   const [credencial, setCredencial] = useState<{ nombre: string; usuario: string; contrasena: string } | null>(null);
   const [ocupado, iniciar] = useTransition();
+  const [comun, setComun] = useState(false);
   const puede = (p: Persona) => yo.rol === "ceo" || p.rol !== "ceo";
 
   return (
     <>
-      <div className="flex justify-end"><Boton icono={UserPlus} onClick={() => setEditar("nueva")}>Dar de alta</Boton></div>
+      <div className="flex flex-wrap justify-end gap-2">
+        <Boton variante="secundario" icono={Users} onClick={() => setComun(true)}>Misma contraseña para todos</Boton>
+        <Boton icono={UserPlus} onClick={() => setEditar("nueva")}>Dar de alta</Boton>
+      </div>
       <Tarjeta className="p-2 sm:p-3">
         <Tabla>
           <thead><tr><th>Persona</th><th>Usuario</th><th>Rol</th><th className="!text-right">Unidades del mes</th><th className="!text-right">Prod./unidad</th><th>Corte hoy</th><th>Academia</th><th /></tr></thead>
@@ -57,6 +61,10 @@ export function ListaEquipo({ personas, yo }: { personas: Persona[]; yo: { id: s
       <Confirmar abierto={reset !== null} alCerrar={() => setReset(null)} titulo={`¿Nueva contraseña para ${reset?.nombre ?? ""}?`} boton="Generar contraseña" ocupado={ocupado}
         texto="Su contraseña actual deja de funcionar. Le das la nueva y la cambia en Mi perfil."
         alConfirmar={() => { const p = reset!; iniciar(async () => { const r = await restablecerContrasena(p.id); setReset(null); if (!r.ok) { avisar(r.error, "error"); return; } setCredencial({ nombre: p.nombre, usuario: p.usuario, contrasena: r.contrasena! }); }); }} />
+
+      <Dialogo abierto={comun} alCerrar={() => setComun(false)} titulo="Misma contraseña para todos" subtitulo="Se le pone a todo el equipo activo (sin el CEO), incluido tú. Quien tenga la sesión abierta la sigue usando." ancho="sm">
+        {comun ? <FormClaveComun alTerminar={(m) => { setComun(false); if (m) avisar(m); }} /> : null}
+      </Dialogo>
 
       <Dialogo abierto={credencial !== null} alCerrar={() => setCredencial(null)} titulo="Acceso listo" ancho="sm" pie={<Boton onClick={() => setCredencial(null)}>Listo</Boton>}>
         {credencial ? (
@@ -111,6 +119,28 @@ function FormPersona({ persona, yo, alTerminar }: { persona: Persona | null; yo:
       {persona && !propio ? <label className="inline-flex items-center gap-2.5 text-[0.9rem]"><input type="checkbox" className="size-4 accent-[var(--accent)]" checked={f.activo} onChange={(e) => setF({ ...f, activo: e.target.checked })} />Acceso activo (desmarca para dar de baja)</label> : null}
       {error ? <p role="alert" className="rounded-xl bg-bad-soft px-4 py-3 text-sm font-semibold text-bad">{error}</p> : null}
       <div className="flex gap-2"><Boton type="submit" disabled={ocupado}>{ocupado ? "Guardando…" : persona ? "Guardar" : "Dar de alta"}</Boton></div>
+    </form>
+  );
+}
+
+function FormClaveComun({ alTerminar }: { alTerminar: (mensaje?: string) => void }) {
+  const avisar = useAviso();
+  const [ocupado, iniciar] = useTransition();
+  const [clave, setClave] = useState("");
+  const [otra, setOtra] = useState("");
+  const distinta = otra.length > 0 && clave !== otra;
+  return (
+    <form className="grid gap-4" onSubmit={(e) => {
+      e.preventDefault();
+      if (clave !== otra) return;
+      iniciar(async () => { const r = await contrasenaParaTodos(clave); if (!r.ok) { avisar(r.error, "error"); return; } alTerminar(r.mensaje); });
+    }}>
+      <Campo etiqueta="Contraseña nueva" htmlFor="c-comun" ayuda="Mínimo 7 caracteres."><input id="c-comun" type="password" autoComplete="new-password" className="campo" value={clave} onChange={(e) => setClave(e.target.value)} minLength={7} required /></Campo>
+      <Campo etiqueta="Repítela" htmlFor="c-comun-2" error={distinta ? "No coinciden." : null}><input id="c-comun-2" type="password" autoComplete="new-password" className="campo" value={otra} onChange={(e) => setOtra(e.target.value)} aria-invalid={distinta} required /></Campo>
+      <div className="flex justify-end gap-2">
+        <Boton variante="secundario" onClick={() => alTerminar()}>Cancelar</Boton>
+        <Boton type="submit" disabled={ocupado || clave.length < 7 || clave !== otra}>{ocupado ? "Guardando…" : "Poner a todos"}</Boton>
+      </div>
     </form>
   );
 }

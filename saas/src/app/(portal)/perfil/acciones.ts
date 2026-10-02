@@ -7,7 +7,7 @@ import type { Resultado } from "@/lib/tipos";
 
 const Clave = z.object({
   actual: z.string().min(1, "Escribe tu contraseña actual."),
-  nueva: z.string().min(8, "La nueva contraseña debe tener al menos 8 caracteres.").max(72),
+  nueva: z.string().min(7, "La nueva contraseña debe tener al menos 7 caracteres.").max(72),
 });
 
 export async function cambiarContrasena(e: z.input<typeof Clave>): Promise<Resultado> {
