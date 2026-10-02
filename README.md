@@ -1,4 +1,10 @@
-# Portal BYD Park Point (control interno)
+# Park Point · portal interno de ventas (versión pro)
+
+La app principal está en **[`saas/`](saas/README.md)**: Next.js + Supabase con usuario y contraseña por persona, permisos por rol aplicados en la base de datos, ventas con VIN y productos, tablero descargable como imagen, objetivos, corte de piso, CRM, cotizador Banorte, academia, agente IA y administración del equipo y del catálogo. La guía de puesta en marcha (Supabase + Vercel, ~15 minutos) está en [`saas/README.md`](saas/README.md).
+
+Lo que sigue abajo son las versiones anteriores (una sola página, sin servidor), que siguen funcionando mientras se configura la versión pro.
+
+# Portal BYD Park Point (versión de una página)
 
 `portal.html` es la SaaS interna del equipo de BYD Cumbres · Park Point. Publicada en https://claude.ai/artifact/MRhdyyADYxEcSZvFyZuoPL
 
