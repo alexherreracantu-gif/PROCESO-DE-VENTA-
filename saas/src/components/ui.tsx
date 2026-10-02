@@ -5,10 +5,11 @@ import type { LucideIcon } from "lucide-react";
 
 export const cx = clsx;
 
-type Variante = "primario" | "secundario" | "fantasma" | "peligro" | "whatsapp" | "acento";
+type Variante = "primario" | "tinta" | "secundario" | "fantasma" | "peligro" | "whatsapp" | "acento";
 type Tamano = "sm" | "md" | "lg";
 const VARIANTES: Record<Variante, string> = {
-  primario: "bg-ink text-on-ink hover:brightness-110 border-transparent",
+  primario: "bg-accent text-on-accent hover:brightness-110 border-transparent",
+  tinta: "bg-ink text-on-ink hover:brightness-110 border-transparent",
   secundario: "bg-surface text-fg border-line hover:bg-surface-2",
   fantasma: "bg-transparent text-muted border-transparent hover:bg-surface-2 hover:text-fg",
   peligro: "bg-surface text-bad border-line hover:bg-bad-soft",
@@ -109,10 +110,10 @@ export function Campo({ etiqueta, htmlFor, requerido, ayuda, error, children, cl
   );
 }
 
-export function Avatar({ texto, destacado, tamano = "md" }: { texto: string; destacado?: boolean; tamano?: "sm" | "md" | "lg" | "xl" }) {
+export function Avatar({ texto, destacado, tamano = "md", sobreMarca }: { texto: string; destacado?: boolean; tamano?: "sm" | "md" | "lg" | "xl"; sobreMarca?: boolean }) {
   const t = { sm: "size-7 text-[0.7rem]", md: "size-9 text-[0.85rem]", lg: "size-11 text-base", xl: "size-20 text-3xl" }[tamano];
   return (
-    <span className={cx("grid shrink-0 place-items-center rounded-full font-display font-semibold", t, destacado ? "bg-accent text-on-accent" : "bg-surface-2 text-fg", texto.length > 2 && tamano !== "xl" && "text-[0.66rem] tracking-wide")} aria-hidden>
+    <span className={cx("grid shrink-0 place-items-center rounded-full font-display font-semibold", t, sobreMarca ? "bg-white text-brand-deep" : destacado ? "bg-brand text-white" : "bg-surface-2 text-fg", texto.length > 2 && tamano !== "xl" && "text-[0.66rem] tracking-wide")} aria-hidden>
       {texto}
     </span>
   );

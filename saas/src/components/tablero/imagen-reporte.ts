@@ -15,16 +15,26 @@ export type DatosImagen = {
   detalle: { fecha: string; vendedor: string; cliente: string; num: string; vin: string; modelo: string; color: string; hex: string; prod: string }[];
 };
 
-const C = { fondo: "#f2f3f6", tarjeta: "#ffffff", tinta: "#11141a", tenue: "#586070", linea: "#dde1e8", barra: "#3157c9", pista: "#e3e7ee", banda: "#0f1217", hueso: "#e9e7e2" };
+const C = { fondo: "#eef2f6", tarjeta: "#ffffff", tinta: "#11141a", tenue: "#586070", linea: "#dbe2ea", barra: "#159be6", pista: "#e2e8ef", banda: "#159be6", bandaSuave: "#dff1fd" };
 const DISP = '"Barlow Condensed", "Arial Narrow", sans-serif';
 const SANS = '"IBM Plex Sans", "Segoe UI", Arial, sans-serif';
 
-export async function cargarFuentes() {
-  if (!document.fonts?.load) return;
-  await Promise.all(['700 64px "Barlow Condensed"', '600 40px "Barlow Condensed"', '400 20px "IBM Plex Sans"', '600 20px "IBM Plex Sans"'].map((f) => document.fonts.load(f))).catch(() => {});
+/** Carga las tipografías y el logo antes de dibujar. */
+export async function cargarRecursos(): Promise<{ logo: HTMLImageElement | null }> {
+  const fuentes = document.fonts?.load
+    ? Promise.all(['700 64px "Barlow Condensed"', '600 40px "Barlow Condensed"', '400 20px "IBM Plex Sans"', '600 20px "IBM Plex Sans"'].map((f) => document.fonts.load(f))).catch(() => {})
+    : Promise.resolve();
+  const logo = new Promise<HTMLImageElement | null>((res) => {
+    const img = new Image();
+    img.onload = () => res(img);
+    img.onerror = () => res(null);
+    img.src = "/marca/byd-grupo-tec-blanco.png";
+  });
+  const [, l] = await Promise.all([fuentes, logo]);
+  return { logo: l };
 }
 
-export function dibujarReporte(d: DatosImagen): HTMLCanvasElement {
+export function dibujarReporte(d: DatosImagen, logo: HTMLImageElement | null = null): HTMLCanvasElement {
   const W = 1080, pad = 56;
   const secH = (n: number) => 90 + n * 52;
   const maxD = 30, detN = Math.min(d.detalle.length, maxD);
@@ -58,11 +68,13 @@ export function dibujarReporte(d: DatosImagen): HTMLCanvasElement {
 
   x.fillStyle = C.fondo; x.fillRect(0, 0, W, H);
   x.fillStyle = C.banda; x.fillRect(0, 0, W, 250);
-  txt("PARK POINT", pad, 92, `700 64px ${DISP}`, C.hueso);
-  txt(`${d.agencia} · ${d.grupo}`.toUpperCase(), pad, 128, `600 18px ${SANS}`, "#8f96a3");
+  x.beginPath(); x.arc(W - 40, -10, 190, 0, Math.PI * 2); x.lineWidth = 42; x.strokeStyle = "rgba(255,255,255,0.10)"; x.stroke();
+  if (logo) x.drawImage(logo, pad, 40, 236, (236 * logo.naturalHeight) / logo.naturalWidth);
+  else txt("BYD GRUPO TEC", pad, 92, `700 56px ${DISP}`, "#ffffff");
+  txt(`PORTAL PARK POINT · ${d.agencia.replace(" · Park Point", "")}`.toUpperCase(), W - pad, 70, `600 16px ${SANS}`, C.bandaSuave, "right");
   txt(d.titulo, pad, 192, `600 44px ${DISP}`, "#ffffff");
-  txt(d.quien, pad, 226, `400 22px ${SANS}`, "#c9ccd2");
-  txt(d.corte, W - pad, 226, `400 18px ${SANS}`, "#8f96a3", "right");
+  txt(d.quien, pad, 226, `400 22px ${SANS}`, C.bandaSuave);
+  txt(d.corte, W - pad, 226, `400 18px ${SANS}`, C.bandaSuave, "right");
 
   let y = 290;
   const tw = (W - pad * 2 - 3 * 16) / 4;
@@ -146,6 +158,6 @@ export function dibujarReporte(d: DatosImagen): HTMLCanvasElement {
     if (d.detalle.length > maxD) txt(`y ${d.detalle.length - maxD} más en el portal`, x0, ty + 4, `400 16px ${SANS}`, C.tenue);
     y += h + 20;
   }
-  txt(`Generado por ${d.generadoPor} en el portal Park Point · las ventas canceladas no cuentan`, pad, H - 28, `400 16px ${SANS}`, C.tenue);
+  txt(`Generado por ${d.generadoPor} en el portal Park Point · BYD Grupo TEC · las ventas canceladas no cuentan`, pad, H - 28, `400 16px ${SANS}`, C.tenue);
   return cv;
 }

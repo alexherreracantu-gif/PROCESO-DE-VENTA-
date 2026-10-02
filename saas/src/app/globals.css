@@ -9,24 +9,25 @@
 @import "@fontsource/ibm-plex-mono/500.css";
 
 /*
- * Portal de piso de ventas: barra lateral grafito fija (la identidad del portal en ambos temas),
- * área de trabajo clara u oscura. Números grandes en condensada; datos con cifras tabulares.
+ * Identidad BYD Grupo TEC: azul de marca (#159BE6) en el login, la bienvenida y las barras;
+ * barra lateral azul marino fija en ambos temas; área de trabajo clara u oscura.
+ * Números grandes en condensada; datos con cifras tabulares.
  */
 :root {
-  --bg: #eef0f4;
+  --bg: #eef2f6;
   --surface: #ffffff;
-  --surface-2: #e8ebf0;
+  --surface-2: #e7ecf2;
   --fg: #11141a;
   --muted: #586070;
   --subtle: #8b93a2;
-  --line: #d9dde5;
+  --line: #d7dee7;
   --ink: #11141a;
   --on-ink: #f4f2ed;
-  --accent: #3157c9;
-  --accent-soft: #e2e9fb;
+  --accent: #0b6fb3;
+  --accent-soft: #e1f1fc;
   --on-accent: #ffffff;
-  --bar: #3157c9;
-  --bar-track: #e2e6ed;
+  --bar: #159be6;
+  --bar-track: #e2e8ef;
   --ok: #23774a;
   --ok-soft: #dcf0e3;
   --warn: #9a5f0e;
@@ -34,30 +35,32 @@
   --bad: #b3362d;
   --bad-soft: #f8e1de;
   --wa: #1f9d55;
-  --side: #0f1217;
-  --side-2: #191d25;
-  --side-fg: #e9e7e2;
-  --side-muted: #8a909c;
+  --brand: #159be6;
+  --brand-deep: #0d7fc4;
+  --side: #0b1d2e;
+  --side-2: #14304a;
+  --side-fg: #eef6fc;
+  --side-muted: #8eaec7;
   --shadow: 0 1px 2px rgb(16 20 28 / 0.06), 0 6px 24px -12px rgb(16 20 28 / 0.18);
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0a0c10;
-    --surface: #12161c;
-    --surface-2: #1a1f27;
+    --bg: #090d12;
+    --surface: #111820;
+    --surface-2: #18212c;
     --fg: #ecebe7;
     --muted: #9aa1ad;
     --subtle: #687080;
-    --line: #262c36;
+    --line: #243140;
     --ink: #ecebe7;
     --on-ink: #0b0d11;
-    --accent: #8ea9f2;
-    --accent-soft: #1b2540;
-    --on-accent: #0b0d11;
-    --bar: #7f9cf0;
-    --bar-track: #222833;
+    --accent: #5cc0f5;
+    --accent-soft: #0f2a40;
+    --on-accent: #06121d;
+    --bar: #3fb0ef;
+    --bar-track: #1f2a36;
     --ok: #86c39b;
     --ok-soft: #15291d;
     --warn: #e0b16c;
@@ -65,29 +68,29 @@
     --bad: #ec8d84;
     --bad-soft: #351b19;
     --wa: #3cc276;
-    --side: #07090c;
-    --side-2: #12161d;
-    --side-fg: #e9e7e2;
-    --side-muted: #7d8491;
+    --side: #07131f;
+    --side-2: #112a40;
+    --side-fg: #eef6fc;
+    --side-muted: #7e9bb3;
     --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 28px -14px rgb(0 0 0 / 0.7);
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0a0c10;
-  --surface: #12161c;
-  --surface-2: #1a1f27;
+  --bg: #090d12;
+  --surface: #111820;
+  --surface-2: #18212c;
   --fg: #ecebe7;
   --muted: #9aa1ad;
   --subtle: #687080;
-  --line: #262c36;
+  --line: #243140;
   --ink: #ecebe7;
   --on-ink: #0b0d11;
-  --accent: #8ea9f2;
-  --accent-soft: #1b2540;
-  --on-accent: #0b0d11;
-  --bar: #7f9cf0;
-  --bar-track: #222833;
+  --accent: #5cc0f5;
+  --accent-soft: #0f2a40;
+  --on-accent: #06121d;
+  --bar: #3fb0ef;
+  --bar-track: #1f2a36;
   --ok: #86c39b;
   --ok-soft: #15291d;
   --warn: #e0b16c;
@@ -95,10 +98,10 @@
   --bad: #ec8d84;
   --bad-soft: #351b19;
   --wa: #3cc276;
-  --side: #07090c;
-  --side-2: #12161d;
-  --side-fg: #e9e7e2;
-  --side-muted: #7d8491;
+  --side: #07131f;
+  --side-2: #112a40;
+  --side-fg: #eef6fc;
+  --side-muted: #7e9bb3;
   --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 28px -14px rgb(0 0 0 / 0.7);
   color-scheme: dark;
 }
@@ -125,6 +128,8 @@
   --color-bad: var(--bad);
   --color-bad-soft: var(--bad-soft);
   --color-wa: var(--wa);
+  --color-brand: var(--brand);
+  --color-brand-deep: var(--brand-deep);
   --color-side: var(--side);
   --color-side-2: var(--side-2);
   --color-side-fg: var(--side-fg);

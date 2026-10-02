@@ -4,6 +4,8 @@ App para el equipo de **BYD Cumbres · Park Point**: cada quien entra con su usu
 
 Hecho con **Next.js 16 + Supabase (Postgres, Auth, permisos por fila) + Vercel**.
 
+Identidad **BYD Grupo TEC**: azul de marca `#159BE6`, logo en `public/marca/` (blanco para fondos azules u oscuros, azul para fondos claros) e íconos de la app en `public/iconos/`. Si cambia el logo, reemplaza esos archivos.
+
 ## Qué hace
 
 | Módulo | Para qué |

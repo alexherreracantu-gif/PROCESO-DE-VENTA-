@@ -103,7 +103,7 @@ export function Cotizador({ modelos, parametros, asesor }: { modelos: ModeloC[];
         </div>
         <div className="grid grid-cols-4 gap-2 text-center">
           {r.escenarios.map((e) => (
-            <button key={e.n} type="button" onClick={() => setPlazo(e.n)} className={cx("rounded-xl border px-2 py-2 transition", e.n === plazo ? "border-ink bg-ink text-on-ink" : "border-line hover:border-subtle")}>
+            <button key={e.n} type="button" onClick={() => setPlazo(e.n)} className={cx("rounded-xl border px-2 py-2 transition", e.n === plazo ? "border-accent bg-accent text-on-accent" : "border-line hover:border-subtle")}>
               <span className="block text-[0.72rem] opacity-80">{e.n} meses</span><span className="block text-[0.86rem] font-semibold tabular-nums">{dinero(e.m)}</span>
             </button>
           ))}

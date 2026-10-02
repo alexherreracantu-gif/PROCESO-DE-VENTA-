@@ -8,6 +8,7 @@ import {
   MessagesSquare, Monitor, Moon, Sparkles, Sun, Target, UserRound, Users, X, type LucideIcon,
 } from "lucide-react";
 import { Avatar, cx } from "@/components/ui";
+import { Insignia, Logo } from "@/components/marca";
 
 type Item = { href: string; texto: string; icono: LucideIcon; direccion?: boolean };
 const GRUPOS: { titulo: string; items: Item[] }[] = [
@@ -65,9 +66,12 @@ export function Marco({ usuario, agencia, direccion, children }: {
         "max-lg:w-[272px] max-lg:shadow-2xl", menu ? "max-lg:translate-x-0" : "max-lg:-translate-x-full",
       )}>
         <div className="flex items-start gap-2 px-5 pb-4 pt-6">
-          <Link href="/inicio" className="min-w-0 flex-1">
-            <span className="block font-display text-[1.75rem] font-bold leading-none tracking-[0.05em]">PARK POINT</span>
-            <span className="mt-1.5 block truncate text-[0.74rem] text-side-muted">{agencia}</span>
+          <Link href="/inicio" className="min-w-0 flex-1" aria-label="Inicio">
+            <Logo ancho={142} prioridad />
+            <span className="mt-3 flex items-center gap-2 text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-side-muted">
+              <span className="h-px w-4 bg-brand" aria-hidden />Portal Park Point
+            </span>
+            <span className="mt-0.5 block truncate text-[0.74rem] text-side-muted/80">{agencia}</span>
           </Link>
           <button type="button" onClick={() => setMenu(false)} aria-label="Cerrar menú" className="grid size-8 place-items-center rounded-lg text-side-muted hover:bg-side-2 lg:hidden"><X className="size-4" /></button>
         </div>
@@ -81,8 +85,8 @@ export function Marco({ usuario, agencia, direccion, children }: {
                 return (
                   <Link key={i.href} href={i.href} aria-current={activo ? "page" : undefined} onClick={() => setMenu(false)}
                     className={cx("relative flex h-10 items-center gap-3 rounded-lg px-3 text-[0.9rem] font-medium transition",
-                      activo ? "bg-side-2 text-side-fg" : "text-side-muted hover:bg-side-2/60 hover:text-side-fg")}>
-                    {activo ? <span className="absolute inset-y-2 left-0 w-[3px] rounded-r bg-bar" aria-hidden /> : null}
+                      activo ? "bg-side-2 text-white" : "text-side-muted hover:bg-side-2/60 hover:text-side-fg")}>
+                    {activo ? <span className="absolute inset-y-2 left-0 w-[3px] rounded-r bg-brand" aria-hidden /> : null}
                     <Icono className="size-[18px] shrink-0" strokeWidth={1.8} aria-hidden />
                     {i.texto}
                   </Link>
@@ -107,7 +111,7 @@ export function Marco({ usuario, agencia, direccion, children }: {
 
       <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-line bg-surface/95 px-4 pb-2.5 pt-[calc(10px+env(safe-area-inset-top))] backdrop-blur lg:hidden">
         <button type="button" onClick={() => setMenu(true)} aria-label="Abrir menú" className="grid size-9 place-items-center rounded-lg border border-line"><Menu className="size-[18px]" /></button>
-        <span className="flex-1 font-display text-[1.35rem] font-bold tracking-[0.05em]">PARK POINT</span>
+        <Link href="/inicio" className="flex flex-1 items-center gap-2.5" aria-label="Inicio"><Insignia tamano={32} /><span className="font-display text-[1.3rem] font-bold tracking-[0.04em]">PARK POINT</span></Link>
         <span className="text-right text-[0.76rem] leading-tight text-muted">{usuario.corto}<br />{usuario.rol}</span>
       </header>
 

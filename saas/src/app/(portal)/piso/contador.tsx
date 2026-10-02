@@ -46,7 +46,7 @@ export function Contador({ fecha, nombre, inicial }: { fecha: string; nombre: st
               <span className="flex-1 text-[0.92rem]">{c.label}</span>
               <button type="button" aria-label={`Restar ${c.label}`} onClick={() => cambiar(c.id, -1)} className="grid size-10 place-items-center rounded-lg border border-line bg-surface-2 hover:bg-line"><Minus className="size-4" /></button>
               <span className="num w-10 text-center text-[1.7rem]" aria-live="polite">{valores[c.id] ?? 0}</span>
-              <button type="button" aria-label={`Sumar ${c.label}`} onClick={() => cambiar(c.id, 1)} className="grid size-10 place-items-center rounded-lg bg-ink text-on-ink hover:brightness-110"><Plus className="size-4" /></button>
+              <button type="button" aria-label={`Sumar ${c.label}`} onClick={() => cambiar(c.id, 1)} className="grid size-10 place-items-center rounded-lg bg-accent text-on-accent hover:brightness-110"><Plus className="size-4" /></button>
             </li>
           ))}
         </ul>

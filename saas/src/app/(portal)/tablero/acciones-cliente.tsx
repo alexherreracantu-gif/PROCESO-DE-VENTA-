@@ -4,7 +4,7 @@ import { useState, useSyncExternalStore } from "react";
 import { Download, FileSpreadsheet, Share2 } from "lucide-react";
 import { Boton } from "@/components/ui";
 import { descargarArchivo, useAviso } from "@/components/cliente";
-import { cargarFuentes, dibujarReporte, type DatosImagen } from "@/components/tablero/imagen-reporte";
+import { cargarRecursos, dibujarReporte, type DatosImagen } from "@/components/tablero/imagen-reporte";
 
 const sinSuscripcion = () => () => {};
 let compartirCache: boolean | null = null;
@@ -21,8 +21,8 @@ export function AccionesTablero({ datos, nombreArchivo, csv }: { datos: DatosIma
   const compartible = useSyncExternalStore(sinSuscripcion, puedeCompartirArchivos, () => false);
 
   async function generar(): Promise<Blob | null> {
-    await cargarFuentes();
-    const cv = dibujarReporte(datos);
+    const { logo } = await cargarRecursos();
+    const cv = dibujarReporte(datos, logo);
     return new Promise((res) => cv.toBlob((b) => res(b), "image/png"));
   }
   async function descargar() {

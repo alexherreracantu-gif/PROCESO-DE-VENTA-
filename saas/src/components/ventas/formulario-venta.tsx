@@ -149,11 +149,11 @@ function Cuerpo({ alCerrar, ctx, venta, prefill, alGuardar }: { alCerrar: () => 
             const activo = f.productos.has(p.id);
             return (
               <label key={p.id} className={cx("relative inline-flex cursor-pointer select-none items-center gap-2 rounded-full border px-3 py-2 text-[0.86rem] font-medium transition has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent",
-                activo ? "border-ink bg-ink text-on-ink" : "border-line bg-surface hover:border-subtle")}>
+                activo ? "border-accent bg-accent text-on-accent" : "border-line bg-surface hover:border-subtle")}>
                 <input type="checkbox" className="absolute opacity-0" checked={activo} onChange={() => {
                   const n = new Set(f.productos); if (activo) n.delete(p.id); else n.add(p.id); set("productos", n);
                 }} />
-                <span className={cx("grid size-4 place-items-center rounded border-[1.5px]", activo ? "border-on-ink" : "border-subtle")}>{activo ? <Check className="size-3" strokeWidth={3} /> : null}</span>
+                <span className={cx("grid size-4 place-items-center rounded border-[1.5px]", activo ? "border-on-accent" : "border-subtle")}>{activo ? <Check className="size-3" strokeWidth={3} /> : null}</span>
                 {p.nombre}
               </label>
             );
