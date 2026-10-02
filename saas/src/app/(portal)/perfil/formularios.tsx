@@ -35,7 +35,7 @@ export function FormContrasena() {
       });
     }}>
       <Campo etiqueta="Contraseña actual" htmlFor="pf-actual"><input id="pf-actual" type="password" autoComplete="current-password" className="campo" value={f.actual} onChange={(e) => setF({ ...f, actual: e.target.value })} /></Campo>
-      <Campo etiqueta="Nueva contraseña" htmlFor="pf-nueva"><input id="pf-nueva" type="password" autoComplete="new-password" minLength={8} className="campo" value={f.nueva} onChange={(e) => setF({ ...f, nueva: e.target.value })} /></Campo>
+      <Campo etiqueta="Nueva contraseña" htmlFor="pf-nueva"><input id="pf-nueva" type="password" autoComplete="new-password" minLength={7} className="campo" value={f.nueva} onChange={(e) => setF({ ...f, nueva: e.target.value })} /></Campo>
       <Campo etiqueta="Repite la nueva" htmlFor="pf-rep"><input id="pf-rep" type="password" autoComplete="new-password" className="campo" value={f.repetir} onChange={(e) => setF({ ...f, repetir: e.target.value })} /></Campo>
       {error ? <p role="alert" className="rounded-xl bg-bad-soft px-4 py-3 text-sm font-semibold text-bad">{error}</p> : null}
       <div><Boton type="submit" disabled={ocupado || !f.actual || !f.nueva}>{ocupado ? "Cambiando…" : "Cambiar contraseña"}</Boton></div>

@@ -8,7 +8,7 @@
 insert into public.agencias (id, nombre, marca, grupo, ciudad, parametros) values (
   '0b7d0c3e-5f1a-4c8e-9a51-3c2d7e1f0a01',
   'BYD Cumbres · Park Point', 'BYD', 'Grupo TEC', 'Monterrey, N.L.',
-  '{"placas_electrico": 1760, "placas_hibrido": 5866, "gestoria": 3016, "permiso_frontera": 1199, "separacion": 5000, "garantia_extendida": 9082, "meta_unidades": 14, "meta_producto": 50}'
+  '{"placas_electrico": 1760, "placas_hibrido": 5866, "gestoria": 3016, "permiso_frontera": 1199, "separacion": 5000, "garantia_extendida": 9082, "meta_unidades": 5, "meta_producto": 50}'
 ) on conflict (id) do nothing;
 
 insert into public.modelos (agencia_id, clave, nombre, anio, motor, precio, bono, orden, banorte_submarca, banorte_anio, banorte_modelo, descripcion) values

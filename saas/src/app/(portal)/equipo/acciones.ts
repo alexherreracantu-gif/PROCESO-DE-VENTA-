@@ -88,3 +88,22 @@ export async function restablecerContrasena(id: string): Promise<ResultadoEquipo
   if (error) return { ok: false, error: "No se pudo cambiar la contraseña: " + error.message };
   return { ok: true, mensaje: `Nueva contraseña para ${t.nombre}`, contrasena };
 }
+
+const ClaveComun = z.string().min(7, "La contraseña debe tener al menos 7 caracteres.").max(72);
+
+/** Pone la misma contraseña a todo el equipo activo (sin el CEO). Útil al arrancar el portal. */
+export async function contrasenaParaTodos(nueva: string): Promise<ResultadoEquipo> {
+  const s = await requerirDireccion();
+  const r = ClaveComun.safeParse(nueva);
+  if (!r.success) return { ok: false, error: r.error.issues[0]?.message ?? "Revisa la contraseña." };
+  const admin = supabaseAdmin();
+  const { data, error } = await admin.from("perfiles").select("id, nombre, rol").eq("agencia_id", s.agencia.id).eq("activo", true).neq("rol", "ceo");
+  if (error) return { ok: false, error: "No se pudo leer el equipo: " + error.message };
+  const fallidos: string[] = [];
+  for (const p of data ?? []) {
+    const { error: e } = await admin.auth.admin.updateUserById(p.id, { password: r.data });
+    if (e) fallidos.push(p.nombre);
+  }
+  if (fallidos.length) return { ok: false, error: `No se pudo cambiar la contraseña de: ${fallidos.join(", ")}.` };
+  return { ok: true, mensaje: `Contraseña actualizada para ${data?.length ?? 0} personas` };
+}
