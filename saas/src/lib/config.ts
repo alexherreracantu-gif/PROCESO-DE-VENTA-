@@ -20,4 +20,6 @@ export const VISIBLE = {
   agente: false,
   /** Tarjeta "Seguimientos para hoy" de prospectos en el Inicio. */
   seguimientosEnInicio: false,
+  /** CEO en el inicio de sesión. Escondido: dirección la lleva Jorge (gerente) y el CEO ve /panel. */
+  ceoEnLogin: false,
 };

@@ -1,5 +1,8 @@
-/** Rutas que se abren sin sesión. `/api/leads` se protege con su propio LEADS_TOKEN. */
-export const RUTAS_PUBLICAS = ["/login", "/configurar", "/salir", "/instalar", "/api/leads"];
+/**
+ * Rutas que se abren sin sesión. `/api/leads` se protege con su propio LEADS_TOKEN y
+ * `/panel` es el dashboard general de solo lectura.
+ */
+export const RUTAS_PUBLICAS = ["/login", "/configurar", "/salir", "/instalar", "/panel", "/api/leads"];
 
 export type Acceso = "pasar" | "no-autorizado" | "al-login" | "al-inicio";
 

@@ -17,7 +17,11 @@ describe("decidirAcceso", () => {
   });
 
   it("abre las páginas públicas sin sesión", () => {
-    for (const ruta of ["/login", "/configurar", "/salir", "/instalar"]) expect(decidirAcceso(ruta, false)).toBe("pasar");
+    for (const ruta of ["/login", "/configurar", "/salir", "/instalar", "/panel"]) expect(decidirAcceso(ruta, false)).toBe("pasar");
+  });
+
+  it("el dashboard general no abre otras rutas que empiecen igual", () => {
+    expect(decidirAcceso("/panelx", false)).toBe("al-login");
   });
 
   it("con sesión, /login lleva al inicio y lo demás pasa", () => {
