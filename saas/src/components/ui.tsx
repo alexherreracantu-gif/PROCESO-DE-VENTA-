@@ -9,13 +9,13 @@ export const cx = clsx;
 type Variante = "primario" | "tinta" | "secundario" | "fantasma" | "peligro" | "whatsapp" | "acento";
 type Tamano = "sm" | "md" | "lg";
 const VARIANTES: Record<Variante, string> = {
-  primario: "bg-accent text-on-accent hover:brightness-110 border-transparent",
+  primario: "boton-brillo bg-[linear-gradient(180deg,#1590dc,var(--accent))] text-on-accent border-transparent shadow-[0_8px_18px_-10px_var(--accent)] hover:brightness-110 hover:shadow-[0_10px_22px_-10px_var(--accent)]",
   tinta: "bg-ink text-on-ink hover:brightness-110 border-transparent",
   secundario: "bg-surface text-fg border-line hover:bg-surface-2",
   fantasma: "bg-transparent text-muted border-transparent hover:bg-surface-2 hover:text-fg",
   peligro: "bg-surface text-bad border-line hover:bg-bad-soft",
   whatsapp: "bg-wa text-white border-transparent hover:brightness-110",
-  acento: "bg-accent text-on-accent border-transparent hover:brightness-110",
+  acento: "boton-brillo bg-[linear-gradient(180deg,#1590dc,var(--accent))] text-on-accent border-transparent hover:brightness-110",
 };
 const TAMANOS: Record<Tamano, string> = {
   sm: "h-8 px-3 text-[0.82rem] rounded-lg gap-1.5",
@@ -50,7 +50,7 @@ export function BotonEnlace({ variante, tamano, icono: Icono, className, childre
 }
 
 export function Tarjeta({ className, ...p }: ComponentProps<"section">) {
-  return <section className={cx("min-w-0 rounded-2xl border border-line bg-surface p-5 shadow-card", className)} {...p} />;
+  return <section className={cx("min-w-0 rounded-2xl border border-line bg-surface p-5 shadow-card transition-shadow duration-300 hover:shadow-[0_1px_2px_rgb(16_20_28/0.05),0_14px_34px_-18px_rgb(16_20_28/0.22)]", className)} {...p} />;
 }
 
 export function TituloTarjeta({ titulo, children, nota }: { titulo: ReactNode; children?: ReactNode; nota?: ReactNode }) {
@@ -77,7 +77,7 @@ export function Pastilla({ tono = "neutro", children, className }: { tono?: Tono
 
 export function Indicador({ etiqueta, valor, nota, tono }: { etiqueta: string; valor: ReactNode; nota?: ReactNode; tono?: "ok" | "warn" | "bad" }) {
   return (
-    <div className="flex min-w-0 flex-col gap-1.5 rounded-2xl border border-line bg-surface px-4 py-3.5 shadow-card">
+    <div className="relative flex min-w-0 flex-col gap-1.5 overflow-hidden rounded-2xl border border-line bg-surface px-4 py-3.5 shadow-card transition duration-300 before:absolute before:inset-x-0 before:top-0 before:h-[3px] before:bg-[linear-gradient(90deg,var(--brand),transparent)] before:opacity-70 hover:-translate-y-0.5 hover:shadow-lg">
       <span className="text-[0.8rem] font-medium text-muted">{etiqueta}</span>
       <span className={cx("num text-[2.35rem]", tono === "ok" && "text-ok", tono === "warn" && "text-warn", tono === "bad" && "text-bad")}>{typeof valor === "string" || typeof valor === "number" ? <Cifra key={String(valor)} valor={String(valor)} /> : valor}</span>
       {nota ? <span className="text-[0.8rem] text-muted">{nota}</span> : null}
@@ -89,7 +89,7 @@ export function Encabezado({ eyebrow, titulo, descripcion, children }: { eyebrow
   return (
     <div className="flex flex-wrap items-end gap-4">
       <div className="min-w-0 flex-[1_1_320px]">
-        {eyebrow ? <p className="eyebrow mb-1">{eyebrow}</p> : null}
+        {eyebrow ? <p className="eyebrow mb-1 flex items-center gap-2"><span className="barra-crece h-0.5 w-4 rounded-full bg-brand" aria-hidden />{eyebrow}</p> : null}
         <h1 className="font-display text-[2.5rem] font-semibold leading-none tracking-tight max-sm:text-[2.1rem]">{titulo}</h1>
         {descripcion ? <p className="mt-2 max-w-[68ch] text-[0.92rem] text-muted">{descripcion}</p> : null}
       </div>

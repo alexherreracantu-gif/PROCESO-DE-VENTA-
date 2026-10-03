@@ -12,7 +12,7 @@ export default async function Bienvenida() {
   const ceo = perfil.rol === "ceo";
   return (
     <main className="relative grid min-h-dvh place-items-center overflow-hidden bg-accent-soft px-4 text-fg">
-      <div aria-hidden className="pointer-events-none absolute -right-40 -top-40 size-[520px] rounded-full border-[56px] border-brand/10" />
+      <div aria-hidden className="pointer-events-none absolute -right-40 -top-40 size-[520px] rounded-full border-[56px] border-brand/10 deriva" />
       <div className="absolute left-1/2 top-[max(32px,env(safe-area-inset-top))] -translate-x-1/2"><Logo tono="azul" ancho={170} prioridad /></div>
       <div className="escalonado relative grid justify-items-center gap-3 text-center">
         <span className="salta"><Avatar texto={ceo ? "CEO" : iniciales(perfil.nombre)} tamano="xl" destacado /></span>
