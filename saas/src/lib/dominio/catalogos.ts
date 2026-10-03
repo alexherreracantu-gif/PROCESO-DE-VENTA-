@@ -69,33 +69,6 @@ export const CORTE = [
 ] as const;
 export type ClaveCorte = (typeof CORTE)[number]["id"];
 
-/** Los 11 pasos del expediente. `credito` = solo aplica si la venta es financiada. */
-export const PASOS_EXPEDIENTE = [
-  { id: "cliente", label: "Datos del cliente", ayuda: "Nombre completo, teléfono y plaza." },
-  { id: "cotizacion", label: "Cotización enviada", ayuda: "Cotización + lista de documentos por WhatsApp." },
-  { id: "documentos", label: "Documentos al banco", ayuda: "INE, comprobante de domicilio e ingresos.", credito: true },
-  { id: "aprobacion", label: "Crédito aprobado", ayuda: "No pidas la separación antes de esto.", credito: true },
-  { id: "separacion", label: "Separación de $5,000", ayuda: "Es parte del enganche. Gancho: el color interior." },
-  { id: "quiter", label: "Alta en Quiter", ayuda: "Comercial → Fichas maestras → Cuentas personales." },
-  { id: "caja", label: "Separación en caja", ayuda: "Siempre al concepto Accesorios con el código de cliente." },
-  { id: "firma", label: "Enganche y firma", ayuda: "¿Qué le vendí? (extras) y ¿qué le di? (bonos)." },
-  { id: "desembolso", label: "Desembolso del banco", ayuda: "Compara el desembolso real contra el esperado.", credito: true },
-  { id: "cuadre", label: "Cuadre sin adeudo", ayuda: "Si falta aunque sea $1, el carro no sale." },
-  { id: "entrega", label: "Entrega", ayuda: "Unos 4 días. Reseña, video y referidos." },
-] as const;
-export type PasoExpediente = (typeof PASOS_EXPEDIENTE)[number]["id"];
-
-export function pasosAplicables(formaPago: string) {
-  const contado = formaPago === "Contado";
-  return PASOS_EXPEDIENTE.filter((p) => !(contado && "credito" in p && p.credito));
-}
-export function avanceExpediente(formaPago: string, expediente: Record<string, string | undefined> | null | undefined) {
-  const pasos = pasosAplicables(formaPago);
-  const hechos = pasos.filter((p) => expediente?.[p.id]).length;
-  const siguiente = pasos.find((p) => !expediente?.[p.id]) ?? null;
-  return { total: pasos.length, hechos, pct: pasos.length ? hechos / pasos.length : 0, siguiente };
-}
-
 export const GUIONES = [
   { t: "Bienvenida Park Point (30 s)", b: "Hola, soy {n} de BYD. ¿Qué te trae hoy? Si quieres, en 5 minutos te armo una mensualidad del modelo que más te convenga." },
   { t: "Diagnóstico", b: "¿Cuántos km haces al día? ¿Quién más lo maneja? ¿Cuánto se te va en gasolina al mes? ¿Traes auto a cuenta o arrancas de cero?" },

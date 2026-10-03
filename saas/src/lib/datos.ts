@@ -9,11 +9,23 @@ import type { Corte, FilaRanking, Metas, Modelo, Perfil, Producto, ProgresoAcade
  * con el cliente de servicio) filtran además por agencia.
  */
 
-const COLS_VENTA = "id, folio, fecha, vendedor_id, cliente, num_cliente, telefono, vin, modelo_id, color, color_nombre, forma_pago, plaza, estatus, fecha_entrega, valor_factura, notas, expediente, cuadre, created_at, venta_productos(producto_id)";
-type FilaVenta = Omit<Venta, "productos"> & { venta_productos: { producto_id: string }[] | null };
+const COLS_VENTA = "id, folio, fecha, vendedor_id, cliente, num_cliente, telefono, vin, modelo_id, color, color_nombre, forma_pago, plaza, estatus, fecha_entrega, valor_factura, notas, expediente, credito, created_at, venta_productos(producto_id), venta_documentos(id, tipo, movimiento_id, nombre, enlace, mime, tamano, created_at), venta_movimientos(id, tipo, concepto, aplica_a, monto, fecha, forma, referencia, notas)";
+type FilaVenta = Omit<Venta, "productos" | "documentos" | "movimientos"> & {
+  venta_productos: { producto_id: string }[] | null;
+  venta_documentos: Venta["documentos"] | null;
+  venta_movimientos: Venta["movimientos"] | null;
+};
 const aVenta = (f: FilaVenta): Venta => {
-  const { venta_productos, ...resto } = f;
-  return { ...resto, valor_factura: resto.valor_factura == null ? null : Number(resto.valor_factura), expediente: resto.expediente ?? {}, cuadre: resto.cuadre ?? {}, productos: (venta_productos ?? []).map((p) => p.producto_id) };
+  const { venta_productos, venta_documentos, venta_movimientos, ...resto } = f;
+  return {
+    ...resto,
+    valor_factura: resto.valor_factura == null ? null : Number(resto.valor_factura),
+    expediente: resto.expediente ?? {},
+    credito: resto.credito ?? {},
+    productos: (venta_productos ?? []).map((p) => p.producto_id),
+    documentos: (venta_documentos ?? []).map((d) => ({ ...d, tamano: d.tamano == null ? null : Number(d.tamano) })).sort((a, b) => a.created_at.localeCompare(b.created_at)),
+    movimientos: (venta_movimientos ?? []).map((m) => ({ ...m, monto: Number(m.monto) })).sort((a, b) => a.fecha.localeCompare(b.fecha) || a.id.localeCompare(b.id)),
+  };
 };
 
 function revisar<T>(r: { data: T | null; error: { message: string } | null }, que: string): T {
@@ -60,9 +72,16 @@ export async function ventasEnProceso(s: Sesion): Promise<Venta[]> {
   return revisar<FilaVenta[]>(r, "las ventas").map(aVenta);
 }
 
-export async function historialVenta(s: Sesion, id: string) {
-  const r = await s.sb.from("bitacora").select("id, accion, usuario_id, datos, created_at").eq("tabla", "ventas").eq("registro_id", id).order("created_at", { ascending: false }).limit(30);
-  return revisar<{ id: number; accion: string; usuario_id: string | null; datos: Record<string, unknown>; created_at: string }[]>(r, "el historial");
+export type CambioVenta = { id: number; tabla: string; accion: string; usuario_id: string | null; datos: Record<string, unknown>; created_at: string };
+/** Cambios de la venta y de su expediente (pagos, cargos y archivos), del más reciente al más viejo. */
+export async function historialVenta(s: Sesion, id: string): Promise<CambioVenta[]> {
+  const cols = "id, tabla, accion, usuario_id, datos, created_at";
+  const [a, b] = await Promise.all([
+    s.sb.from("bitacora").select(cols).eq("tabla", "ventas").eq("registro_id", id).order("created_at", { ascending: false }).limit(30),
+    s.sb.from("bitacora").select(cols).in("tabla", ["venta_movimientos", "venta_documentos"]).eq("datos->>venta_id", id).order("created_at", { ascending: false }).limit(60),
+  ]);
+  return [...revisar<CambioVenta[]>(a, "el historial"), ...revisar<CambioVenta[]>(b, "el historial")]
+    .sort((x, y) => y.created_at.localeCompare(x.created_at)).slice(0, 60);
 }
 
 export async function metasDelMes(s: Sesion, mes: string): Promise<Metas> {

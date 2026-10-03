@@ -206,4 +206,36 @@ d("permisos por rol (RLS)", () => {
       await como(tx, x.jorge);
       expect(await tx`select 1 from public.modelo_fotos where modelo_id = ${x.modA}`).toHaveLength(1);
     }));
+
+  it("el expediente (pagos y archivos) sigue a la venta: el asesor solo el suyo, dirección todos, nadie de otra agencia", () =>
+    escenario(async (tx, x) => {
+      await como(tx, x.omar);
+      const [m] = await tx`insert into public.venta_movimientos (venta_id, tipo, concepto, aplica_a, monto) values (${x.ventaOmar}, 'pago', 'separacion', 'accesorios', 5000) returning id`;
+      await tx`insert into public.venta_documentos (venta_id, tipo, movimiento_id, nombre, ruta) values (${x.ventaOmar}, 'recibo', ${m.id}, 'recibo.pdf', ${`${x.agA}/${x.ventaOmar}/a-recibo.pdf`})`;
+      await tx`insert into public.venta_documentos (venta_id, tipo, nombre, enlace) values (${x.ventaOmar}, 'ine', 'INE', 'https://drive.google.com/file/d/x')`;
+      // No puede escribir en el expediente de Mariana ni ver el suyo.
+      const e1 = await tx.savepoint((sp) => sp`insert into public.venta_movimientos (venta_id, tipo, concepto, monto) values (${x.ventaMariana}, 'pago', 'cliente', 100)`).catch((e) => e);
+      expect(String(e1)).toMatch(/row-level security/);
+      // La ruta del archivo tiene que ser de su venta.
+      const e2 = await tx.savepoint((sp) => sp`insert into public.venta_documentos (venta_id, tipo, nombre, ruta) values (${x.ventaOmar}, 'ine', 'x', ${`${x.agA}/${x.ventaMariana}/x.pdf`})`).catch((e) => e);
+      expect(String(e2)).toMatch(/no corresponde/);
+      expect(await tx`select 1 from public.venta_documentos`).toHaveLength(2);
+      await como(tx, x.mariana);
+      expect(await tx`select 1 from public.venta_movimientos`).toHaveLength(0);
+      expect(await tx`select 1 from public.venta_documentos`).toHaveLength(0);
+      expect(await tx`delete from public.venta_documentos returning id`).toHaveLength(0);
+      await como(tx, x.jorge);
+      expect(await tx`select 1 from public.venta_documentos`).toHaveLength(2);
+      expect(await tx`select monto from public.venta_movimientos`).toHaveLength(1);
+      await como(tx, x.ajeno);
+      expect(await tx`select 1 from public.venta_movimientos`).toHaveLength(0);
+      expect(await tx`select 1 from public.venta_documentos`).toHaveLength(0);
+      await como(tx, null);
+      const e3 = await tx.savepoint((sp) => sp`select 1 from public.venta_documentos`).catch((e) => e);
+      expect(String(e3)).toMatch(/permission denied/);
+      // Al borrar el pago se van sus recibos.
+      await como(tx, x.omar);
+      await tx`delete from public.venta_movimientos where id = ${m.id}`;
+      expect(await tx`select tipo from public.venta_documentos`).toEqual([{ tipo: "ine" }]);
+    }));
 });

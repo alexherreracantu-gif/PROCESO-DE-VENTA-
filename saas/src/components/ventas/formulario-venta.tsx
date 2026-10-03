@@ -50,7 +50,7 @@ function Cuerpo({ alCerrar, ctx, venta, prefill, alGuardar }: { alCerrar: () => 
     color_nombre: venta?.color_nombre ?? "",
     forma_pago: venta?.forma_pago ?? "Crédito Banorte",
     plaza: venta?.plaza ?? "Monterrey",
-    estatus: venta?.estatus ?? "facturada",
+    estatus: venta?.estatus ?? "apartada",
     fecha_entrega: venta?.fecha_entrega ?? "",
     valor_factura: venta?.valor_factura != null ? String(venta.valor_factura) : "",
     notas: venta?.notas ?? "",

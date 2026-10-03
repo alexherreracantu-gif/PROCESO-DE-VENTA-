@@ -13,7 +13,8 @@ Identidad **BYD Grupo TEC** en colores claros: fondo blanco, barra lateral blanc
 | Módulo | Para qué |
 |---|---|
 | **Inicio** | Te dice quién eres, tu avance del mes (unidades, faltan, ritmo por semana, productos por unidad), ranking del equipo, seguimientos de hoy y ventas en proceso. |
-| **Ventas** | Alta de cada venta (se guarda completa o no se guarda): fecha, vendedor, cliente, número de cliente, VIN (valida 17 caracteres y que no se repita), modelo, color y nombre comercial, forma de pago, plaza, estatus, fecha de entrega y productos. Cada venta tiene su **expediente de 11 pasos**, su **cuadre sin adeudo** (enganche restante, desembolso esperado contra real, saldo y si el carro sale) y un **historial de cambios**. |
+| **Ventas** | Alta de cada venta (se guarda completa o no se guarda): fecha, vendedor, cliente, número de cliente, VIN (valida 17 caracteres y que no se repita), modelo, color y nombre comercial, forma de pago, plaza, estatus, fecha de entrega y productos. Al registrarla se abre su **expediente**, de la aprobación del crédito a la hoja de salida (ver abajo), con su **cuenta del cliente** y un **historial de cambios**. Vista **Expedientes abiertos** con avance y saldo de cada venta en proceso. |
+| **Expediente del cliente** | 6 etapas: crédito y documentos del cliente → separación y pedido → facturación → pagos y cuadre → placas y permisos (permiso de frontera en Piedras Negras) → hoja de salida y entrega. Cada documento se **sube** (PDF, foto, Excel; las fotos se reducen solas), se **enlaza** desde Google Drive, se marca **en físico** o **no aplica**. La **cuenta del cliente** lleva cada cargo (factura, accesorios, garantías, placas, gestoría, permiso…) y cada pago (separación, pago del cliente, desembolso, bono/nota de crédito) con fecha, forma de pago, número de recibo y su archivo; cuadra por concepto como la aplicación de pago. Al subir la factura la venta pasa a Facturada. El asesor no puede marcar **Unidad entregada** hasta tener todo al 100% sin adeudo (dirección puede autorizarla). **Hoja de control** imprimible para el día de la entrega, con firmas. |
 | **Dashboard general** (`/panel`) | El tablero de todo el equipo **sin iniciar sesión**, de solo lectura: indicadores, ranking, productos, modelos, colores y detalle de ventas. Se actualiza solo cada 5 minutos (para dejarlo en una pantalla). Es público: cualquiera con el enlace ve las cifras y el detalle. |
 | **Tablero de reporte** | Por mes y por vendedor: unidades contra meta y contra el mes anterior, penetración por producto, ranking, modelos, colores y detalle. **Descargar imagen** (PNG), **Compartir** desde el celular y **Exportar Excel** (CSV). |
 | **Objetivos** | Meta de unidades por vendedor y meta de penetración por producto, por mes. Dirección las edita; el equipo ve su avance. |
@@ -54,6 +55,10 @@ Opcional:
 - **Agente IA:** agrega `ANTHROPIC_API_KEY` (Claude, de [console.anthropic.com](https://console.anthropic.com)) u `OPENAI_API_KEY` (ChatGPT, de [platform.openai.com](https://platform.openai.com/api-keys)) y vuelve a desplegar. Si están las dos, usa Claude.
 - **Dominio propio:** *Settings → Domains* (por ejemplo `portal.tuagencia.mx`).
 - **En el celular:** abre el enlace y usa *Agregar a pantalla de inicio*.
+
+### Archivos del expediente
+
+Se guardan en **Supabase Storage**, en un bucket privado `expedientes` que el portal crea solo la primera vez que alguien sube un archivo (no hay que configurar nada). Nadie entra directo al bucket: el portal revisa permisos y firma URLs de 2 minutos para subir o abrir cada archivo. El plan gratis incluye 1 GB; para ahorrar espacio, lo que ya está en Google Drive se puede **enlazar** en lugar de subirlo. Límite por archivo: 25 MB.
 
 ### Variables de entorno
 
