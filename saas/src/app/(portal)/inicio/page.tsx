@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { VISIBLE } from "@/lib/config";
-import { BarChart3, Calculator, ClipboardList, Plus } from "lucide-react";
-import { catalogo, cortesDelDia, equipo, metaProducto, metaUnidades, metasDelMes, ranking, seguimientosPendientes, ventasDelMes, ventasEnProceso, ventasRecientes } from "@/lib/datos";
+import { AlertTriangle, BarChart3, CalendarClock, Calculator, ClipboardList, Clock, HeartHandshake, Plus, Receipt, Wallet } from "lucide-react";
+import { catalogo, ventasConEntrega, cortesDelDia, equipo, metaProducto, metaUnidades, metasDelMes, ranking, seguimientosPendientes, ventasDelMes, ventasEnProceso, ventasRecientes } from "@/lib/datos";
 import { requerirSesion } from "@/lib/sesion";
 import { colorHex, ROLES } from "@/lib/dominio/catalogos";
 import { procesoDeVenta } from "@/lib/dominio/proceso";
-import { diasDelMes, diasRestantes, fechaCorta, fechaLarga, hoy, mesActual, MESES, nombreMes } from "@/lib/dominio/fechas";
+import { alertasVenta, postventa, type Alerta } from "@/lib/dominio/seguimiento";
+import { diasDelMes, diasRestantes, fechaCorta, fechaLarga, hoy, mesActual, MESES, nombreMes, sumarDias } from "@/lib/dominio/fechas";
 import { decimal, porcentaje } from "@/lib/dominio/formato";
 import { penetracion, proyeccion, resumir, ritmoNecesario } from "@/lib/dominio/reportes";
 import { BotonEnlace, Encabezado, FilaBarra, Indicador, Leyenda, MuestraColor, Pastilla, Progreso, Tarjeta, TituloTarjeta } from "@/components/ui";
@@ -17,11 +18,12 @@ export default async function Inicio() {
   const s = await requerirSesion();
   const { perfil, direccion } = s;
   const mes = mesActual(), fecha = hoy();
-  const [cat, eq, metas, filasRanking, recientes, enProceso, seguimientos, misVentas, cortes] = await Promise.all([
+  const [cat, eq, metas, filasRanking, recientes, enProceso, seguimientos, misVentas, cortes, entregadas] = await Promise.all([
     catalogo(s), equipo(s), metasDelMes(s, mes), ranking(s, mes), ventasRecientes(s, 6), ventasEnProceso(s),
     perfil.vende && VISIBLE.seguimientosEnInicio ? seguimientosPendientes(s, fecha, perfil.id) : Promise.resolve([]),
     perfil.vende ? ventasDelMes(s, mes, perfil.id) : Promise.resolve([]),
     direccion ? cortesDelDia(s, fecha) : Promise.resolve([]),
+    ventasConEntrega(s, sumarDias(hoy(), -200), hoy()),
   ]);
   const mostrarSeguimientos = perfil.vende && VISIBLE.seguimientosEnInicio;
   const vendedores = eq.filter((p) => p.vende && p.activo);
@@ -41,6 +43,20 @@ export default async function Inicio() {
   const prodEquipo = filas.reduce((t, f) => t + f.productos, 0);
   const cortesHoy = new Set(cortes.map((c) => c.usuario_id));
 
+  // Lo urgente: entregas, expedientes detenidos, recibos, adeudos y postventa que ya toca.
+  const urgentes: (Alerta & { ventaId: string; cliente: string; vendedor: string })[] = [];
+  for (const v of enProceso) {
+    for (const a of alertasVenta(v, procesoDeVenta(v, cat.productos), fecha)) urgentes.push({ ...a, ventaId: v.id, cliente: v.cliente, vendedor: v.vendedor_id });
+  }
+  for (const v of entregadas) {
+    if (v.estatus !== "entregada" || !v.fecha_entrega) continue;
+    const toca = postventa(v.fecha_entrega, v.expediente, v.cliente, s.agencia.nombre, fecha).filter((x) => x.vencido);
+    if (toca.length) urgentes.push({ tipo: "postventa", texto: `Postventa: ${toca.map((x) => x.label.toLowerCase()).join(", ")}`, grave: false, ventaId: v.id, cliente: v.cliente, vendedor: v.vendedor_id });
+  }
+  const ORDEN = { entrega: 0, adeudo: 1, detenido: 2, recibo: 3, postventa: 4 } as const;
+  urgentes.sort((a, b) => Number(b.grave) - Number(a.grave) || ORDEN[a.tipo] - ORDEN[b.tipo]);
+  const ICONO = { entrega: CalendarClock, adeudo: Wallet, detenido: Clock, recibo: Receipt, postventa: HeartHandshake } as const;
+
   return (
     <>
       <Encabezado eyebrow={`${s.agencia.nombre} · ${fechaLarga(fecha)}`} titulo={`Hola, ${perfil.rol === "ceo" ? "CEO" : perfil.nombre_corto}`}
@@ -52,6 +68,32 @@ export default async function Inicio() {
         <BotonEnlace href="/tablero" variante="secundario" icono={BarChart3}>Ver tablero</BotonEnlace>
         <BotonEnlace href="/cotizador" variante="secundario" icono={Calculator}>Cotizar</BotonEnlace>
       </div>
+
+      <Tarjeta className={urgentes.some((u) => u.grave) ? "border-bad/40" : undefined}>
+        <TituloTarjeta titulo={<span className="inline-flex items-center gap-2"><AlertTriangle className={urgentes.some((u) => u.grave) ? "size-4 text-bad" : "size-4 text-warn"} />Que no se te pase</span>}
+          nota={urgentes.length ? `${urgentes.length} ${urgentes.length === 1 ? "pendiente" : "pendientes"}${direccion ? " del equipo" : ""}` : undefined}>
+          <BotonEnlace href="/entregas" variante="secundario" tamano="sm" icono={CalendarClock}>Entregas</BotonEnlace>
+        </TituloTarjeta>
+        {urgentes.length ? (
+          <ul className="grid grid-cols-[minmax(0,1fr)] gap-x-6 md:grid-cols-2">
+            {urgentes.slice(0, 10).map((u, i) => {
+              const Icono = ICONO[u.tipo];
+              return (
+                <li key={`${u.ventaId}-${u.tipo}-${i}`} className="border-t border-line first:border-0 md:[&:nth-child(2)]:border-0">
+                  <Link href={`/ventas/${u.ventaId}`} className="flex items-center gap-3 py-2.5 hover:opacity-80">
+                    <span className={u.grave ? "grid size-8 shrink-0 place-items-center rounded-full bg-bad-soft text-bad" : "grid size-8 shrink-0 place-items-center rounded-full bg-warn-soft text-warn"}><Icono className="size-4" /></span>
+                    <span className="min-w-0 flex-1">
+                      <strong className="block truncate">{u.cliente}</strong>
+                      <span className="block truncate text-[0.8rem] text-muted">{u.texto}{direccion ? ` · ${corto.get(u.vendedor) ?? ""}` : ""}</span>
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        ) : <p className="text-sm text-muted">Todo al día: sin entregas en riesgo, expedientes detenidos, recibos faltantes ni postventa pendiente.</p>}
+        {urgentes.length > 10 ? <p className="mt-2 text-[0.8rem] text-muted">Y {urgentes.length - 10} más en <Link href="/ventas?vista=abiertas" className="font-semibold text-accent hover:underline">Expedientes abiertos</Link>.</p> : null}
+      </Tarjeta>
 
       {perfil.vende ? (
         <>

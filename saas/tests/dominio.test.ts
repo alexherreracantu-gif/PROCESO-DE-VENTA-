@@ -298,3 +298,85 @@ describe("recibos que cumplen documentos", () => {
     expect([r.separacion, r.desembolso, r.nota_credito, r.recibos]).toEqual(["hecho", "hecho", "hecho", "hecho"]);
   });
 });
+
+import { alertasVenta, comisionVenta, mensajeDocumentos, postventa } from "@/lib/dominio/seguimiento";
+import { paqueteExpediente } from "@/lib/dominio/paquete";
+describe("seguimiento", () => {
+  const base: EntradaProceso = { forma_pago: "Crédito Banorte", plaza: "Monterrey", valor_factura: 500000, expediente: { ine: "2026-10-01" }, documentos: [], movimientos: [] };
+  const datos = { cliente: "maría lópez", asesor: "Jorge", agencia: "BYD Cumbres", modelo: "King 2027", contado: false };
+
+  it("arma el WhatsApp con documentos y firmas pendientes, sin el saldo mientras falte el banco", () => {
+    const m = mensajeDocumentos(datos, evaluarProceso(base))!;
+    expect(m).toMatch(/^Hola María, soy Jorge de BYD Cumbres\. Para avanzar con tu King 2027/);
+    expect(m).toContain("• CURP");
+    expect(m).not.toContain("INE");
+    expect(m).toContain("✍️ Pasar a firmar");
+    expect(m).toContain("• Autorización de Buró de Crédito");
+    expect(m).not.toContain("Saldo");
+    const conBanco = { ...base, movimientos: [mov("d", "pago", "desembolso", 400000)] };
+    expect(mensajeDocumentos(datos, evaluarProceso(conBanco))).toContain("Saldo pendiente: $100,000.00");
+  });
+
+  it("no manda mensaje si el cliente ya entregó todo", () => {
+    const todo: Record<string, string> = {};
+    for (const r of TODOS_REQUISITOS) if (r.cliente) todo[r.id] = "2026-10-01";
+    expect(mensajeDocumentos({ ...datos, contado: true }, evaluarProceso({ ...base, forma_pago: "Contado", valor_factura: null, expediente: todo }))).toBeNull();
+  });
+
+  it("calcula la postventa desde la fecha de entrega", () => {
+    const pv = postventa("2026-10-01", { pv_resena: "2026-10-02" }, "luis gonzález", "BYD Cumbres", "2026-10-12");
+    expect(pv.map((x) => [x.id, x.fecha, !!x.hecho, x.vencido])).toEqual([
+      ["pv_resena", "2026-10-02", true, false], ["pv_video", "2026-10-02", false, true], ["pv_llamada", "2026-10-08", false, true],
+      ["pv_referidos", "2026-10-11", false, true], ["pv_servicio", "2027-03-20", false, false],
+    ]);
+    expect(pv[3].mensaje).toMatch(/^Hola Luis,/);
+  });
+
+  it("avisa entregas en riesgo, expedientes detenidos, recibos y adeudos", () => {
+    const v = { estatus: "facturada", forma_pago: "Contado", fecha_entrega: "2026-10-04", updated_at: "2026-09-20T10:00:00Z", documentos: [], movimientos: [{ id: "p1", tipo: "pago", concepto: "cliente", fecha: "2026-09-25" }] };
+    const p = evaluarProceso({ ...base, forma_pago: "Contado", movimientos: [mov("p1", "pago", "cliente", 1000)] });
+    const a = alertasVenta(v, p, "2026-10-03");
+    expect(a.map((x) => [x.tipo, x.grave])).toEqual([["entrega", true], ["detenido", false], ["recibo", false], ["adeudo", true]]);
+    expect(a[0].texto).toMatch(/^Entrega es mañana · faltan \d+ pendientes$/);
+    expect(a[1].texto).toBe("Sin movimiento desde hace 8 días");
+    expect(alertasVenta({ ...v, estatus: "entregada" }, p, "2026-10-03")).toEqual([]);
+  });
+
+  it("calcula la comisión por unidad, % de factura y productos (con el precio del cargo)", () => {
+    const cat = [{ id: "g", clave: "garantia", nombre: "Garantía extendida", precio: 9082 }, { id: "c", clave: "cerocible", nombre: "Cerocible", precio: 4592 }];
+    const esq = { por_unidad: 1500, pct_factura: 0.2, productos: { garantia: { pct: 10 }, cerocible: { fijo: 300 } } };
+    const c = comisionVenta(esq, { estatus: "facturada", valor_factura: 500000, productos: ["g", "c"], movimientos: [{ tipo: "cargo", concepto: "garantia_ext", monto: 10000 }] }, cat);
+    expect(c.unidad).toBe(2500);
+    expect(c.productos).toEqual([{ nombre: "Garantía extendida", monto: 1000 }, { nombre: "Cerocible", monto: 300 }]);
+    expect(c.total).toBe(3800);
+    expect(comisionVenta(esq, { estatus: "cancelada", valor_factura: 500000, productos: [], movimientos: [] }, cat).total).toBe(0);
+  });
+
+  it("acomoda el ZIP por etapa, con recibos, enlaces y la cuenta en CSV", () => {
+    const doc = (id: string, tipo: string, nombre: string, extra: Partial<{ movimiento_id: string; enlace: string }> = {}) =>
+      ({ id, tipo, nombre, movimiento_id: extra.movimiento_id ?? null, enlace: extra.enlace ?? null, mime: null, tamano: null, created_at: "2026-10-01T00:00:00Z" });
+    const z = paqueteExpediente({
+      cliente: "Ana Pérez", folio: 7,
+      documentos: [doc("1", "ine", "ine.pdf"), doc("2", "recibo", "r.pdf", { movimiento_id: "p1" }), doc("3", "factura", "Factura", { enlace: "https://drive.google.com/x" })],
+      movimientos: [mov("p1", "pago", "separacion", 5000, "accesorios")],
+    });
+    expect(z.nombre).toBe("Expediente 7 Ana Pérez");
+    expect(z.archivos).toEqual([
+      { id: "1", ruta: "1 Crédito y documentos del cliente/INE - ine.pdf" },
+      { id: "2", ruta: "4 Pagos y cuadre/Recibos/2026-09-20 Separación - r.pdf" },
+    ]);
+    expect(z.extras.map((x) => x.ruta)).toEqual(["Cuenta del cliente.csv", "Enlaces de Drive.txt"]);
+    expect(z.extras[0].texto).toContain("2026-09-20,Pago,Separación,Accesorios,,,5000.00,");
+  });
+});
+
+import { textoSaldo } from "@/lib/dominio/seguimiento";
+describe("texto del saldo", () => {
+  it("en crédito, sin desembolso, lo que falta es del banco", () => {
+    const c = { completo: true, sinAdeudo: false, saldo: -1234.5, porOrigen: [] as { origen: string }[] };
+    expect(textoSaldo("Crédito Banorte", c)).toEqual({ texto: "Espera desembolso", tono: "warn" });
+    expect(textoSaldo("Crédito Banorte", { ...c, porOrigen: [{ origen: "desembolso" }] })).toEqual({ texto: "Debe $1,234.50", tono: "bad" });
+    expect(textoSaldo("Contado", { ...c, saldo: -500 })).toEqual({ texto: "Debe $500", tono: "bad" });
+    expect(textoSaldo("Contado", { ...c, sinAdeudo: true }).texto).toBe("Sin adeudo");
+  });
+});

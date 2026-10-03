@@ -7,6 +7,7 @@ import { venta as leerVenta, catalogo } from "@/lib/datos";
 import { hoy } from "@/lib/dominio/fechas";
 import { BANCOS, CARGO_DE_PRODUCTO, esConceptoCargo, esOrigen, FORMAS_COBRO, labelCargo } from "@/lib/dominio/cuenta";
 import { NO_APLICA, procesoDeVenta, requisito, TIPOS_DOCUMENTO } from "@/lib/dominio/proceso";
+import { esPasoPostventa } from "@/lib/dominio/seguimiento";
 import { borrarArchivos, existeArchivo, extensionValida, MAX_ARCHIVO, rutaNueva, urlDeSubida } from "@/lib/expedientes";
 import type { Resultado } from "@/lib/tipos";
 
@@ -152,7 +153,8 @@ export async function marcarRequisito(ventaId: string, reqId: string, estado: "h
         return { ok: false, error: `Faltan ${faltan.length} ${faltan.length === 1 ? "pendiente" : "pendientes"} para entregar: ${faltan.slice(0, 4).map((x) => x.label).join(", ")}${faltan.length > 4 ? "…" : ""}.` };
       }
       cambios.estatus = "entregada";
-      if (!v.fecha_entrega) cambios.fecha_entrega = hoy();
+      // La fecha real de entrega (si estaba programada para después, se entregó hoy).
+      if (!v.fecha_entrega || v.fecha_entrega > hoy()) cambios.fecha_entrega = hoy();
     } else if (v.estatus === "entregada") {
       cambios.estatus = "facturada";
     }
@@ -268,4 +270,34 @@ export async function guardarValorFactura(ventaId: string, valor: number | null)
   if (!count) return { ok: false, error: "No se encontró la venta." };
   refrescar(ventaId);
   return { ok: true, mensaje: "Valor factura guardado" };
+}
+
+// ---------------------------------------------------------------------
+// Entrega y postventa
+// ---------------------------------------------------------------------
+
+/** Fecha programada de entrega (o null para quitarla). */
+export async function programarEntrega(ventaId: string, fechaEntrega: string | null): Promise<Resultado> {
+  const s = await requerirSesion();
+  if (fechaEntrega && !fecha.safeParse(fechaEntrega).success) return { ok: false, error: "Fecha inválida." };
+  const { error, count } = await s.sb.from("ventas").update({ fecha_entrega: fechaEntrega }, { count: "exact" }).eq("id", ventaId);
+  if (error) return { ok: false, error: mensaje(error) };
+  if (!count) return { ok: false, error: "No se encontró la venta." };
+  refrescar(ventaId);
+  revalidatePath("/entregas");
+  return { ok: true, mensaje: fechaEntrega ? "Entrega programada" : "Fecha de entrega quitada" };
+}
+
+/** Marca o desmarca un paso de postventa (reseña, video, referidos…). */
+export async function marcarPostventa(ventaId: string, paso: string, hecho: boolean): Promise<Resultado> {
+  const s = await requerirSesion();
+  if (!esPasoPostventa(paso)) return { ok: false, error: "Paso desconocido." };
+  const { data } = await s.sb.from("ventas").select("expediente").eq("id", ventaId).maybeSingle<{ expediente: Record<string, string> }>();
+  if (!data) return { ok: false, error: "No se encontró la venta." };
+  const expediente = { ...data.expediente };
+  if (hecho) expediente[paso] = hoy(); else delete expediente[paso];
+  const { error } = await s.sb.from("ventas").update({ expediente }).eq("id", ventaId);
+  if (error) return { ok: false, error: mensaje(error) };
+  refrescar(ventaId);
+  return { ok: true };
 }

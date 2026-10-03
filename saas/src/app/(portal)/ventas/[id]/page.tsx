@@ -7,11 +7,14 @@ import { labelCargo, labelOrigen } from "@/lib/dominio/cuenta";
 import { requerirSesion } from "@/lib/sesion";
 import { colorHex, estatusInfo } from "@/lib/dominio/catalogos";
 import { procesoDeVenta } from "@/lib/dominio/proceso";
-import { fechaCorta, fechaLarga } from "@/lib/dominio/fechas";
+import { fechaCorta, fechaLarga, hoy } from "@/lib/dominio/fechas";
+import { mensajeDocumentos, postventa } from "@/lib/dominio/seguimiento";
+import { paqueteExpediente } from "@/lib/dominio/paquete";
 import { dinero, dinero2, porcentaje } from "@/lib/dominio/formato";
 import { BotonEnlace, cx, Encabezado, MuestraColor, Pastilla, Progreso, Tarjeta, TituloTarjeta } from "@/components/ui";
 import { ProcesoVenta } from "@/components/expediente/proceso";
 import { CuentaCliente } from "@/components/expediente/cuenta";
+import { BotonWhatsApp, BotonZip, Postventa, ProgramarEntrega } from "@/components/expediente/seguimiento";
 import { AccionesVenta } from "./cliente";
 
 export const metadata = { title: "Venta" };
@@ -41,6 +44,10 @@ export default async function DetalleVenta(props: PageProps<"/ventas/[id]">) {
   const est = estatusInfo(v.estatus);
   const p = procesoDeVenta(v, catalogo.productos);
   const c = p.cuenta;
+  const nombreModelo = modelo ? `${modelo.nombre} ${modelo.anio}` : "BYD";
+  const pideDocs = v.estatus === "cancelada" ? null : mensajeDocumentos({ cliente: v.cliente, asesor: vendedor?.nombre_corto ?? s.perfil.nombre_corto, agencia: s.agencia.nombre, modelo: nombreModelo, contado: v.forma_pago === "Contado" }, p);
+  const paquete = paqueteExpediente(v);
+  const pv = v.estatus === "entregada" && v.fecha_entrega ? postventa(v.fecha_entrega, v.expediente, v.cliente, s.agencia.nombre, hoy()) : null;
   const cargosPendientes = p.etapas.flatMap((e) => e.requisitos).some((r) => r.id === "cargos" && r.estado === "pendiente" && c.completo);
   const productos = catalogo.productos.filter((p) => v.productos.includes(p.id));
   const totalProductos = productos.reduce((t, p) => t + (p.precio ?? 0), 0);
@@ -78,16 +85,30 @@ export default async function DetalleVenta(props: PageProps<"/ventas/[id]">) {
         <div className={cx("rounded-2xl border px-4 py-3.5 shadow-card", p.listoParaSalida ? "border-transparent bg-ok-soft text-ok" : "border-line bg-surface")}>
           <p className="text-[0.8rem] font-medium opacity-80">Día de la entrega</p>
           <p className="mt-1 text-[1.05rem] font-semibold leading-snug">{v.estatus === "entregada" ? `Entregada${v.fecha_entrega ? ` el ${fechaCorta(v.fecha_entrega)}` : ""}` : p.listoParaSalida ? "Listo para entregar" : `Faltan ${p.pendientes.filter((x) => x.id !== "entrega").length} pendientes`}</p>
-          <p className="mt-1 text-[0.78rem] opacity-80">{v.fecha_entrega && v.estatus !== "entregada" ? `Programada: ${fechaLarga(v.fecha_entrega)}` : "Imprime la hoja de control para la salida."}</p>
+          {v.estatus === "entregada" || v.estatus === "cancelada" ? <p className="mt-1 text-[0.78rem] opacity-80">Imprime la hoja de control para el expediente.</p> : (
+            <>
+              <p className="mt-1 text-[0.78rem] opacity-80">{v.fecha_entrega ? `Programada: ${fechaLarga(v.fecha_entrega)}` : "Sin fecha programada"}</p>
+              <ProgramarEntrega ventaId={v.id} fecha={v.fecha_entrega} />
+            </>
+          )}
         </div>
       </div>
 
       <Tarjeta>
         <TituloTarjeta titulo="Proceso del cliente" nota={v.forma_pago === "Contado" ? "Venta de contado" : `Crédito · ${v.forma_pago}${v.plaza === "Piedras Negras" ? " · Piedras Negras" : ""}`}>
+          {pideDocs ? <BotonWhatsApp telefono={v.telefono} mensaje={pideDocs} texto="Pedir lo que falta" /> : null}
+          {v.documentos.length ? <BotonZip nombre={paquete.nombre} archivos={paquete.archivos} extras={paquete.extras} /> : null}
           <BotonEnlace href={`/hoja/${v.id}`} variante="secundario" tamano="sm" icono={Printer} externo>Hoja de control</BotonEnlace>
         </TituloTarjeta>
         <ProcesoVenta ventaId={v.id} proceso={p} documentos={v.documentos} credito={v.credito} direccion={s.direccion} />
       </Tarjeta>
+
+      {pv ? (
+        <Tarjeta>
+          <TituloTarjeta titulo="Postventa" nota={`${pv.filter((x) => x.hecho).length} de ${pv.length} · reseña, referidos y servicio`} />
+          <Postventa ventaId={v.id} telefono={v.telefono} items={pv} />
+        </Tarjeta>
+      ) : null}
 
       <Tarjeta id="cuenta" className="scroll-mt-20">
         <TituloTarjeta titulo="Cuenta del cliente" nota="Cargos y pagos al peso, con su recibo" />

@@ -7,10 +7,9 @@ import { Boton, cx, MuestraColor, Pastilla, Progreso, Tabla, Tarjeta, Vacio } fr
 import { FormularioVenta, type ContextoVenta } from "@/components/ventas/formulario-venta";
 import { colorHex, estatusInfo } from "@/lib/dominio/catalogos";
 import { fechaCorta } from "@/lib/dominio/fechas";
-import { dinero } from "@/lib/dominio/formato";
 import type { Venta } from "@/lib/tipos";
 
-export type AvanceVenta = { pct: number; hechos: number; total: number; siguiente: string | null; completo: boolean; saldo: number };
+export type AvanceVenta = { pct: number; hechos: number; total: number; siguiente: string | null; saldo: { texto: string; tono: "ok" | "bad" | "warn" | "neutro" } };
 
 export function ListaVentas({ ventas, ctx, modelos, productos, nombres, mesTexto, abrirNueva, abiertas, avances }: {
   ventas: Venta[]; ctx: ContextoVenta; modelos: { id: string; nombre: string }[]; productos: { id: string; nombre: string; corto: string }[];
@@ -77,8 +76,7 @@ export function ListaVentas({ ventas, ctx, modelos, productos, nombres, mesTexto
                       ) : null}
                     </td>
                     <td className="whitespace-nowrap">
-                      {avances[v.id] ? (!avances[v.id].completo ? <span className="text-[0.8rem] text-muted">Sin factura</span>
-                        : <span className={cx("text-[0.84rem] font-semibold", avances[v.id].saldo >= 0 ? "text-ok" : "text-bad")}>{avances[v.id].saldo >= 0 ? "Sin adeudo" : `Debe ${dinero(-avances[v.id].saldo)}`}</span>) : null}
+                      {avances[v.id] ? <span className={cx("text-[0.84rem] font-semibold", { ok: "text-ok", bad: "text-bad", warn: "text-warn", neutro: "font-normal text-muted" }[avances[v.id].saldo.tono])}>{avances[v.id].saldo.texto}</span> : null}
                     </td>
                     <td>
                       <span className="flex items-center gap-2" title={productos.filter((p) => v.productos.includes(p.id)).map((p) => p.nombre).join(", ") || "Sin productos"}>
