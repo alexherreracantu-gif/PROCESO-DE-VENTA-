@@ -3,9 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requerirSesion } from "@/lib/sesion";
-import { COLORES, ESTATUS, FORMAS_PAGO, PASOS_EXPEDIENTE, PLAZAS } from "@/lib/dominio/catalogos";
+import { COLORES, ESTATUS, FORMAS_PAGO, PLAZAS } from "@/lib/dominio/catalogos";
+import { borrarArchivos } from "@/lib/expedientes";
 import { normalizarVin, VIN_RE } from "@/lib/dominio/vin";
-import { hoy } from "@/lib/dominio/fechas";
 import type { Resultado } from "@/lib/tipos";
 
 const id = z.string().regex(/^[0-9a-f-]{36}$/i, "Identificador inválido");
@@ -60,42 +60,12 @@ export async function guardarVenta(entrada: EntradaVenta): Promise<Resultado> {
 export async function borrarVenta(ventaId: string): Promise<Resultado> {
   const s = await requerirSesion();
   if (!s.direccion) return { ok: false, error: "Solo dirección puede borrar ventas. Márcala como cancelada." };
+  const { data: docs } = await s.sb.from("venta_documentos").select("ruta").eq("venta_id", ventaId).not("ruta", "is", null);
   const { error, count } = await s.sb.from("ventas").delete({ count: "exact" }).eq("id", ventaId);
   if (error) return { ok: false, error: mensajeError(error) };
   if (!count) return { ok: false, error: "No se encontró la venta." };
+  // Los registros del expediente se borran en cascada; aquí se limpian sus archivos.
+  await borrarArchivos((docs ?? []).map((d) => d.ruta as string)).catch(() => {});
   revalidatePath("/", "layout");
   return { ok: true, mensaje: "Venta borrada" };
-}
-
-const PASOS = PASOS_EXPEDIENTE.map((p) => p.id) as string[];
-export async function marcarPaso(ventaId: string, paso: string, hecho: boolean): Promise<Resultado> {
-  const s = await requerirSesion();
-  if (!PASOS.includes(paso)) return { ok: false, error: "Paso desconocido." };
-  const { data, error } = await s.sb.from("ventas").select("expediente").eq("id", ventaId).maybeSingle();
-  if (error || !data) return { ok: false, error: "No se encontró la venta." };
-  const expediente = { ...(data.expediente as Record<string, string>) };
-  if (hecho) expediente[paso] = hoy(); else delete expediente[paso];
-  const { error: e2 } = await s.sb.from("ventas").update({ expediente }).eq("id", ventaId);
-  if (e2) return { ok: false, error: mensajeError(e2) };
-  revalidatePath("/", "layout");
-  return { ok: true };
-}
-
-const monto = z.number().nonnegative().max(50_000_000).nullable().optional();
-const EntradaCuadre = z.object({
-  valor_factura: monto, enganche: monto, separacion: monto, bonos: monto,
-  desembolso_real: monto, pagos_adicionales: monto, extras: monto,
-});
-
-export async function guardarCuadre(ventaId: string, entrada: z.input<typeof EntradaCuadre>): Promise<Resultado> {
-  const s = await requerirSesion();
-  const r = EntradaCuadre.safeParse(entrada);
-  if (!r.success) return { ok: false, error: "Revisa los montos: deben ser números positivos." };
-  const { valor_factura, ...cuadre } = r.data;
-  const limpio = Object.fromEntries(Object.entries(cuadre).filter(([, v]) => v != null));
-  const { error, count } = await s.sb.from("ventas").update({ cuadre: limpio, valor_factura: valor_factura ?? null }, { count: "exact" }).eq("id", ventaId);
-  if (error) return { ok: false, error: mensajeError(error) };
-  if (!count) return { ok: false, error: "No se encontró la venta." };
-  revalidatePath("/", "layout");
-  return { ok: true, mensaje: "Cuadre guardado" };
 }

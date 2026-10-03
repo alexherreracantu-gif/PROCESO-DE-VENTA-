@@ -1,4 +1,5 @@
-import type { DatosCuadre } from "@/lib/dominio/cuadre";
+import type { DatosCredito, Movimiento } from "@/lib/dominio/cuenta";
+import type { DocumentoResumen } from "@/lib/dominio/proceso";
 import type { Calor, Etapa, EstatusVenta, Rol } from "@/lib/dominio/catalogos";
 
 export type ParametrosAgencia = {
@@ -26,7 +27,8 @@ export type Venta = {
   id: string; folio: number; fecha: string; vendedor_id: string; cliente: string; num_cliente: string | null;
   telefono: string | null; vin: string | null; modelo_id: string; color: string; color_nombre: string | null;
   forma_pago: string; plaza: string; estatus: EstatusVenta; fecha_entrega: string | null; valor_factura: number | null;
-  notas: string | null; expediente: Record<string, string>; cuadre: DatosCuadre; created_at: string; productos: string[];
+  notas: string | null; expediente: Record<string, string>; credito: DatosCredito; created_at: string; productos: string[];
+  documentos: DocumentoResumen[]; movimientos: Movimiento[];
 };
 export type Prospecto = {
   id: string; asesor_id: string; nombre: string; telefono: string | null; modelo_id: string | null; etapa: Etapa;

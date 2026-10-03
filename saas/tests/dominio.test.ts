@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { aportacionParaPagoFirma, convenio, cotizar, mensualidad, tasaMensual, truncar, type ModeloCotizable } from "@/lib/dominio/banorte";
 import { diasRestantes, fechaCorta, mesAnterior, nombreMes, rangoMes, sumarDias } from "@/lib/dominio/fechas";
 import { normalizarVin, revisarVin } from "@/lib/dominio/vin";
-import { avanceExpediente, pasosAplicables } from "@/lib/dominio/catalogos";
+import { calcularCuenta, type Movimiento } from "@/lib/dominio/cuenta";
+import { evaluarProceso, NO_APLICA, TODOS_REQUISITOS, type EntradaProceso } from "@/lib/dominio/proceso";
 import { penetracion, proyeccion, resumir, ritmoNecesario } from "@/lib/dominio/reportes";
 import { enlaceWhatsApp, iniciales } from "@/lib/dominio/formato";
 
@@ -95,13 +96,98 @@ describe("VIN", () => {
   });
 });
 
-describe("expediente", () => {
-  it("se salta los pasos del banco si es de contado", () => {
-    expect(pasosAplicables("Crédito Banorte")).toHaveLength(11);
-    expect(pasosAplicables("Contado")).toHaveLength(8);
-    const a = avanceExpediente("Contado", { cliente: "2026-10-01", cotizacion: "2026-10-01" });
-    expect(a).toMatchObject({ total: 8, hechos: 2 });
-    expect(a.siguiente?.id).toBe("separacion");
+const mov = (id: string, tipo: "cargo" | "pago", concepto: string, monto: number, aplica_a: string | null = tipo === "pago" ? "factura" : null): Movimiento =>
+  ({ id, tipo, concepto, aplica_a, monto, fecha: "2026-09-20", forma: null, referencia: null, notas: null });
+
+describe("cuenta del cliente", () => {
+  // Crédito típico: factura, garantía, separación a Accesorios, bono, enganche y desembolso.
+  const movimientos = [
+    mov("c1", "cargo", "garantia_ext", 9082),
+    mov("p1", "pago", "separacion", 5000, "accesorios"),
+    mov("p2", "pago", "bono", 59976),
+    mov("p3", "pago", "cliente", 46419.59),
+    mov("p4", "pago", "desembolso", 393404.41),
+  ];
+  it("suma cargos y pagos al centavo y dice si hay adeudo", () => {
+    const c = calcularCuenta(499800, movimientos, { monto: 374850 });
+    expect(c.totalCargos).toBe(508882);
+    expect(c.totalPagos).toBe(504800);
+    expect(c.saldo).toBe(-4082);
+    expect(c.sinAdeudo).toBe(false);
+    expect(c.diferenciaDesembolso).toBe(18554.41);
+    const pagado = calcularCuenta(499800, [...movimientos, mov("p5", "pago", "cliente", 4082, "garantia_ext")]);
+    expect(pagado.saldo).toBe(0);
+    expect(pagado.sinAdeudo).toBe(true);
+  });
+  it("cuadra por concepto como la aplicación de pago", () => {
+    const c = calcularCuenta(499800, movimientos);
+    const por = Object.fromEntries(c.porConcepto.map((x) => [x.concepto, x.pendiente]));
+    expect(por.factura).toBe(0);
+    expect(por.garantia_ext).toBe(9082);
+    expect(por.accesorios).toBe(-5000);
+    expect(c.porConcepto.map((x) => x.concepto)).toEqual(["factura", "accesorios", "garantia_ext"]);
+  });
+  it("sin valor factura no hay veredicto", () => {
+    expect(calcularCuenta(null, []).sinAdeudo).toBe(false);
+    expect(calcularCuenta(null, []).completo).toBe(false);
+  });
+});
+
+describe("proceso del cliente", () => {
+  const base: EntradaProceso = { forma_pago: "Crédito Banorte", plaza: "Monterrey", valor_factura: null, expediente: {}, documentos: [], movimientos: [] };
+  const ids = (e: EntradaProceso) => evaluarProceso(e).etapas.flatMap((x) => x.requisitos).map((r) => r.id);
+
+  it("arma los requisitos según crédito, contado y Piedras Negras", () => {
+    const credito = ids(base);
+    expect(credito[0]).toBe("ine");
+    expect(credito).toContain("aprobacion");
+    expect(credito).not.toContain("permiso");
+    expect(credito.at(-1)).toBe("entrega");
+    const contado = ids({ ...base, forma_pago: "Contado" });
+    expect(contado).not.toContain("aprobacion");
+    expect(contado).not.toContain("desembolso");
+    expect(evaluarProceso({ ...base, forma_pago: "Contado" }).etapas[0].label).toBe("Documentos del cliente");
+    expect(ids({ ...base, plaza: "Piedras Negras" })).toEqual(expect.arrayContaining(["permiso", "permiso_pago"]));
+    expect(TODOS_REQUISITOS.every((r, i, a) => a.findIndex((x) => x.id === r.id) === i)).toBe(true);
+  });
+
+  it("un documento cuenta con archivo, en físico o como no aplica", () => {
+    const p = evaluarProceso({ ...base, documentos: [{ tipo: "ine", movimiento_id: null }], expediente: { curp: "2026-09-01", buro: NO_APLICA } });
+    const r = Object.fromEntries(p.etapas[0].requisitos.map((x) => [x.id, x]));
+    expect(r.ine.estado).toBe("hecho");
+    expect(r.curp).toMatchObject({ estado: "hecho", detalle: "Entregado en físico" });
+    expect(r.buro.estado).toBe("na");
+    expect(r.domicilio.estado).toBe("pendiente");
+    expect(p.etapas[0]).toMatchObject({ hechos: 2, total: 6 });
+    expect(p.siguiente?.id).toBe("domicilio");
+  });
+
+  it("pide recibo de cada pago, cargo de cada producto y cuadre sin adeudo", () => {
+    const e: EntradaProceso = {
+      ...base, valor_factura: 100000, productosVendidos: ["garantia"],
+      movimientos: [mov("p1", "pago", "separacion", 5000, "accesorios"), mov("p2", "pago", "cliente", 95000), mov("p3", "pago", "bono", 1000)],
+      documentos: [{ tipo: "recibo", movimiento_id: "p1" }],
+    };
+    const estado = (x: EntradaProceso) => Object.fromEntries(evaluarProceso(x).etapas.flatMap((et) => et.requisitos).map((r) => [r.id, r]));
+    let r = estado(e);
+    expect(r.recibos).toMatchObject({ estado: "pendiente", detalle: "1 de 2 pagos con recibo" });
+    expect(r.cargos.estado).toBe("pendiente");
+    expect(r.cuadre).toMatchObject({ estado: "hecho", detalle: "Sin adeudo · saldo a favor $1,000.00" });
+    r = estado({ ...e, movimientos: [...e.movimientos, mov("c1", "cargo", "garantia_ext", 9082)], documentos: [...e.documentos, { tipo: "recibo", movimiento_id: "p2" }] });
+    expect(r.recibos.estado).toBe("hecho");
+    expect(r.cargos.estado).toBe("hecho");
+    expect(r.cuadre).toMatchObject({ estado: "pendiente", detalle: "Falta cubrir $8,082.00" });
+  });
+
+  it("solo está listo para la salida con todo al 100%", () => {
+    const todo: Record<string, string> = {};
+    for (const r of TODOS_REQUISITOS) if (r.tipo !== "auto" && r.id !== "entrega") todo[r.id] = "2026-10-01";
+    const e: EntradaProceso = { ...base, valor_factura: 1000, expediente: todo, movimientos: [mov("p1", "pago", "cliente", 1000)], documentos: [{ tipo: "recibo", movimiento_id: "p1" }] };
+    const p = evaluarProceso(e);
+    expect(p.pendientes.map((x) => x.id)).toEqual(["entrega"]);
+    expect(p.listoParaSalida).toBe(true);
+    expect(evaluarProceso({ ...e, movimientos: [mov("p1", "pago", "cliente", 999)] }).listoParaSalida).toBe(false);
+    expect(evaluarProceso({ ...e, expediente: { ...todo, entrega: "2026-10-03" } }).pct).toBe(1);
   });
 });
 
@@ -136,36 +222,6 @@ describe("formato", () => {
   it("arma iniciales y enlaces de WhatsApp", () => {
     expect(iniciales("Jorge Cabral")).toBe("JC");
     expect(enlaceWhatsApp("81 1234 5678", "Hola")).toBe("https://wa.me/528112345678?text=Hola");
-  });
-});
-
-import { calcularCuadre } from "@/lib/dominio/cuadre";
-describe("cuadre", () => {
-  it("crédito: calcula enganche restante, desembolso esperado y veredicto", () => {
-    const c = calcularCuadre({ valor_factura: 524900, enganche: 80000, bonos: 25000, extras: 9082 }, "Crédito Banorte");
-    expect(c.engancheRestante).toBe(75000);
-    expect(c.desembolsoEsperado).toBe(419900);
-    expect(c.total).toBe(533982);
-    expect(c.saldo).toBe(-9082);
-    expect(c.sale).toBe(false);
-    const pagado = calcularCuadre({ valor_factura: 524900, enganche: 80000, bonos: 25000, extras: 9082, pagos_adicionales: 9082 }, "Crédito Banorte");
-    expect(pagado.saldo).toBe(0);
-    expect(pagado.sale).toBe(true);
-  });
-  it("compara el desembolso real contra el esperado", () => {
-    const c = calcularCuadre({ valor_factura: 500000, enganche: 100000, desembolso_real: 399000 }, "Crédito Banorte");
-    expect(c.diferenciaDesembolso).toBe(-1000);
-    expect(c.sale).toBe(false);
-  });
-  it("contado: no hay desembolso y el saldo sale de pagos y bonos", () => {
-    const c = calcularCuadre({ valor_factura: 399800, enganche: 380000, bonos: 25000 }, "Contado", 5000);
-    expect(c.desembolso).toBe(0);
-    expect(c.saldo).toBe(5200);
-    expect(c.sale).toBe(true);
-  });
-  it("sin valor factura no da veredicto", () => {
-    expect(calcularCuadre({}, "Contado").sale).toBe(false);
-    expect(calcularCuadre({}, "Contado").completo).toBe(false);
   });
 });
 
@@ -228,5 +284,17 @@ describe("generador de anuncios", async () => {
     expect(t.principal).toContain("81 1234 5678 (Omar)");
     expect(t.hashtags).toContain("#BYDSongPlusDMi");
     expect(t.titulo).toBe("BYD Song Plus DM-i 2026: bono de $78,000");
+  });
+});
+
+describe("recibos que cumplen documentos", () => {
+  it("el recibo de la separación, del desembolso y del bono cuentan para su requisito", () => {
+    const p = evaluarProceso({
+      forma_pago: "Crédito Banorte", plaza: "Monterrey", valor_factura: 1000, expediente: {},
+      movimientos: [mov("p1", "pago", "separacion", 500, "accesorios"), mov("p2", "pago", "desembolso", 400), mov("p3", "pago", "bono", 100)],
+      documentos: [{ tipo: "recibo", movimiento_id: "p1" }, { tipo: "recibo", movimiento_id: "p2" }, { tipo: "recibo", movimiento_id: "p3" }],
+    });
+    const r = Object.fromEntries(p.etapas.flatMap((et) => et.requisitos).map((x) => [x.id, x.estado]));
+    expect([r.separacion, r.desembolso, r.nota_credito, r.recibos]).toEqual(["hecho", "hecho", "hecho", "hecho"]);
   });
 });

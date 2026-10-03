@@ -3,7 +3,8 @@ import { VISIBLE } from "@/lib/config";
 import { BarChart3, Calculator, ClipboardList, Plus } from "lucide-react";
 import { catalogo, cortesDelDia, equipo, metaProducto, metaUnidades, metasDelMes, ranking, seguimientosPendientes, ventasDelMes, ventasEnProceso, ventasRecientes } from "@/lib/datos";
 import { requerirSesion } from "@/lib/sesion";
-import { avanceExpediente, colorHex, ROLES } from "@/lib/dominio/catalogos";
+import { colorHex, ROLES } from "@/lib/dominio/catalogos";
+import { procesoDeVenta } from "@/lib/dominio/proceso";
 import { diasDelMes, diasRestantes, fechaCorta, fechaLarga, hoy, mesActual, MESES, nombreMes } from "@/lib/dominio/fechas";
 import { decimal, porcentaje } from "@/lib/dominio/formato";
 import { penetracion, proyeccion, resumir, ritmoNecesario } from "@/lib/dominio/reportes";
@@ -107,7 +108,7 @@ export default async function Inicio() {
           {enProceso.length ? (
             <ul className="grid grid-cols-[minmax(0,1fr)]">
               {enProceso.slice(0, 6).map((v) => {
-                const av = avanceExpediente(v.forma_pago, v.expediente);
+                const av = procesoDeVenta(v, cat.productos);
                 return (
                   <li key={v.id} className="border-t border-line first:border-0">
                     <Link href={`/ventas/${v.id}`} className="flex items-center gap-3 py-2.5 hover:opacity-80">
