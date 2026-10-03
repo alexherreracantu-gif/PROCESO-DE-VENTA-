@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import {
   BarChart3, BookOpenCheck, Calculator, CarFront, ClipboardList, Cog, Home, KanbanSquare, LogOut, Menu,
-  Images, MessagesSquare, Sparkles, Target, UserRound, Users, X, type LucideIcon,
+  Images, Megaphone, MessagesSquare, Sparkles, Target, UserRound, Users, X, type LucideIcon,
 } from "lucide-react";
 import { Avatar, cx } from "@/components/ui";
 import { Insignia, Logo } from "@/components/marca";
@@ -25,6 +25,7 @@ const GRUPOS: { titulo: string; items: Item[] }[] = [
     { href: "/crm", texto: "Prospectos", icono: KanbanSquare },
     { href: "/cotizador", texto: "Cotizador", icono: Calculator },
     { href: "/fotos", texto: "Fotos de modelos", icono: Images },
+    { href: "/anuncios", texto: "Generador de anuncios", icono: Megaphone },
     { href: "/guiones", texto: "Guiones", icono: MessagesSquare },
     { href: "/agente", texto: "Agente IA", icono: Sparkles, oculto: !VISIBLE.agente },
   ] },

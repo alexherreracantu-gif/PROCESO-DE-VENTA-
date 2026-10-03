@@ -185,3 +185,48 @@ describe("prospectos entrantes", () => {
     expect(elegirAsesor([{ id: "omar", hoy: 2, total: 9 }, { id: "mariana", hoy: 1, total: 12 }, { id: "leo", hoy: 1, total: 4 }])).toBe("leo");
   });
 });
+
+describe("generador de anuncios", async () => {
+  const { escenario, textoLegal, textosAnuncio, telefonoBonito, vigencia, tasaTexto, condicionesModelo } = await import("@/lib/anuncios");
+  const song = { clave: "song-plus", nombre: "Song Plus DM-i", anio: 2026, motor: "hibrido" as const, precio: 778800, bono: 78000, descripcion: "SUV de volumen premium." };
+  const kingGs = { ...song, clave: "king-gs", nombre: "King GS DM-i", anio: 2027, precio: 579900, bono: 25000, descripcion: "King con más equipo. Bono flexible de octubre solo con interior gris/azul." };
+
+  it("calcula la mensualidad con el cotizador Banorte (50% de enganche → 7.88%)", () => {
+    const e = escenario(song, 0.5, 72);
+    expect(e.tasa).toBe(0.0788);
+    expect(e.pctEnganche).toBeCloseTo(0.5, 3);
+    expect(e.bonoAplica).toBe(true);
+    expect(e.mensualidad).toBeGreaterThan(6000);
+    expect(e.mensualidad).toBeLessThan(8000);
+  });
+
+  it("la letra chica lleva precio con IVA, condiciones del bono y de la mensualidad, y la vigencia del mes", () => {
+    const t = textoLegal({ modelo: kingGs, hoy: "2026-10-03", conBono: true, mensualidad: { pctEnganche: 0.5, plazo: 72, tasa: 0.0788 } });
+    expect(t).toContain("$579,900 con IVA incluido");
+    expect(t).toContain("BBVA, Santander, Banorte o KUNA desde 5% de enganche");
+    expect(t).toContain("solo con interior gris/azul");
+    expect(t).toContain("enganche de 50%, plazo de 72 meses y tasa fija anual de 7.88%");
+    expect(t).toContain("31 de octubre de 2026");
+    const sinBono = textoLegal({ modelo: kingGs, hoy: "2026-10-03", conBono: false });
+    expect(sinBono).not.toContain("Bono flexible");
+  });
+
+  it("formatea teléfono, vigencia y tasa", () => {
+    expect(telefonoBonito("528112345678")).toBe("81 1234 5678");
+    expect(telefonoBonito("81-1234-5678")).toBe("81 1234 5678");
+    expect(vigencia("2026-02-10")).toBe("28 de febrero de 2026");
+    expect(tasaTexto(0.0788)).toBe("7.88%");
+    expect(tasaTexto(0.1)).toBe("10%");
+    expect(condicionesModelo("SUV familiar. Precio especial de octubre.")).toEqual(["Precio especial de octubre."]);
+    expect(condicionesModelo("SUV de volumen premium. El bono más visible del piso.")).toEqual([]);
+  });
+
+  it("arma los textos para redes con los datos del asesor", () => {
+    const t = textosAnuncio({ modelo: song, conBono: true, mensualidad: { valor: 7070, tasa: 0.0788 }, asesor: "Omar", telefono: "8112345678", agencia: "BYD Cumbres · Park Point", ciudad: "Monterrey, N.L." });
+    expect(t.principal).toContain("BYD Song Plus DM-i 2026");
+    expect(t.principal).toContain("Bono flexible de $78,000");
+    expect(t.principal).toContain("81 1234 5678 (Omar)");
+    expect(t.hashtags).toContain("#BYDSongPlusDMi");
+    expect(t.titulo).toBe("BYD Song Plus DM-i 2026: bono de $78,000");
+  });
+});
