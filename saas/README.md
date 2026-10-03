@@ -19,6 +19,10 @@ Identidad **BYD Grupo TEC** en colores claros: fondo blanco, barra lateral blanc
 | **Entregas** | Calendario de los próximos 14 días y lista por día con lo que le falta a cada expediente; atrasadas y expedientes sin fecha. La fecha se programa desde el expediente. |
 | **Postventa** | Al entregar: reseña, video, llamada de satisfacción, referidos y recordatorio del primer servicio, cada uno con su fecha y su mensaje de WhatsApp listo. |
 | **Mis comisiones** | Comisión por venta (monto por unidad, % de factura y por producto: fijo o % de su precio), ganado vs. por cobrar, bono por meta y meta personal de ingreso con cuántas ventas faltan. Dirección captura el esquema en la misma pantalla. |
+| **Resultados de anuncios** | Por canal (Meta Ads, Instagram, landing, referido…): prospectos, ventas, conversión, inversión, costo por prospecto, **costo por venta** y ganancia contra comisiones. Cada asesor captura lo que invirtió por mes; dirección ve al equipo. Cada venta guarda de dónde llegó el cliente (si sale del CRM, toma el origen del prospecto). |
+| **Cotización en PDF** | Desde el cotizador: hoja con foto del auto, números Banorte, plazos de 36 a 72 meses y datos del asesor, lista para imprimir o guardar como PDF y mandar por WhatsApp. |
+| **Respaldo** | Botón en Ventas: ZIP con ventas, cuenta de cada cliente, lista de documentos, prospectos e inversión (CSV que abre Excel). A dirección se le recuerda cada semana en el Inicio. |
+| **Seguridad** | Aviso hasta que cada quien cambie la contraseña compartida. La landing trae campo trampa y tiempo mínimo contra robots, y el webhook frena avalanchas (más de 30 prospectos en 10 minutos). |
 | **Dashboard general** (`/panel`) | El tablero de todo el equipo **sin iniciar sesión**, de solo lectura: indicadores, ranking, productos, modelos, colores y detalle de ventas. Se actualiza solo cada 5 minutos (para dejarlo en una pantalla). Es público: cualquiera con el enlace ve las cifras y el detalle. |
 | **Tablero de reporte** | Por mes y por vendedor: unidades contra meta y contra el mes anterior, penetración por producto, ranking, modelos, colores y detalle. **Descargar imagen** (PNG), **Compartir** desde el celular y **Exportar Excel** (CSV). |
 | **Objetivos** | Meta de unidades por vendedor y meta de penetración por producto, por mes. Dirección las edita; el equipo ve su avance. |
@@ -59,6 +63,15 @@ Opcional:
 - **Agente IA:** agrega `ANTHROPIC_API_KEY` (Claude, de [console.anthropic.com](https://console.anthropic.com)) u `OPENAI_API_KEY` (ChatGPT, de [platform.openai.com](https://platform.openai.com/api-keys)) y vuelve a desplegar. Si están las dos, usa Claude.
 - **Dominio propio:** *Settings → Domains* (por ejemplo `portal.tuagencia.mx`).
 - **En el celular:** abre el enlace y usa *Agregar a pantalla de inicio*.
+
+### Resumen diario por correo (opcional)
+
+Cada mañana (7:00 Monterrey) el portal manda a cada quien sus pendientes: entregas, adeudos, recibos, postventa y seguimientos. Para encenderlo:
+1. Crea una cuenta gratis en [resend.com](https://resend.com) y copia tu API key.
+2. En Vercel → Settings → Environment Variables agrega `RESEND_API_KEY` y `CRON_SECRET` (cualquier texto largo). Vuelve a desplegar.
+3. Cada usuario pone su correo en **Mi perfil**.
+
+Sin dominio propio, Resend solo entrega al correo con el que abriste la cuenta. Para mandar a todo el equipo, verifica un dominio en Resend y agrega `RESUMEN_REMITENTE` (ej. `Park Point <avisos@tudominio.com>`).
 
 ### Archivos del expediente
 

@@ -6,9 +6,15 @@ describe("decidirAcceso", () => {
     expect(decidirAcceso("/api/leads", false)).toBe("pasar");
   });
 
+  it("deja pasar el resumen diario de Vercel Cron (lo protege CRON_SECRET)", () => {
+    expect(decidirAcceso("/api/cron/resumen", false)).toBe("pasar");
+  });
+
   it("rechaza con 401 las demás API sin sesión", () => {
     expect(decidirAcceso("/api/agente", false)).toBe("no-autorizado");
     expect(decidirAcceso("/api/leadsx", false)).toBe("no-autorizado");
+    expect(decidirAcceso("/api/respaldo", false)).toBe("no-autorizado");
+    expect(decidirAcceso("/api/expedientes/x", false)).toBe("no-autorizado");
   });
 
   it("manda al login las páginas privadas sin sesión", () => {

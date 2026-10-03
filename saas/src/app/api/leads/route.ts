@@ -1,6 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { buscarModelo, elegirAsesor, normalizarLead } from "@/lib/dominio/leads";
+import { buscarModelo, elegirAsesor, esRobot, normalizarLead } from "@/lib/dominio/leads";
 import { hoy } from "@/lib/dominio/fechas";
 
 /**
@@ -38,12 +38,19 @@ export async function POST(request: Request) {
   if (!autorizado(request, url)) return respuesta({ ok: false, error: "Token inválido o LEADS_TOKEN sin configurar." }, 401);
   let datos: Record<string, string>;
   try { datos = await leerCuerpo(request); } catch { return respuesta({ ok: false, error: "Cuerpo inválido." }, 400); }
+  // Robots: llenaron el campo trampa o mandaron el formulario en menos de 3 segundos. Se les responde
+  // "ok" para que no reintenten, pero no se guarda nada.
+  if (esRobot(datos)) return respuesta({ ok: true });
   const lead = normalizarLead(datos);
   if ("error" in lead) return respuesta({ ok: false, error: lead.error }, 422);
 
   const admin = supabaseAdmin();
   const agenciaId = url.searchParams.get("agencia") ?? (await admin.from("agencias").select("id").order("created_at").limit(1).single()).data?.id;
   if (!agenciaId) return respuesta({ ok: false, error: "No hay agencia configurada." }, 500);
+
+  // Freno contra avalanchas: más de 30 prospectos en 10 minutos no es tráfico normal.
+  const { count: ultimos } = await admin.from("prospectos").select("id", { count: "exact", head: true }).eq("agencia_id", agenciaId).gte("created_at", new Date(Date.now() - 10 * 60_000).toISOString());
+  if ((ultimos ?? 0) >= 30) return respuesta({ ok: false, error: "Demasiados prospectos seguidos. Intenta en unos minutos." }, 429);
 
   // Si el teléfono ya llegó en los últimos 30 días, se agrega la nota al mismo prospecto.
   const hace30 = new Date(Date.now() - 30 * 864e5).toISOString();

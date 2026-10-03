@@ -380,3 +380,50 @@ describe("texto del saldo", () => {
     expect(textoSaldo("Contado", { ...c, sinAdeudo: true }).texto).toBe("Sin adeudo");
   });
 });
+
+import { esRobot } from "@/lib/dominio/leads";
+describe("prospectos de robots", () => {
+  it("detecta el campo trampa y los envíos instantáneos", () => {
+    expect(esRobot({ nombre: "Ana", sitio_web: "http://spam" })).toBe(true);
+    expect(esRobot({ nombre: "Ana", t: "1" })).toBe(true);
+    expect(esRobot({ nombre: "Ana", t: "12", sitio_web: "" })).toBe(false);
+    expect(esRobot({ nombre: "Ana" })).toBe(false);
+  });
+});
+
+import { resultadosPorCanal } from "@/lib/dominio/publicidad";
+describe("resultados por canal", () => {
+  it("calcula conversión, costo por prospecto, costo por venta y retorno", () => {
+    const r = resultadosPorCanal({
+      prospectos: [{ origen: "Meta Ads" }, { origen: "Meta Ads" }, { origen: "Meta Ads" }, { origen: "Meta Ads" }, { origen: "Referido" }, { origen: null }],
+      ventas: [{ origen: "Meta Ads", comision: 3000 }, { origen: "Referido", comision: 2500 }],
+      inversion: [{ canal: "Meta Ads", monto: 2000 }, { canal: "Google", monto: 500 }],
+    });
+    const meta = r.filas.find((f) => f.canal === "Meta Ads")!;
+    expect(meta).toMatchObject({ prospectos: 4, ventas: 1, conversion: 0.25, inversion: 2000, costoProspecto: 500, costoVenta: 2000, comision: 3000, retorno: 1000 });
+    expect(r.filas.find((f) => f.canal === "Google")).toMatchObject({ ventas: 0, costoVenta: null, retorno: -500 });
+    expect(r.filas.find((f) => f.canal === "Sin dato")?.prospectos).toBe(1);
+    expect(r.total).toMatchObject({ prospectos: 6, ventas: 2, inversion: 2500, comision: 5500, retorno: 3000 });
+  });
+});
+
+import { correoResumen } from "@/lib/dominio/resumen";
+describe("resumen diario", () => {
+  it("arma el asunto con lo importante y escapa el HTML", () => {
+    const c = correoResumen({ nombre: "Jorge Cabral", fecha: "Lunes, 5 de octubre", portal: "https://x.app/inicio", entregasHoy: 1, seguimientos: 2,
+      puntos: [{ cliente: "Ana <b>", texto: "Debe $1,000", grave: true, enlace: "https://x.app/ventas/1" }] })!;
+    expect(c.asunto).toBe("Jorge, tu día: 1 entrega hoy · 1 urgente · 2 seguimientos");
+    expect(c.html).toContain("Ana &lt;b&gt;");
+    expect(c.texto).toContain("• Ana <b>: Debe $1,000");
+  });
+  it("no manda nada si no hay pendientes", () => {
+    expect(correoResumen({ nombre: "Ana", fecha: "x", portal: "y", puntos: [], entregasHoy: 0, seguimientos: 0 })).toBeNull();
+  });
+});
+
+describe("conversión sin prospectos registrados", () => {
+  it("no inventa conversiones de más de 100%", () => {
+    const r = resultadosPorCanal({ prospectos: [{ origen: "Referido" }], ventas: [{ origen: "Referido", comision: 0 }, { origen: "Referido", comision: 0 }], inversion: [] });
+    expect(r.filas[0].conversion).toBeNull();
+  });
+});

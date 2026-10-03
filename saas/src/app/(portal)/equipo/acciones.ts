@@ -45,7 +45,7 @@ export async function crearUsuario(e: z.input<typeof Nuevo>): Promise<ResultadoE
   const contrasena = contrasenaTemporal();
   const { data, error } = await admin.auth.admin.createUser({ email: r.data.email || `${r.data.usuario}@${DOMINIO_USUARIOS}`, password: contrasena, email_confirm: true, user_metadata: { usuario: r.data.usuario } });
   if (error || !data.user) return { ok: false, error: /already|registered|exists/i.test(error?.message ?? "") ? "Ese correo ya tiene cuenta." : "No se pudo crear la cuenta: " + (error?.message ?? "") };
-  const { error: e2 } = await admin.from("perfiles").insert({ id: data.user.id, agencia_id: s.agencia.id, usuario: r.data.usuario, nombre: r.data.nombre, nombre_corto: r.data.nombre_corto, rol: r.data.rol, vende: r.data.vende });
+  const { error: e2 } = await admin.from("perfiles").insert({ id: data.user.id, agencia_id: s.agencia.id, usuario: r.data.usuario, nombre: r.data.nombre, nombre_corto: r.data.nombre_corto, rol: r.data.rol, vende: r.data.vende, clave_temporal: true });
   if (e2) { await admin.auth.admin.deleteUser(data.user.id); return { ok: false, error: "No se pudo crear el perfil: " + e2.message }; }
   revalidatePath("/", "layout");
   return { ok: true, mensaje: `${r.data.nombre} ya puede entrar`, contrasena };
@@ -86,6 +86,7 @@ export async function restablecerContrasena(id: string): Promise<ResultadoEquipo
   const contrasena = contrasenaTemporal();
   const { error } = await supabaseAdmin().auth.admin.updateUserById(id, { password: contrasena });
   if (error) return { ok: false, error: "No se pudo cambiar la contraseña: " + error.message };
+  await supabaseAdmin().from("perfiles").update({ clave_temporal: true }).eq("id", id);
   return { ok: true, mensaje: `Nueva contraseña para ${t.nombre}`, contrasena };
 }
 
@@ -103,6 +104,7 @@ export async function contrasenaParaTodos(nueva: string): Promise<ResultadoEquip
   for (const p of data ?? []) {
     const { error: e } = await admin.auth.admin.updateUserById(p.id, { password: r.data });
     if (e) fallidos.push(p.nombre);
+    else await admin.from("perfiles").update({ clave_temporal: true }).eq("id", p.id);
   }
   if (fallidos.length) return { ok: false, error: `No se pudo cambiar la contraseña de: ${fallidos.join(", ")}.` };
   return { ok: true, mensaje: `Contraseña actualizada para ${data?.length ?? 0} personas` };

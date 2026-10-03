@@ -324,6 +324,8 @@
           </div>
         </div>
         <form class="card" id="leadForm" novalidate>
+          <!-- Campo trampa contra robots: las personas no lo ven ni lo llenan. -->
+          <input name="sitio_web" type="text" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
           <div class="field">
             <label for="fNombre">Nombre</label>
             <input id="fNombre" name="nombre" type="text" autocomplete="name" required placeholder="Tu nombre y apellido">
@@ -568,6 +570,7 @@
         return s >= 6 ? "Caliente" : s >= 4 ? "Tibio" : "Frío";
       }
 
+      var cargada = Date.now();
       form.addEventListener("submit", function (e) {
         e.preventDefault();
         var nombre = form.nombre.value.trim();
@@ -594,6 +597,8 @@
           var body = new URLSearchParams(Object.assign({}, d, utm, {
             fecha: new Date().toISOString(),
             pagina: location.href.split("?")[0],
+            sitio_web: form.sitio_web.value,
+            t: String(Math.round((Date.now() - cargada) / 1000)),
           }));
           try { fetch(C.webhookUrl, { method: "POST", mode: "no-cors", body: body, keepalive: true }); } catch (err) { /* sin bloquear al cliente */ }
         }

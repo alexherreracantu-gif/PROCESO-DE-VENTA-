@@ -146,3 +146,24 @@ export function textoSaldo(formaPago: string, c: { completo: boolean; sinAdeudo:
   if (formaPago !== "Contado" && !c.porOrigen.some((o) => o.origen === "desembolso")) return { texto: "Espera desembolso", tono: "warn" };
   return { texto: `Debe ${dinero2(-c.saldo).replace(/\.00$/, "")}`, tono: "bad" };
 }
+
+// ---------------------------------------------------------------------
+// Lista de lo urgente (Inicio y correo diario)
+// ---------------------------------------------------------------------
+
+export type Urgente = Alerta & { ventaId: string; cliente: string; vendedor: string };
+const ORDEN_ALERTA: Record<Alerta["tipo"], number> = { entrega: 0, adeudo: 1, detenido: 2, recibo: 3, postventa: 4 };
+
+/** Alertas de los expedientes abiertos + postventa vencida de los entregados, lo grave primero. */
+export function pendientesUrgentes<V extends VentaAlertas & { id: string; cliente: string; vendedor_id: string; expediente: Record<string, string> }>(
+  enProceso: V[], entregadas: V[], proceso: (v: V) => ResultadoProceso, agencia: string, hoy: string,
+): Urgente[] {
+  const out: Urgente[] = [];
+  for (const v of enProceso) for (const a of alertasVenta(v, proceso(v), hoy)) out.push({ ...a, ventaId: v.id, cliente: v.cliente, vendedor: v.vendedor_id });
+  for (const v of entregadas) {
+    if (v.estatus !== "entregada" || !v.fecha_entrega) continue;
+    const toca = postventa(v.fecha_entrega, v.expediente, v.cliente, agencia, hoy).filter((x) => x.vencido);
+    if (toca.length) out.push({ tipo: "postventa", texto: `Postventa: ${toca.map((x) => x.label.toLowerCase()).join(", ")}`, grave: false, ventaId: v.id, cliente: v.cliente, vendedor: v.vendedor_id });
+  }
+  return out.sort((a, b) => Number(b.grave) - Number(a.grave) || ORDEN_ALERTA[a.tipo] - ORDEN_ALERTA[b.tipo]);
+}

@@ -129,6 +129,7 @@ export default async function DetalleVenta(props: PageProps<"/ventas/[id]">) {
           {dato("Valor factura", v.valor_factura != null ? dinero2(v.valor_factura) : null)}
           {dato("Teléfono", v.telefono)}
           {dato("Vendedor", vendedor?.nombre)}
+          {dato("Llegó por", v.origen)}
         </dl>
         <div className="mt-5 border-t border-line pt-4">
           <p className="mb-2 text-[0.76rem] font-semibold text-muted">Productos vendidos · {productos.length} de {catalogo.productos.length}{totalProductos ? ` · ${dinero(totalProductos)} a precio de catálogo` : ""}</p>

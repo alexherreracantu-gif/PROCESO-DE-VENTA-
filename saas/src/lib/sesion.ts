@@ -19,7 +19,7 @@ export const obtenerSesion = cache(async (): Promise<Sesion | null> => {
   if (!data.user) return null;
   const { data: perfil } = await sb
     .from("perfiles")
-    .select("id, agencia_id, usuario, nombre, nombre_corto, rol, vende, activo, telefono")
+    .select("id, agencia_id, usuario, nombre, nombre_corto, rol, vende, activo, telefono, clave_temporal, correo")
     .eq("id", data.user.id)
     .maybeSingle<Perfil>();
   if (!perfil?.activo) return null;

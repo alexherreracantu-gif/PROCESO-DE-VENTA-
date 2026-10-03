@@ -1,4 +1,5 @@
 /** Cómo se acomoda el expediente al descargarlo en ZIP: una carpeta por etapa, como en Drive. */
+import { aCsv } from "./csv";
 import { labelCargo, labelOrigen, type Movimiento } from "./cuenta";
 import { ETAPAS_PROCESO, type DocumentoResumen } from "./proceso";
 
@@ -28,7 +29,7 @@ export function paqueteExpediente(v: { cliente: string; folio: number; documento
   const filas = [["Fecha", "Tipo", "Concepto", "Aplicado a", "Forma de pago", "Referencia", "Monto", "Nota"],
     ...v.movimientos.map((m) => [m.fecha, m.tipo === "cargo" ? "Cargo" : "Pago", m.tipo === "cargo" ? labelCargo(m.concepto) : labelOrigen(m.concepto),
       m.tipo === "pago" ? labelCargo(m.aplica_a) : "", m.forma ?? "", m.referencia ?? "", m.monto.toFixed(2), m.notas ?? ""])];
-  const csv = "﻿" + filas.map((f) => f.map((x) => /[",\n]/.test(x) ? `"${x.replace(/"/g, '""')}"` : x).join(",")).join("\r\n");
+  const csv = aCsv(filas);
   const extras = [{ ruta: "Cuenta del cliente.csv", texto: csv }];
   if (enlaces.length) extras.push({ ruta: "Enlaces de Drive.txt", texto: enlaces.join("\r\n") });
   return { nombre: limpio(`Expediente ${v.folio} ${v.cliente}`), archivos, extras };

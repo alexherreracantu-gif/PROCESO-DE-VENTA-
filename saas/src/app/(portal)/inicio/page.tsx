@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { VISIBLE } from "@/lib/config";
-import { AlertTriangle, BarChart3, CalendarClock, Calculator, ClipboardList, Clock, HeartHandshake, Plus, Receipt, Wallet } from "lucide-react";
+import { AlertTriangle, BarChart3, DatabaseBackup, CalendarClock, Calculator, ClipboardList, Clock, HeartHandshake, Plus, Receipt, Wallet } from "lucide-react";
 import { catalogo, ventasConEntrega, cortesDelDia, equipo, metaProducto, metaUnidades, metasDelMes, ranking, seguimientosPendientes, ventasDelMes, ventasEnProceso, ventasRecientes } from "@/lib/datos";
 import { requerirSesion } from "@/lib/sesion";
 import { colorHex, ROLES } from "@/lib/dominio/catalogos";
 import { procesoDeVenta } from "@/lib/dominio/proceso";
-import { alertasVenta, postventa, type Alerta } from "@/lib/dominio/seguimiento";
+import { pendientesUrgentes, type Alerta } from "@/lib/dominio/seguimiento";
 import { diasDelMes, diasRestantes, fechaCorta, fechaLarga, hoy, mesActual, MESES, nombreMes, sumarDias } from "@/lib/dominio/fechas";
 import { decimal, porcentaje } from "@/lib/dominio/formato";
 import { penetracion, proyeccion, resumir, ritmoNecesario } from "@/lib/dominio/reportes";
@@ -44,18 +44,14 @@ export default async function Inicio() {
   const cortesHoy = new Set(cortes.map((c) => c.usuario_id));
 
   // Lo urgente: entregas, expedientes detenidos, recibos, adeudos y postventa que ya toca.
-  const urgentes: (Alerta & { ventaId: string; cliente: string; vendedor: string })[] = [];
-  for (const v of enProceso) {
-    for (const a of alertasVenta(v, procesoDeVenta(v, cat.productos), fecha)) urgentes.push({ ...a, ventaId: v.id, cliente: v.cliente, vendedor: v.vendedor_id });
+  type Urgente = Omit<Alerta, "tipo"> & { tipo: Alerta["tipo"] | "respaldo"; href: string; cliente: string; vendedor: string | null };
+  const urgentes: Urgente[] = pendientesUrgentes(enProceso, entregadas, (v) => procesoDeVenta(v, cat.productos), s.agencia.nombre, fecha)
+    .map((u) => ({ ...u, href: `/ventas/${u.ventaId}` }));
+  const ultimoRespaldo = s.agencia.parametros.ultimo_respaldo;
+  if (direccion && (!ultimoRespaldo || ultimoRespaldo < sumarDias(fecha, -7))) {
+    urgentes.push({ tipo: "respaldo", texto: ultimoRespaldo ? `El último fue el ${fechaCorta(ultimoRespaldo)}: descarga el de esta semana` : "Descarga tu primer respaldo de ventas, pagos y prospectos", grave: false, href: "/api/respaldo", cliente: "Respaldo semanal", vendedor: null });
   }
-  for (const v of entregadas) {
-    if (v.estatus !== "entregada" || !v.fecha_entrega) continue;
-    const toca = postventa(v.fecha_entrega, v.expediente, v.cliente, s.agencia.nombre, fecha).filter((x) => x.vencido);
-    if (toca.length) urgentes.push({ tipo: "postventa", texto: `Postventa: ${toca.map((x) => x.label.toLowerCase()).join(", ")}`, grave: false, ventaId: v.id, cliente: v.cliente, vendedor: v.vendedor_id });
-  }
-  const ORDEN = { entrega: 0, adeudo: 1, detenido: 2, recibo: 3, postventa: 4 } as const;
-  urgentes.sort((a, b) => Number(b.grave) - Number(a.grave) || ORDEN[a.tipo] - ORDEN[b.tipo]);
-  const ICONO = { entrega: CalendarClock, adeudo: Wallet, detenido: Clock, recibo: Receipt, postventa: HeartHandshake } as const;
+  const ICONO = { entrega: CalendarClock, adeudo: Wallet, detenido: Clock, recibo: Receipt, postventa: HeartHandshake, respaldo: DatabaseBackup } as const;
 
   return (
     <>
@@ -79,14 +75,14 @@ export default async function Inicio() {
             {urgentes.slice(0, 10).map((u, i) => {
               const Icono = ICONO[u.tipo];
               return (
-                <li key={`${u.ventaId}-${u.tipo}-${i}`} className="border-t border-line first:border-0 md:[&:nth-child(2)]:border-0">
-                  <Link href={`/ventas/${u.ventaId}`} className="flex items-center gap-3 py-2.5 hover:opacity-80">
+                <li key={`${u.href}-${u.tipo}-${i}`} className="border-t border-line first:border-0 md:[&:nth-child(2)]:border-0">
+                  <a href={u.href} className="flex items-center gap-3 py-2.5 hover:opacity-80">
                     <span className={u.grave ? "grid size-8 shrink-0 place-items-center rounded-full bg-bad-soft text-bad" : "grid size-8 shrink-0 place-items-center rounded-full bg-warn-soft text-warn"}><Icono className="size-4" /></span>
                     <span className="min-w-0 flex-1">
                       <strong className="block truncate">{u.cliente}</strong>
-                      <span className="block truncate text-[0.8rem] text-muted">{u.texto}{direccion ? ` · ${corto.get(u.vendedor) ?? ""}` : ""}</span>
+                      <span className="block truncate text-[0.8rem] text-muted">{u.texto}{direccion && u.vendedor ? ` · ${corto.get(u.vendedor) ?? ""}` : ""}</span>
                     </span>
-                  </Link>
+                  </a>
                 </li>
               );
             })}

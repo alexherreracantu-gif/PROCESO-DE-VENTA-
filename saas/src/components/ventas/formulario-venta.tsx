@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
 import { Boton, Campo, cx } from "@/components/ui";
 import { Dialogo, useAviso } from "@/components/cliente";
-import { COLORES, ESTATUS, FORMAS_PAGO, PLAZAS } from "@/lib/dominio/catalogos";
+import { COLORES, ORIGENES, ESTATUS, FORMAS_PAGO, PLAZAS } from "@/lib/dominio/catalogos";
 import { revisarVin, normalizarVin } from "@/lib/dominio/vin";
 import { hoy } from "@/lib/dominio/fechas";
 import { guardarVenta, type EntradaVenta } from "@/app/(portal)/ventas/acciones";
@@ -20,7 +20,7 @@ export type ContextoVenta = {
   vinesUsados: { vin: string; cliente: string; id: string }[];
 };
 
-export type Prefill = Partial<Pick<Venta, "cliente" | "telefono" | "modelo_id" | "vendedor_id">> & { prospecto_id?: string };
+export type Prefill = Partial<Pick<Venta, "cliente" | "telefono" | "modelo_id" | "vendedor_id" | "origen">> & { prospecto_id?: string };
 
 export function FormularioVenta({ abierto, alCerrar, ctx, venta, prefill, alGuardar }: {
   abierto: boolean; alCerrar: () => void; ctx: ContextoVenta; venta?: Venta | null; prefill?: Prefill; alGuardar?: (id: string) => void;
@@ -54,6 +54,7 @@ function Cuerpo({ alCerrar, ctx, venta, prefill, alGuardar }: { alCerrar: () => 
     fecha_entrega: venta?.fecha_entrega ?? "",
     valor_factura: venta?.valor_factura != null ? String(venta.valor_factura) : "",
     notas: venta?.notas ?? "",
+    origen: venta?.origen ?? prefill?.origen ?? "",
     productos: new Set(venta?.productos ?? []),
   }));
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((x) => ({ ...x, [k]: v }));
@@ -81,7 +82,7 @@ function Cuerpo({ alCerrar, ctx, venta, prefill, alGuardar }: { alCerrar: () => 
       id: venta?.id, fecha: f.fecha, vendedor_id: f.vendedor_id, cliente: f.cliente, num_cliente: f.num_cliente, telefono: f.telefono,
       vin: f.vin, modelo_id: f.modelo_id, color: f.color, color_nombre: f.color_nombre, forma_pago: f.forma_pago as EntradaVenta["forma_pago"],
       plaza: f.plaza as EntradaVenta["plaza"], estatus: f.estatus as EntradaVenta["estatus"], fecha_entrega: f.fecha_entrega,
-      valor_factura: f.valor_factura ? Number(f.valor_factura) : null, notas: f.notas, productos: [...f.productos], prospecto_id: prefill?.prospecto_id ?? null,
+      valor_factura: f.valor_factura ? Number(f.valor_factura) : null, notas: f.notas, origen: f.origen || null, productos: [...f.productos], prospecto_id: prefill?.prospecto_id ?? null,
     };
     iniciar(async () => {
       const r = await guardarVenta(entrada);
@@ -122,6 +123,12 @@ function Cuerpo({ alCerrar, ctx, venta, prefill, alGuardar }: { alCerrar: () => 
             onChange={(e) => set("modelo_id", e.target.value)} onBlur={() => setMarcados((m) => ({ ...m, modelo_id: true }))}>
             <option value="">Elige modelo</option>
             {modelosVisibles.map((m) => <option key={m.id} value={m.id}>{m.nombre} {m.anio}</option>)}
+          </select>
+        </Campo>
+        <Campo etiqueta="¿De dónde llegó el cliente?" htmlFor="v-origen" ayuda="Para saber qué publicidad te trae ventas.">
+          <select id="v-origen" className="campo" value={f.origen} onChange={(e) => set("origen", e.target.value)}>
+            <option value="">Sin dato</option>
+            {[...new Set([...ORIGENES, ...(f.origen ? [f.origen] : [])])].map((o) => <option key={o} value={o}>{o}</option>)}
           </select>
         </Campo>
       </div>
