@@ -10,6 +10,7 @@ import {
 import { Avatar, cx } from "@/components/ui";
 import { Insignia, Logo } from "@/components/marca";
 import { VISIBLE } from "@/lib/config";
+import { BarraNavegacion } from "@/components/barra-navegacion";
 
 type Item = { href: string; texto: string; icono: LucideIcon; direccion?: boolean; oculto?: boolean };
 const GRUPOS: { titulo: string; items: Item[] }[] = [
@@ -44,12 +45,13 @@ export function Marco({ usuario, agencia, direccion, children }: {
 
   return (
     <div className="min-h-dvh">
+      <BarraNavegacion />
       <aside className={cx(
         "fixed inset-y-0 left-0 z-40 flex w-[248px] flex-col border-r border-line bg-side pt-[env(safe-area-inset-top)] text-side-fg transition-transform duration-200",
         "max-lg:w-[272px] max-lg:shadow-2xl", menu ? "max-lg:translate-x-0" : "max-lg:-translate-x-full",
       )}>
         <div className="flex items-start gap-2 px-5 pb-4 pt-6">
-          <Link href="/inicio" className="min-w-0 flex-1" aria-label="Inicio">
+          <Link href="/inicio" className="min-w-0 flex-1 [animation:entrar_0.6s_cubic-bezier(0.2,0.7,0.2,1)_both]" aria-label="Inicio">
             <Logo tono="azul" ancho={142} prioridad />
             <span className="mt-3 flex items-center gap-2 text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-side-muted">
               <span className="h-px w-4 bg-brand" aria-hidden />Portal Park Point
@@ -58,7 +60,7 @@ export function Marco({ usuario, agencia, direccion, children }: {
           </Link>
           <button type="button" onClick={() => setMenu(false)} aria-label="Cerrar menú" className="grid size-8 place-items-center rounded-lg text-side-muted hover:bg-side-2 lg:hidden"><X className="size-4" /></button>
         </div>
-        <nav aria-label="Módulos" className="flex-1 overflow-y-auto px-3 pb-4">
+        <nav aria-label="Módulos" className="escalonado flex-1 overflow-y-auto px-3 pb-4">
           {GRUPOS.map((g) => (
             <div key={g.titulo} className="mb-2">
               <p className="px-3 pb-1 pt-3 text-[0.66rem] font-semibold uppercase tracking-[0.12em] text-side-muted">{g.titulo}</p>
@@ -67,9 +69,9 @@ export function Marco({ usuario, agencia, direccion, children }: {
                 const Icono = i.icono;
                 return (
                   <Link key={i.href} href={i.href} aria-current={activo ? "page" : undefined} onClick={() => setMenu(false)}
-                    className={cx("relative flex h-10 items-center gap-3 rounded-lg px-3 text-[0.9rem] font-medium transition",
+                    className={cx("relative flex h-10 items-center gap-3 rounded-lg px-3 text-[0.9rem] font-medium transition-all duration-200",
                       activo ? "bg-side-2 font-semibold text-accent" : "text-side-muted hover:translate-x-0.5 hover:bg-side-2/60 hover:text-side-fg")}>
-                    {activo ? <span className="absolute inset-y-2 left-0 w-[3px] rounded-r bg-brand" aria-hidden /> : null}
+                    {activo ? <span className="absolute inset-y-2 left-0 w-[3px] rounded-r bg-brand [animation:aparecer_0.3s_ease-out]" aria-hidden /> : null}
                     <Icono className="size-[18px] shrink-0" strokeWidth={1.8} aria-hidden />
                     {i.texto}
                   </Link>
@@ -98,7 +100,7 @@ export function Marco({ usuario, agencia, direccion, children }: {
       </header>
 
       <main className="px-4 pb-20 pt-5 sm:px-6 lg:ml-[248px] lg:px-8 lg:pt-8">
-        <div className="escalonado mx-auto grid max-w-[1180px] grid-cols-[minmax(0,1fr)] gap-6">{children}</div>
+        <div className="mx-auto max-w-[1180px]">{children}</div>
       </main>
     </div>
   );
