@@ -19,6 +19,10 @@ export type Requisito = {
   aplica?: (c: ContextoProceso) => boolean;
   /** Documentos que suelen ser varios archivos (estados de cuenta, aplicaciones de pago…). */
   varios?: boolean;
+  /** Lo trae el cliente ("doc") o lo tiene que firmar ("firma"): entra en el mensaje de WhatsApp. */
+  cliente?: "doc" | "firma";
+  /** Cómo se le pide al cliente. */
+  pedir?: string;
 };
 export type EtapaProceso = { id: string; label: string; labelContado?: string; requisitos: Requisito[] };
 
@@ -29,12 +33,12 @@ export const ETAPAS_PROCESO: EtapaProceso[] = [
   {
     id: "credito", label: "Crédito y documentos del cliente", labelContado: "Documentos del cliente",
     requisitos: [
-      { id: "ine", label: "INE", ayuda: "Por ambos lados, vigente.", tipo: "doc" },
-      { id: "curp", label: "CURP", ayuda: "Impresa del portal del gobierno.", tipo: "doc" },
-      { id: "domicilio", label: "Comprobante de domicilio", ayuda: "No mayor a 3 meses.", tipo: "doc" },
-      { id: "ingresos", label: "Estados de cuenta / ingresos", ayuda: "Los últimos 3 meses.", tipo: "doc", aplica: credito, varios: true },
-      { id: "solicitud", label: "Solicitud de crédito firmada", ayuda: "La del banco, llena y firmada.", tipo: "doc", aplica: credito },
-      { id: "buro", label: "Autorización de Buró", ayuda: "Firmada por el cliente.", tipo: "doc", aplica: credito },
+      { id: "ine", label: "INE", ayuda: "Por ambos lados, vigente.", tipo: "doc", cliente: "doc", pedir: "INE por ambos lados" },
+      { id: "curp", label: "CURP", ayuda: "Impresa del portal del gobierno.", tipo: "doc", cliente: "doc", pedir: "CURP" },
+      { id: "domicilio", label: "Comprobante de domicilio", ayuda: "No mayor a 3 meses.", tipo: "doc", cliente: "doc", pedir: "Comprobante de domicilio (no mayor a 3 meses)" },
+      { id: "ingresos", label: "Estados de cuenta / ingresos", ayuda: "Los últimos 3 meses.", tipo: "doc", aplica: credito, varios: true, cliente: "doc", pedir: "Estados de cuenta de los últimos 3 meses" },
+      { id: "solicitud", label: "Solicitud de crédito firmada", ayuda: "La del banco, llena y firmada.", tipo: "doc", aplica: credito, cliente: "firma", pedir: "Solicitud de crédito" },
+      { id: "buro", label: "Autorización de Buró", ayuda: "Firmada por el cliente.", tipo: "doc", aplica: credito, cliente: "firma", pedir: "Autorización de Buró de Crédito" },
       { id: "aprobacion", label: "Carta de aprobación del crédito", ayuda: "Captura banco, monto, enganche, plazo y tasa. No pidas la separación antes.", tipo: "doc", aplica: credito },
     ],
   },
@@ -42,9 +46,9 @@ export const ETAPAS_PROCESO: EtapaProceso[] = [
     id: "apartado", label: "Separación y pedido",
     requisitos: [
       { id: "separacion", label: "Recibo de separación", ayuda: "$5,000 en caja, al concepto Accesorios. Si lo subes en el pago de la cuenta, cuenta aquí.", tipo: "doc" },
-      { id: "rfc", label: "Constancia de situación fiscal (RFC)", ayuda: "Para facturar con los datos correctos.", tipo: "doc" },
+      { id: "rfc", label: "Constancia de situación fiscal (RFC)", ayuda: "Para facturar con los datos correctos.", tipo: "doc", cliente: "doc", pedir: "Constancia de situación fiscal (RFC) actualizada" },
       { id: "quiter", label: "Alta del cliente en Quiter", ayuda: "Comercial → Fichas maestras → Cuentas personales. Anota el número de cliente.", tipo: "paso" },
-      { id: "bono_carta", label: "Carta bono flexible", ayuda: "Firmada, si el cliente lleva bono.", tipo: "doc", aplica: credito },
+      { id: "bono_carta", label: "Carta bono flexible", ayuda: "Firmada, si el cliente lleva bono.", tipo: "doc", aplica: credito, cliente: "firma", pedir: "Carta del bono" },
       { id: "prefactura", label: "Prefactura", ayuda: "Revisa nombre, RFC, versión y color.", tipo: "doc" },
       { id: "pedido", label: "Confirmación de prefactura / pedido", ayuda: "Con el número de pedido.", tipo: "doc" },
     ],
@@ -70,11 +74,11 @@ export const ETAPAS_PROCESO: EtapaProceso[] = [
   {
     id: "placas", label: "Placas y permisos",
     requisitos: [
-      { id: "licencia", label: "Licencia de conducir", ayuda: "Del titular.", tipo: "doc" },
-      { id: "registro", label: "Solicitud de registro estatal vehicular", ayuda: "Llena y firmada.", tipo: "doc" },
+      { id: "licencia", label: "Licencia de conducir", ayuda: "Del titular.", tipo: "doc", cliente: "doc", pedir: "Licencia de conducir vigente" },
+      { id: "registro", label: "Solicitud de registro estatal vehicular", ayuda: "Llena y firmada.", tipo: "doc", cliente: "firma", pedir: "Solicitud de registro vehicular (placas)" },
       { id: "placas_pago", label: "Pago de placas", ayuda: "Comprobante del pago al estado.", tipo: "doc" },
       { id: "gestoria", label: "Pago de gestoría", ayuda: "Recibo de la gestoría.", tipo: "doc" },
-      { id: "extracto", label: "Extracto firmado", ayuda: "Firmado por el cliente.", tipo: "doc" },
+      { id: "extracto", label: "Extracto firmado", ayuda: "Firmado por el cliente.", tipo: "doc", cliente: "firma", pedir: "Extracto" },
       { id: "permiso", label: "Permiso de frontera", ayuda: "Ventas de Piedras Negras.", tipo: "doc", aplica: frontera },
       { id: "permiso_pago", label: "Pago del permiso", ayuda: "Comprobante del pago del permiso.", tipo: "doc", aplica: frontera },
     ],
@@ -178,7 +182,7 @@ export function evaluarProceso(e: EntradaProceso): ResultadoProceso {
       const marca = e.expediente[r.id];
       const n = archivos.get(r.id) ?? 0;
       // Sin la función `aplica`, para poder mandarlo a componentes de cliente.
-      const base = { id: r.id, label: r.label, ayuda: r.ayuda, tipo: r.tipo, varios: r.varios, archivos: n, fecha: esFecha(marca) ? marca : null, marcado: esFecha(marca) };
+      const base = { id: r.id, label: r.label, ayuda: r.ayuda, tipo: r.tipo, varios: r.varios, cliente: r.cliente, pedir: r.pedir, archivos: n, fecha: esFecha(marca) ? marca : null, marcado: esFecha(marca) };
       if (marca === NO_APLICA && r.tipo !== "auto") return { ...base, estado: "na", detalle: "No aplica" };
       if (r.tipo === "auto") {
         const a = auto(r.id);

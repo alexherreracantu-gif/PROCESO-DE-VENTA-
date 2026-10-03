@@ -1,5 +1,6 @@
 import type { DatosCredito, Movimiento } from "@/lib/dominio/cuenta";
 import type { DocumentoResumen } from "@/lib/dominio/proceso";
+import type { EsquemaComision } from "@/lib/dominio/seguimiento";
 import type { Calor, Etapa, EstatusVenta, Rol } from "@/lib/dominio/catalogos";
 
 export type ParametrosAgencia = {
@@ -11,6 +12,7 @@ export type ParametrosAgencia = {
   garantia_extendida?: number;
   meta_unidades?: number;
   meta_producto?: number;
+  comisiones?: EsquemaComision;
 };
 export type Agencia = { id: string; nombre: string; marca: string; grupo: string | null; ciudad: string | null; parametros: ParametrosAgencia };
 export type Perfil = {
@@ -27,7 +29,7 @@ export type Venta = {
   id: string; folio: number; fecha: string; vendedor_id: string; cliente: string; num_cliente: string | null;
   telefono: string | null; vin: string | null; modelo_id: string; color: string; color_nombre: string | null;
   forma_pago: string; plaza: string; estatus: EstatusVenta; fecha_entrega: string | null; valor_factura: number | null;
-  notas: string | null; expediente: Record<string, string>; credito: DatosCredito; created_at: string; productos: string[];
+  notas: string | null; expediente: Record<string, string>; credito: DatosCredito; created_at: string; updated_at: string; productos: string[];
   documentos: DocumentoResumen[]; movimientos: Movimiento[];
 };
 export type Prospecto = {

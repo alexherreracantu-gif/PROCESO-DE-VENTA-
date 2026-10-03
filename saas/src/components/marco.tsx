@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import {
-  BarChart3, BookOpenCheck, Calculator, CarFront, ClipboardList, Cog, Home, KanbanSquare, LogOut, Menu,
+  BarChart3, BookOpenCheck, CalendarDays, Wallet, Calculator, CarFront, ClipboardList, Cog, Home, KanbanSquare, LogOut, Menu,
   Images, Megaphone, MessagesSquare, Sparkles, Target, UserRound, Users, X, type LucideIcon,
 } from "lucide-react";
 import { Avatar, cx } from "@/components/ui";
@@ -17,6 +17,8 @@ const GRUPOS: { titulo: string; items: Item[] }[] = [
   { titulo: "Operación", items: [
     { href: "/inicio", texto: "Inicio", icono: Home },
     { href: "/ventas", texto: "Ventas", icono: CarFront },
+    { href: "/entregas", texto: "Entregas", icono: CalendarDays },
+    { href: "/comisiones", texto: "Mis comisiones", icono: Wallet },
     { href: "/tablero", texto: "Tablero de reporte", icono: BarChart3 },
     { href: "/objetivos", texto: "Objetivos", icono: Target },
     { href: "/piso", texto: "Corte de piso", icono: ClipboardList },

@@ -1,5 +1,6 @@
 import { contextoVenta, ventasDelMes, ventasEnProceso } from "@/lib/datos";
 import { procesoDeVenta } from "@/lib/dominio/proceso";
+import { textoSaldo } from "@/lib/dominio/seguimiento";
 import { requerirSesion } from "@/lib/sesion";
 import { esMes, mesActual, nombreMes } from "@/lib/dominio/fechas";
 import { Encabezado, Segmentos } from "@/components/ui";
@@ -24,7 +25,7 @@ export default async function Ventas(props: PageProps<"/ventas">) {
   // Avance del expediente y saldo de cada venta, para la lista.
   const avances = Object.fromEntries(ventas.map((v) => {
     const p = procesoDeVenta(v, catalogo.productos);
-    return [v.id, { pct: p.pct, hechos: p.hechos, total: p.total, siguiente: p.siguiente?.label ?? null, completo: p.cuenta.completo, saldo: p.cuenta.saldo }];
+    return [v.id, { pct: p.pct, hechos: p.hechos, total: p.total, siguiente: p.siguiente?.label ?? null, saldo: textoSaldo(v.forma_pago, p.cuenta) }];
   }));
 
   return (
