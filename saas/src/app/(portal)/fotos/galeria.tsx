@@ -2,26 +2,17 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Download, ImagePlus, Images, Search, Send, Trash2 } from "lucide-react";
-import { Boton, Pastilla, Tarjeta, cx } from "@/components/ui";
+import { Download, ImagePlus, Images, Megaphone, Search, Send, Trash2 } from "lucide-react";
+import { Boton, BotonEnlace, Pastilla, Tarjeta, cx } from "@/components/ui";
 import { descargarArchivo, useAviso } from "@/components/cliente";
 import { dinero } from "@/lib/dominio/formato";
-import { POSICIONES, nombreFoto } from "@/lib/fotos";
+import { POSICIONES, fuenteFoto, nombreFoto } from "@/lib/fotos";
 import { guardarFoto, quitarFoto } from "./acciones";
 
 /** `fotos`: subidas en el portal (posición → versión). `incluidas`: fotos de fábrica (posición → id del archivo en /modelos). */
 export type ModeloGaleria = { id: string; clave: string; nombre: string; precio: number; bono: number; fotos: Record<number, number>; incluidas: Partial<Record<number, string>> };
 
-/** De dónde sale cada foto: la subida en el portal manda; si no hay, la de fábrica. */
-function fuente(m: ModeloGaleria, n: number) {
-  if (m.fotos[n]) {
-    const base = `/api/fotos/${m.id}/${n}?v=${m.fotos[n]}`;
-    return { grande: base, mini: `${base}&t=mini`, descarga: `${base}&descargar=1`, propia: true };
-  }
-  const id = m.incluidas[n];
-  if (!id) return null;
-  return { grande: `/modelos/${id}.jpg`, mini: `/modelos/${id}-mini.jpg`, descarga: `/modelos/${id}.jpg`, propia: false };
-}
+const fuente = fuenteFoto;
 
 /** Reduce la imagen en el navegador: JPEG del lado largo indicado, en base64 sin encabezado. */
 async function comprimir(archivo: File, lado: number, calidad: number) {
@@ -90,6 +81,7 @@ function TarjetaModelo({ m, editar }: { m: ModeloGaleria; editar: boolean }) {
         </div>
         {hay.length ? <Boton icono={Send} onClick={enviar} disabled={enviando} className="max-sm:w-full">{enviando ? "Preparando…" : `Enviar al cliente (${hay.length})`}</Boton>
           : <Pastilla>{editar ? "Sube las fotos" : "Sin fotos todavía"}</Pastilla>}
+        {hay.length ? <BotonEnlace href={`/anuncios?modelo=${m.clave}`} variante="secundario" icono={Megaphone} className="max-sm:w-full">Crear anuncio</BotonEnlace> : null}
       </div>
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
         {POSICIONES.map((p) => <Casilla key={p.n} m={m} n={p.n} etiqueta={p.etiqueta} editar={editar} />)}
