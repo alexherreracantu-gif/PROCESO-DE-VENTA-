@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import {
-  BarChart3, BookOpenCheck, CalendarDays, Wallet, Calculator, CarFront, ClipboardList, Cog, Home, KanbanSquare, LogOut, Menu,
+  BarChart3, BookOpenCheck, CalendarDays, ShieldAlert, TrendingUp, Wallet, Calculator, CarFront, ClipboardList, Cog, Home, KanbanSquare, LogOut, Menu,
   Images, Megaphone, MessagesSquare, Sparkles, Target, UserRound, Users, X, type LucideIcon,
 } from "lucide-react";
 import { Avatar, cx } from "@/components/ui";
@@ -28,6 +28,7 @@ const GRUPOS: { titulo: string; items: Item[] }[] = [
     { href: "/cotizador", texto: "Cotizador", icono: Calculator },
     { href: "/fotos", texto: "Fotos de modelos", icono: Images },
     { href: "/anuncios", texto: "Generador de anuncios", icono: Megaphone },
+    { href: "/resultados", texto: "Resultados de anuncios", icono: TrendingUp },
     { href: "/guiones", texto: "Guiones", icono: MessagesSquare },
     { href: "/agente", texto: "Agente IA", icono: Sparkles, oculto: !VISIBLE.agente },
   ] },
@@ -39,9 +40,9 @@ const GRUPOS: { titulo: string; items: Item[] }[] = [
   ] },
 ];
 
-export function Marco({ usuario, agencia, direccion, children }: {
+export function Marco({ usuario, agencia, direccion, claveTemporal, children }: {
   usuario: { nombre: string; corto: string; rol: string; iniciales: string; destacado: boolean };
-  agencia: string; direccion: boolean; children: ReactNode;
+  agencia: string; direccion: boolean; claveTemporal?: boolean; children: ReactNode;
 }) {
   const ruta = usePathname();
   const [menu, setMenu] = useState(false);
@@ -103,7 +104,16 @@ export function Marco({ usuario, agencia, direccion, children }: {
       </header>
 
       <main className="px-4 pb-20 pt-5 sm:px-6 lg:ml-[248px] lg:px-8 lg:pt-8">
-        <div className="mx-auto max-w-[1180px]">{children}</div>
+        <div className="mx-auto max-w-[1180px]">
+          {claveTemporal && ruta !== "/perfil" ? (
+            <Link href="/perfil#contrasena" className="aparece mb-5 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl border border-warn/40 bg-warn-soft px-4 py-3 text-[0.88rem] hover:brightness-[0.98]">
+              <ShieldAlert className="size-5 shrink-0 text-warn" aria-hidden />
+              <span className="min-w-0 flex-1"><strong>Pon tu propia contraseña.</strong> Todavía usas la contraseña que comparte el equipo: cualquiera podría entrar como tú y ver tus clientes y comisiones.</span>
+              <span className="font-semibold text-accent">Cambiarla ahora →</span>
+            </Link>
+          ) : null}
+          {children}
+        </div>
       </main>
     </div>
   );

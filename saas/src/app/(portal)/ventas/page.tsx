@@ -3,7 +3,8 @@ import { procesoDeVenta } from "@/lib/dominio/proceso";
 import { textoSaldo } from "@/lib/dominio/seguimiento";
 import { requerirSesion } from "@/lib/sesion";
 import { esMes, mesActual, nombreMes } from "@/lib/dominio/fechas";
-import { Encabezado, Segmentos } from "@/components/ui";
+import { DatabaseBackup } from "lucide-react";
+import { claseBoton, Encabezado, Segmentos } from "@/components/ui";
 import { ListaVentas } from "./lista";
 import { SelectorMes } from "@/components/selector-mes";
 
@@ -31,7 +32,9 @@ export default async function Ventas(props: PageProps<"/ventas">) {
   return (
     <>
       <Encabezado eyebrow="Operación" titulo="Ventas"
-        descripcion={`${s.direccion ? "Todas las unidades del equipo" : "Tus unidades"}: cada una con su expediente de la aprobación a la hoja de salida, sus pagos y su saldo.`} />
+        descripcion={`${s.direccion ? "Todas las unidades del equipo" : "Tus unidades"}: cada una con su expediente de la aprobación a la hoja de salida, sus pagos y su saldo.`}>
+        <a href="/api/respaldo" className={claseBoton("secundario", "md")} title="Ventas, pagos, documentos y prospectos en Excel (CSV)"><DatabaseBackup className="size-4" aria-hidden />Respaldo</a>
+      </Encabezado>
       <div className="flex flex-wrap items-center gap-3">
         <Segmentos etiqueta="Vista" actual={abiertas ? "abiertas" : "mes"}
           opciones={[{ valor: "mes", texto: "Por mes", href: vista("mes") }, { valor: "abiertas", texto: "Expedientes abiertos", href: vista("abiertas") }]} />

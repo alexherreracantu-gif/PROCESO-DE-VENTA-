@@ -79,7 +79,7 @@ export function TableroCrm({ prospectos, ctx, modelos, nombres, hoy }: { prospec
       )}
 
       <FormularioProspecto abierto={editando !== null} prospecto={editando === "nuevo" ? null : editando} ctx={ctx} modelos={modelos} alCerrar={() => setEditando(null)}
-        alConvertir={(p) => { setEditando(null); setVenta({ cliente: p.nombre, telefono: p.telefono, modelo_id: p.modelo_id ?? undefined, vendedor_id: p.asesor_id, prospecto_id: p.id }); }} />
+        alConvertir={(p) => { setEditando(null); setVenta({ cliente: p.nombre, telefono: p.telefono, modelo_id: p.modelo_id ?? undefined, vendedor_id: p.asesor_id, prospecto_id: p.id, origen: p.origen }); }} />
       <FormularioVenta abierto={venta !== null} alCerrar={() => setVenta(null)} ctx={ctx} prefill={venta ?? undefined} alGuardar={(vid) => router.push(`/ventas/${vid}`)} />
     </>
   );

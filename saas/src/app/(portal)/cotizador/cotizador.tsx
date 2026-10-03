@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { FileText } from "lucide-react";
 import { BotonCopiar } from "@/components/cliente";
 import { BotonEnlace, Campo, Pastilla, Tarjeta, TituloTarjeta, cx } from "@/components/ui";
 import { aportacionParaPagoFirma, cotizar, PLAZOS } from "@/lib/dominio/banorte";
@@ -117,6 +118,10 @@ export function Cotizador({ modelos, parametros, asesor }: { modelos: ModeloC[];
         <div className="flex flex-wrap gap-2">
           <BotonCopiar texto={wa} etiqueta="Copiar WhatsApp" mensaje="Mensaje copiado" variante="primario" tamano="md" />
           <BotonEnlace variante="whatsapp" externo href={enlaceWhatsApp(telefono, wa)}>Abrir WhatsApp</BotonEnlace>
+          <BotonEnlace variante="secundario" externo icono={FileText}
+            href={`/cotizacion?${new URLSearchParams({ m: modelo.id, ap: String(Math.round(r.ap)), pl: String(plazo), acc: String(Number(accesorios) || 0), gar: garantia ? "1" : "0", gest: gestoria ? "1" : "0", ...(cliente.trim() ? { cli: cliente.trim() } : {}) })}`}>
+            Cotización en PDF
+          </BotonEnlace>
         </div>
       </Tarjeta>
     </div>

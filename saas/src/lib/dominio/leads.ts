@@ -39,3 +39,10 @@ export function elegirAsesor(asesores: { id: string; hoy: number; total: number 
   if (!asesores.length) return null;
   return [...asesores].sort((a, b) => a.hoy - b.hoy || a.total - b.total || a.id.localeCompare(b.id))[0].id;
 }
+
+/** Campo trampa lleno o formulario enviado en menos de 3 segundos (si la landing manda el tiempo). */
+export function esRobot(d: Record<string, string>): boolean {
+  if ((d.sitio_web ?? d.website ?? "").trim()) return true;
+  const t = d.t?.trim();
+  return !!t && /^\d+$/.test(t) && Number(t) < 3;
+}

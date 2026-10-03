@@ -238,4 +238,27 @@ d("permisos por rol (RLS)", () => {
       await tx`delete from public.venta_movimientos where id = ${m.id}`;
       expect(await tx`select tipo from public.venta_documentos`).toEqual([{ tipo: "ine" }]);
     }));
+
+  it("la inversión en publicidad: cada quien la suya; dirección la del equipo; nada entre agencias", () =>
+    escenario(async (tx, x) => {
+      await como(tx, x.omar);
+      await tx`insert into public.inversion_publicidad (mes, canal, monto) values ('2026-10-01', 'Meta Ads', 2000)`;
+      const e1 = await tx.savepoint((sp) => sp`insert into public.inversion_publicidad (usuario_id, mes, canal, monto) values (${x.mariana}, '2026-10-01', 'Meta Ads', 1)`).catch((e) => e);
+      expect(String(e1)).toMatch(/row-level security/);
+      await como(tx, x.mariana);
+      expect(await tx`select 1 from public.inversion_publicidad`).toHaveLength(0);
+      await como(tx, x.jorge);
+      expect(await tx`select monto from public.inversion_publicidad`).toHaveLength(1);
+      expect(await tx`update public.inversion_publicidad set monto = 1 returning id`).toHaveLength(0);
+      await como(tx, x.ajeno);
+      expect(await tx`select 1 from public.inversion_publicidad`).toHaveLength(0);
+    }));
+
+  it("el usuario puede poner su correo, pero no quitarse la marca de contraseña temporal", () =>
+    escenario(async (tx, x) => {
+      await como(tx, x.omar);
+      await tx`update public.perfiles set correo = 'omar@prueba.mx' where id = ${x.omar}`;
+      const e = await tx.savepoint((sp) => sp`update public.perfiles set clave_temporal = false where id = ${x.omar}`).catch((err) => err);
+      expect(String(e)).toMatch(/permission denied/);
+    }));
 });

@@ -20,8 +20,8 @@ export default async function Perfil() {
         </div>
       </Tarjeta>
       <div className="grid gap-5 lg:grid-cols-2">
-        <Tarjeta><TituloTarjeta titulo="Mis datos" /><FormDatos nombreCorto={perfil.nombre_corto} telefono={perfil.telefono ?? ""} /></Tarjeta>
-        <Tarjeta><TituloTarjeta titulo="Cambiar contraseña" nota="Mínimo 8 caracteres" /><FormContrasena /></Tarjeta>
+        <Tarjeta><TituloTarjeta titulo="Mis datos" /><FormDatos nombreCorto={perfil.nombre_corto} telefono={perfil.telefono ?? ""} correo={perfil.correo ?? ""} /></Tarjeta>
+        <Tarjeta id="contrasena" className={perfil.clave_temporal ? "scroll-mt-20 border-warn/50" : "scroll-mt-20"}><TituloTarjeta titulo="Cambiar contraseña" nota={perfil.clave_temporal ? "Usas la contraseña del equipo: pon la tuya" : "Mínimo 7 caracteres"} /><FormContrasena /></Tarjeta>
       </div>
     </>
   );

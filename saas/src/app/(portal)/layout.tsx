@@ -11,6 +11,7 @@ export default async function LayoutPortal({ children }: LayoutProps<"/">) {
       usuario={{ nombre: ceo ? "CEO" : perfil.nombre, corto: perfil.nombre_corto, rol: ROLES[perfil.rol], iniciales: ceo ? "CEO" : iniciales(perfil.nombre), destacado: perfil.rol !== "asesor" }}
       agencia={agencia.nombre}
       direccion={direccion}
+      claveTemporal={!!perfil.clave_temporal}
     >
       {children}
     </Marco>

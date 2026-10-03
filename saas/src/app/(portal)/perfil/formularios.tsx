@@ -6,21 +6,22 @@ import { Boton, Campo } from "@/components/ui";
 import { useAviso } from "@/components/cliente";
 import { actualizarDatos, cambiarContrasena } from "./acciones";
 
-export function FormDatos({ nombreCorto, telefono }: { nombreCorto: string; telefono: string }) {
+export function FormDatos({ nombreCorto, telefono, correo }: { nombreCorto: string; telefono: string; correo: string }) {
   const router = useRouter(); const avisar = useAviso();
-  const [f, setF] = useState({ nombre_corto: nombreCorto, telefono });
+  const [f, setF] = useState({ nombre_corto: nombreCorto, telefono, correo });
   const [ocupado, iniciar] = useTransition();
   return (
     <form className="grid gap-4" onSubmit={(e) => { e.preventDefault(); iniciar(async () => { const r = await actualizarDatos(f); avisar(r.ok ? r.mensaje ?? "Guardado" : r.error, r.ok ? "ok" : "error"); if (r.ok) router.refresh(); }); }}>
       <Campo etiqueta="Cómo te dicen" htmlFor="pf-corto"><input id="pf-corto" className="campo" value={f.nombre_corto} onChange={(e) => setF({ ...f, nombre_corto: e.target.value })} /></Campo>
       <Campo etiqueta="Tu WhatsApp" htmlFor="pf-tel"><input id="pf-tel" type="tel" className="campo" value={f.telefono} onChange={(e) => setF({ ...f, telefono: e.target.value })} placeholder="10 dígitos" /></Campo>
+      <Campo etiqueta="Tu correo" htmlFor="pf-correo" ayuda="Aquí te llega el resumen de pendientes cada mañana."><input id="pf-correo" type="email" autoComplete="email" className="campo" value={f.correo} onChange={(e) => setF({ ...f, correo: e.target.value })} placeholder="tucorreo@gmail.com" /></Campo>
       <div><Boton type="submit" disabled={ocupado}>{ocupado ? "Guardando…" : "Guardar"}</Boton></div>
     </form>
   );
 }
 
 export function FormContrasena() {
-  const avisar = useAviso();
+  const router = useRouter(); const avisar = useAviso();
   const [f, setF] = useState({ actual: "", nueva: "", repetir: "" });
   const [error, setError] = useState<string | null>(null);
   const [ocupado, iniciar] = useTransition();
@@ -31,7 +32,7 @@ export function FormContrasena() {
       iniciar(async () => {
         const r = await cambiarContrasena({ actual: f.actual, nueva: f.nueva });
         if (!r.ok) { setError(r.error); return; }
-        setError(null); setF({ actual: "", nueva: "", repetir: "" }); avisar(r.mensaje ?? "Contraseña actualizada");
+        setError(null); setF({ actual: "", nueva: "", repetir: "" }); avisar(r.mensaje ?? "Contraseña actualizada"); router.refresh();
       });
     }}>
       <Campo etiqueta="Contraseña actual" htmlFor="pf-actual"><input id="pf-actual" type="password" autoComplete="current-password" className="campo" value={f.actual} onChange={(e) => setF({ ...f, actual: e.target.value })} /></Campo>

@@ -31,6 +31,7 @@ const EntradaVenta = z.object({
   notas: opcional(1000),
   productos: z.array(id).max(30),
   prospecto_id: id.optional().nullable(),
+  origen: opcional(40),
 });
 export type EntradaVenta = z.input<typeof EntradaVenta>;
 

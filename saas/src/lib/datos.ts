@@ -9,7 +9,7 @@ import type { Corte, FilaRanking, Metas, Modelo, Perfil, Producto, ProgresoAcade
  * con el cliente de servicio) filtran además por agencia.
  */
 
-const COLS_VENTA = "id, folio, fecha, vendedor_id, cliente, num_cliente, telefono, vin, modelo_id, color, color_nombre, forma_pago, plaza, estatus, fecha_entrega, valor_factura, notas, expediente, credito, created_at, updated_at, venta_productos(producto_id), venta_documentos(id, tipo, movimiento_id, nombre, enlace, mime, tamano, created_at), venta_movimientos(id, tipo, concepto, aplica_a, monto, fecha, forma, referencia, notas)";
+const COLS_VENTA = "id, folio, fecha, vendedor_id, cliente, num_cliente, telefono, vin, modelo_id, color, color_nombre, forma_pago, plaza, estatus, fecha_entrega, valor_factura, notas, expediente, credito, origen, created_at, updated_at, venta_productos(producto_id), venta_documentos(id, tipo, movimiento_id, nombre, enlace, mime, tamano, created_at), venta_movimientos(id, tipo, concepto, aplica_a, monto, fecha, forma, referencia, notas)";
 type FilaVenta = Omit<Venta, "productos" | "documentos" | "movimientos"> & {
   venta_productos: { producto_id: string }[] | null;
   venta_documentos: Venta["documentos"] | null;
@@ -68,7 +68,7 @@ export async function venta(s: Sesion, id: string): Promise<Venta | null> {
 }
 
 export async function ventasEnProceso(s: Sesion): Promise<Venta[]> {
-  const r = await s.sb.from("ventas").select(COLS_VENTA).in("estatus", ["apartada", "facturada"]).order("fecha", { ascending: true }).limit(200);
+  const r = await s.sb.from("ventas").select(COLS_VENTA).eq("agencia_id", s.agencia.id).in("estatus", ["apartada", "facturada"]).order("fecha", { ascending: true }).limit(200);
   return revisar<FilaVenta[]>(r, "las ventas").map(aVenta);
 }
 
@@ -76,7 +76,7 @@ export type CambioVenta = { id: number; tabla: string; accion: string; usuario_i
 /** Cambios de la venta y de su expediente (pagos, cargos y archivos), del más reciente al más viejo. */
 /** Ventas con entrega programada o hecha desde `desde` (para el calendario y la postventa). */
 export async function ventasConEntrega(s: Sesion, desde: string, hasta?: string): Promise<Venta[]> {
-  let q = s.sb.from("ventas").select(COLS_VENTA).neq("estatus", "cancelada").gte("fecha_entrega", desde).order("fecha_entrega").limit(300);
+  let q = s.sb.from("ventas").select(COLS_VENTA).eq("agencia_id", s.agencia.id).neq("estatus", "cancelada").gte("fecha_entrega", desde).order("fecha_entrega").limit(300);
   if (hasta) q = q.lte("fecha_entrega", hasta);
   return revisar<FilaVenta[]>(await q, "las entregas").map(aVenta);
 }

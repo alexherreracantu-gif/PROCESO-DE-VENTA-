@@ -13,11 +13,14 @@ export type ParametrosAgencia = {
   meta_unidades?: number;
   meta_producto?: number;
   comisiones?: EsquemaComision;
+  /** Fecha del último respaldo descargado por dirección. */
+  ultimo_respaldo?: string;
 };
 export type Agencia = { id: string; nombre: string; marca: string; grupo: string | null; ciudad: string | null; parametros: ParametrosAgencia };
 export type Perfil = {
   id: string; agencia_id: string; usuario: string; nombre: string; nombre_corto: string;
   rol: Rol; vende: boolean; activo: boolean; telefono: string | null;
+  clave_temporal?: boolean; correo?: string | null;
 };
 export type Modelo = {
   id: string; clave: string; nombre: string; anio: number; motor: "electrico" | "hibrido";
@@ -29,7 +32,7 @@ export type Venta = {
   id: string; folio: number; fecha: string; vendedor_id: string; cliente: string; num_cliente: string | null;
   telefono: string | null; vin: string | null; modelo_id: string; color: string; color_nombre: string | null;
   forma_pago: string; plaza: string; estatus: EstatusVenta; fecha_entrega: string | null; valor_factura: number | null;
-  notas: string | null; expediente: Record<string, string>; credito: DatosCredito; created_at: string; updated_at: string; productos: string[];
+  notas: string | null; expediente: Record<string, string>; credito: DatosCredito; origen: string | null; created_at: string; updated_at: string; productos: string[];
   documentos: DocumentoResumen[]; movimientos: Movimiento[];
 };
 export type Prospecto = {
