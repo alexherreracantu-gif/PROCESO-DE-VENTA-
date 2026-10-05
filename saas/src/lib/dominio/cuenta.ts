@@ -46,6 +46,7 @@ export const CARGO_DE_PRODUCTO: Record<string, ConceptoCargo> = {
   placas: "gestoria",
   seguro: "seguro",
   refaccion: "llanta_refaccion",
+  wallbox: "instalacion",
 };
 
 export const labelCargo = (id: string | null | undefined) => CARGOS.find((c) => c.id === id)?.label ?? "Otro";

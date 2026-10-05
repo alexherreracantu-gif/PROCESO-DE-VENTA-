@@ -1,143 +1,293 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { FileText, Link2 } from "lucide-react";
-import { BotonCopiar, copiarTexto, useAviso } from "@/components/cliente";
-import { BotonEnlace, Campo, Pastilla, Tarjeta, TituloTarjeta, cx } from "@/components/ui";
-import { aportacionParaPagoFirma, cotizar, PLAZOS } from "@/lib/dominio/banorte";
+import { useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, ArrowRight, BadgeCheck, Copy, FileText, Link2, MessageCircle, Save, ShieldCheck } from "lucide-react";
+import { Boton, BotonEnlace, Campo, Pastilla, cx } from "@/components/ui";
+import { copiarTexto, useAviso } from "@/components/cliente";
+import { cotizacionInterna, engancheParaPresupuesto, PLAZOS, type Convenio } from "@/lib/dominio/banorte";
 import { dinero, dinero2, enlaceWhatsApp } from "@/lib/dominio/formato";
+import { guardarCotizacion } from "./acciones";
 
-type ModeloC = { id: string; clave: string; nombre: string; anio: number; motor: "electrico" | "hibrido"; precio: number; bono: number; descripcion: string | null };
-type Parametros = { placasElectrico: number; placasHibrido: number; gestoria: number; garantia: number; separacion: number };
+export type ModeloC = {
+  id: string; clave: string; nombre: string; anio: number; motor: "electrico" | "hibrido"; precio: number; bono: number;
+  descripcion: string | null; mini: string | null; mensualidadDesde: number | null;
+};
+export type ExtraC = { clave: string; nombre: string; precio: number };
+type Parametros = { placasElectrico: number; placasHibrido: number; gestoria: number };
 
-export function Cotizador({ modelos, parametros, asesor, usuario }: { modelos: ModeloC[]; parametros: Parametros; asesor: string; usuario: string }) {
-  const avisarLink = useAviso();
-  const [modeloId, setModeloId] = useState(modelos.find((m) => m.clave.startsWith("king-gl"))?.id ?? modelos[0]?.id ?? "");
-  const [modo, setModo] = useState<"aportacion" | "firma">("aportacion");
-  const [aportacion, setAportacion] = useState("50000");
-  const [firma, setFirma] = useState("80000");
-  const [accesorios, setAccesorios] = useState("0");
-  const [plazo, setPlazo] = useState(72);
-  const [garantia, setGarantia] = useState(false);
-  const [gestoria, setGestoria] = useState(false);
+const PASOS = ["Vehículo y cliente", "Enganche y extras", "Resumen y Banorte"] as const;
+const num = (v: string) => { const n = Number(String(v).replace(/[^\d.]/g, "")); return Number.isFinite(n) ? n : 0; };
+const pct = (t: number) => `${(t * 100).toFixed(2)} %`;
+const claveConvenio = (c: Convenio) => `${c.nombre}|${c.tasa}`;
+
+export function Cotizador({ modelos, extras, parametros, vendedores, yo, direccion, usuario, vigencia }: {
+  modelos: ModeloC[]; extras: ExtraC[]; parametros: Parametros; vendedores: { id: string; nombre: string; titulo: string }[];
+  yo: string; direccion: boolean; usuario: string; vigencia: string;
+}) {
+  const router = useRouter();
+  const avisar = useAviso();
+  const [paso, setPaso] = useState(0);
+  const [responsable, setResponsable] = useState(vendedores.some((v) => v.id === yo) ? yo : vendedores[0]?.id ?? yo);
   const [cliente, setCliente] = useState("");
   const [telefono, setTelefono] = useState("");
-  const modelo = modelos.find((m) => m.id === modeloId);
+  const [modeloId, setModeloId] = useState(modelos.find((m) => m.clave.startsWith("king-gl"))?.id ?? modelos[0]?.id ?? "");
+  const [cp, setCp] = useState("");
+  const [edad, setEdad] = useState("");
+  const [genero, setGenero] = useState("");
+  const m = modelos.find((x) => x.id === modeloId) ?? modelos[0];
+  const sugerido = (x: ModeloC) => Math.round((x.precio * 0.2) / 1000) * 1000;
+  const [modo, setModo] = useState<"enganche" | "presupuesto">("enganche");
+  const [enganche, setEnganche] = useState(() => String(sugerido(m)));
+  const [presupuesto, setPresupuesto] = useState("100000");
+  const [convenioSel, setConvenioSel] = useState("auto");
+  const [plazo, setPlazo] = useState(72);
+  const [marcados, setMarcados] = useState<Set<string>>(() => new Set(extras.filter((x) => x.clave === "garantia").map((x) => x.clave)));
+  const [otros, setOtros] = useState("");
+  const [seguroAuto, setSeguroAuto] = useState("");
+  const [seguroVida, setSeguroVida] = useState("");
+  const [oficial, setOficial] = useState({ mensualidad: "", comision: "" });
+  const [ocupado, iniciar] = useTransition();
 
-  const r = useMemo(() => {
-    if (!modelo) return null;
-    const base = { modelo, accesorios: Number(accesorios) || 0, garantia: garantia ? parametros.garantia : 0, plazo, placas: modelo.motor === "electrico" ? parametros.placasElectrico : parametros.placasHibrido, tramites: gestoria ? parametros.gestoria : 0 };
-    const ap = modo === "firma" ? aportacionParaPagoFirma(base, Number(firma) || 0) : Number(aportacion) || 0;
-    const q = cotizar({ ...base, aportacion: ap });
-    const escenarios = PLAZOS.filter((n) => n >= 36).map((n) => ({ n, m: cotizar({ ...base, aportacion: ap, plazo: n }).mensualidad }));
-    // Siguiente escalón de tasa si está cerca.
-    const escalones = [0.2, 0.25, 0.4, 0.5].filter((e) => e > q.pctEnganche && e - q.pctEnganche <= 0.1);
-    const sig = escalones[0];
-    let mejora: { aportacion: number; mensualidad: number; tasa: number } | null = null;
-    if (sig && q.base > 0) {
-      const apSig = Math.ceil(sig * q.base - q.bono);
-      const q2 = cotizar({ ...base, aportacion: apSig });
-      if (q2.convenio.tasa < q.convenio.tasa) mejora = { aportacion: apSig, mensualidad: q2.mensualidad, tasa: q2.convenio.tasa };
-    }
-    return { q, ap, base, escenarios, mejora };
-  }, [modelo, accesorios, garantia, plazo, gestoria, modo, firma, aportacion, parametros]);
-
-  if (!modelo || !r) return <p className="text-muted">No hay modelos activos en el catálogo.</p>;
-  const { q } = r;
-  const primerNombre = cliente.trim().split(" ")[0];
-  const wa = [
-    primerNombre ? `Hola ${primerNombre}, te comparto tu cotización:` : null,
-    `🚗 BYD ${modelo.nombre} ${modelo.anio}`,
-    `Enganche: ${dinero(r.ap)}${q.bonoAplica ? ` + ${dinero(q.bono)} de bono = ${dinero(q.enganche)}` : ""}`,
-    `Mensualidad aprox.: ${dinero2(q.mensualidad)} a ${plazo} meses`,
-    `Tasa fija anual: ${(q.convenio.tasa * 100).toFixed(2)}% (Banorte ${q.convenio.nombre})`,
-    `Pago a la firma aprox.: ${dinero2(q.pagoFirma)}`,
-    garantia ? "Incluye garantía extendida de 6 años." : null,
-    `Sujeto a autorización de crédito. ${asesor} · BYD Park Point`,
-  ].filter(Boolean).join("\n");
-  const fila = (k: string, v: string, fuerte?: boolean) => <div className="flex justify-between gap-4 text-[0.9rem]"><span className="text-muted">{k}</span><span className={cx("text-right tabular-nums", fuerte && "font-semibold")}>{v}</span></div>;
-
-  async function copiarLink() {
-    const url = `${location.origin}/cotiza?a=${encodeURIComponent(usuario)}`;
-    avisarLink(await copiarTexto(url) ? "Link copiado: pégalo en tu bio, estados o anuncios" : url, "ok");
+  function cambiarModelo(id: string) {
+    const n = modelos.find((x) => x.id === id);
+    setModeloId(id);
+    if (n) setEnganche(String(sugerido(n)));
+    setConvenioSel("auto");
+    setOficial({ mensualidad: "", comision: "" });
   }
+
+  const garantia = extras.filter((x) => x.clave === "garantia" && marcados.has(x.clave)).reduce((t, x) => t + x.precio, 0);
+  const accesorios = extras.filter((x) => x.clave !== "garantia" && marcados.has(x.clave)).reduce((t, x) => t + x.precio, 0) + num(otros);
+  const seguros = num(seguroAuto) + num(seguroVida);
+  const placas = m.motor === "electrico" ? parametros.placasElectrico : parametros.placasHibrido;
+
+  const c = useMemo(() => {
+    const base = { modelo: m, accesorios, garantia, plazo, seguros };
+    const et = modo === "presupuesto" ? engancheParaPresupuesto(base, num(presupuesto)) : num(enganche);
+    const auto = cotizacionInterna({ ...base, engancheTotal: et });
+    const elegido = auto.disponibles.find((x) => claveConvenio(x) === convenioSel) ?? null;
+    const q = elegido ? cotizacionInterna({ ...base, engancheTotal: et, convenio: elegido }) : auto;
+    return { ...q, engancheTotal: et, disponibles: auto.disponibles, manual: !!elegido };
+  }, [m, accesorios, garantia, plazo, seguros, modo, presupuesto, enganche, convenioSel]);
+
+  const mensualidadOficial = num(oficial.mensualidad);
+  const comisionOficial = num(oficial.comision);
+  const verificado = mensualidadOficial > 0;
+  const mensualidad = verificado ? mensualidadOficial : c.mensualidad;
+  const comision = comisionOficial > 0 ? comisionOficial : c.comision;
+  const bolsa = c.aportacion + comision + seguros;
+  const nombreModelo = `${m.nombre} ${m.anio}`;
+  const extrasTxt = extras.filter((x) => marcados.has(x.clave)).map((x) => x.nombre);
+  const primer = cliente.trim().split(/\s+/)[0];
+  const responsableNombre = vendedores.find((v) => v.id === responsable)?.nombre ?? "";
+
+  const mensaje = [
+    primer ? `Hola ${primer}, te comparto tu cotización:` : "Te comparto tu cotización:",
+    `🚗 BYD ${nombreModelo}`,
+    `Precio: ${dinero(m.precio)}`,
+    `Enganche total: ${dinero(c.engancheTotal)}${c.bonoAplica ? ` (incluye bono de ${dinero(c.bono)})` : ""}`,
+    extrasTxt.length ? `Incluye: ${extrasTxt.join(", ")}` : null,
+    `Mensualidad${verificado ? "" : " estimada"}: ${dinero2(mensualidad)} a ${plazo} meses`,
+    `Tasa fija anual: ${(c.convenio.tasa * 100).toFixed(2)}% · Banorte`,
+    `Pago a la firma: ${dinero2(bolsa)}${seguros ? " (con seguros del primer año)" : ""}`,
+    `Placas y gestoría aparte. Sujeto a aprobación de crédito.`,
+    responsableNombre ? `${responsableNombre} · BYD Cumbres` : null,
+  ].filter(Boolean).join("\n");
+
+  const urlPdf = `/cotizacion?${new URLSearchParams({
+    m: m.id, et: String(Math.round(c.engancheTotal)), pl: String(plazo), ext: [...marcados].join(","), acc: String(num(otros)),
+    seg: String(seguros), ...(c.manual ? { conv: String(c.convenio.tasa) } : {}), ...(verificado ? { mo: String(mensualidadOficial) } : {}),
+    ...(comisionOficial ? { co: String(comisionOficial) } : {}), ...(cliente.trim() ? { cli: cliente.trim() } : {}), r: responsable,
+  })}`;
+
+  const guardar = () => iniciar(async () => {
+    const r = await guardarCotizacion({
+      responsableId: responsable, nombre: cliente, telefono, modeloId: m.id, enganche: c.engancheTotal,
+      resumen: [`BYD ${nombreModelo} · enganche total ${dinero(c.engancheTotal)} · ${plazo} meses · ${dinero2(mensualidad)}/mes (${(c.convenio.tasa * 100).toFixed(2)}%)`,
+        extrasTxt.length ? `Extras: ${extrasTxt.join(", ")}` : "", `A la firma: ${dinero2(bolsa)}`, cp || edad || genero ? `CP ${cp || "—"} · edad ${edad || "—"} · ${genero || "—"}` : ""].filter(Boolean).join("\n"),
+    });
+    avisar(r.ok ? r.mensaje ?? "Guardado" : r.error, r.ok ? "ok" : "error");
+    if (r.ok) router.refresh();
+  });
 
   return (
     <div className="grid gap-5">
-    <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-accent/30 bg-accent-soft px-4 py-3 text-[0.88rem]">
-      <Link2 className="size-5 shrink-0 text-accent" aria-hidden />
-      <span className="min-w-0 flex-1"><strong>Tu cotizador para clientes.</strong> Ellos calculan su mensualidad solos y la cotización te llega como prospecto en el CRM.</span>
-      <a href={`/cotiza?a=${encodeURIComponent(usuario)}`} target="_blank" rel="noopener noreferrer" className="font-semibold text-accent hover:underline">Ver</a>
-      <button type="button" onClick={copiarLink} className="rounded-lg bg-accent px-3 py-1.5 font-semibold text-on-accent hover:brightness-110">Copiar mi link</button>
-    </div>
-    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
-      <Tarjeta className="grid h-fit gap-4">
-        <Campo etiqueta="Modelo" htmlFor="c-modelo">
-          <select id="c-modelo" className="campo" value={modeloId} onChange={(e) => setModeloId(e.target.value)}>
-            {modelos.map((m) => <option key={m.id} value={m.id}>{m.nombre} {m.anio} · {dinero(m.precio)}</option>)}
-          </select>
-        </Campo>
-        <p className="rounded-xl bg-accent-soft px-4 py-3 text-[0.88rem]"><strong>{modelo.motor === "electrico" ? "Eléctrico" : "Híbrido"}</strong>{modelo.bono ? ` · bono ${dinero(modelo.bono)} financiando` : " · sin bono este mes"}{modelo.descripcion ? ` · ${modelo.descripcion}` : ""}
-          <a href={`/fotos#${modelo.clave}`} className="mt-1 inline-block py-1.5 font-semibold text-accent hover:underline">Ver y enviar fotos del {modelo.nombre} →</a></p>
-        <div className="inline-flex w-fit rounded-xl bg-surface-2 p-1" role="group" aria-label="Cómo calcular">
-          {([["aportacion", "Cliente aporta"], ["firma", "Quiere pagar a la firma"]] as const).map(([v, t]) => (
-            <button key={v} type="button" aria-pressed={modo === v} onClick={() => setModo(v)} className={cx("rounded-lg px-3 py-1.5 text-[0.84rem] font-semibold", modo === v ? "bg-surface shadow-sm" : "text-muted")}>{t}</button>
-          ))}
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {modo === "aportacion" ? (
-            <Campo etiqueta="Aportación del cliente" htmlFor="c-aport" ayuda="Sin contar el bono."><input id="c-aport" type="number" min={0} step={1000} inputMode="decimal" className="campo" value={aportacion} onChange={(e) => setAportacion(e.target.value)} /></Campo>
-          ) : (
-            <Campo etiqueta="Pago a la firma deseado" htmlFor="c-firma" ayuda={`Aporta ${dinero(r.ap)}`}><input id="c-firma" type="number" min={0} step={1000} inputMode="decimal" className="campo" value={firma} onChange={(e) => setFirma(e.target.value)} /></Campo>
-          )}
-          <Campo etiqueta="Accesorios" htmlFor="c-acc"><input id="c-acc" type="number" min={0} step={500} inputMode="decimal" className="campo" value={accesorios} onChange={(e) => setAccesorios(e.target.value)} /></Campo>
-          <Campo etiqueta="Plazo" htmlFor="c-plazo"><select id="c-plazo" className="campo" value={plazo} onChange={(e) => setPlazo(Number(e.target.value))}>{PLAZOS.map((n) => <option key={n} value={n}>{n} meses</option>)}</select></Campo>
-          <Campo etiqueta="Cliente" htmlFor="c-cliente"><input id="c-cliente" className="campo" value={cliente} onChange={(e) => setCliente(e.target.value)} placeholder="Opcional" /></Campo>
-        </div>
-        <div className="grid gap-2">
-          <label className="inline-flex items-center gap-2.5 text-[0.9rem]"><input type="checkbox" className="size-4 accent-[var(--accent)]" checked={garantia} onChange={(e) => setGarantia(e.target.checked)} />Garantía extendida financiada ({dinero(parametros.garantia)})</label>
-          <label className="inline-flex items-center gap-2.5 text-[0.9rem]"><input type="checkbox" className="size-4 accent-[var(--accent)]" checked={gestoria} onChange={(e) => setGestoria(e.target.checked)} />Gestoría de placas ({dinero(parametros.gestoria)})</label>
-        </div>
-        <Campo etiqueta="WhatsApp del cliente" htmlFor="c-tel"><input id="c-tel" type="tel" className="campo" value={telefono} onChange={(e) => setTelefono(e.target.value)} placeholder="10 dígitos (opcional)" /></Campo>
-      </Tarjeta>
+      <nav aria-label="Pasos" className="grid grid-cols-3 gap-2">
+        {PASOS.map((t, i) => (
+          <button key={t} type="button" onClick={() => setPaso(i)} aria-current={paso === i ? "step" : undefined}
+            className={cx("rounded-xl border px-2 py-2.5 text-[0.84rem] font-semibold transition sm:text-[0.9rem]", paso === i ? "border-transparent bg-accent text-on-accent shadow-[0_8px_18px_-10px_var(--accent)]" : "border-line bg-surface text-muted hover:text-fg")}>
+            <span className="max-sm:hidden">{i + 1}. </span>{t}
+          </button>
+        ))}
+      </nav>
 
-      <Tarjeta className="grid h-fit gap-2.5">
-        <TituloTarjeta titulo="Hoja de números"><Pastilla tono="warn">Borrador</Pastilla></TituloTarjeta>
-        {fila("Precio de lista", dinero(modelo.precio))}
-        {fila("Bono flexible", q.bonoAplica ? dinero(q.bono) : modelo.bono ? "No aplica (menos de 5%)" : "Sin bono")}
-        {fila("Enganche (aportación + bono)", dinero(q.enganche))}
-        {fila("% de enganche", `${(q.pctEnganche * 100).toFixed(1)}%`)}
-        {fila("Convenio", `${q.convenio.nombre} · ${(q.convenio.tasa * 100).toFixed(2)}%`)}
-        {fila("Monto a financiar", dinero2(q.monto))}
-        {fila("Comisión (× 1.16)", dinero2(q.comision))}
-        {fila("Placas Monterrey", dinero(r.base.placas))}
-        <div className="mt-1 grid gap-1 rounded-xl bg-surface-2 p-4">
-          <span className="text-[0.8rem] text-muted">Mensualidad a {plazo} meses</span>
-          <span className="num text-[2.8rem]">{dinero2(q.mensualidad)}</span>
-          <span className="text-[0.82rem] text-muted">Pago a la firma (sin seguro de auto y vida): <strong className="text-fg">{dinero2(q.pagoFirma)}</strong></span>
-        </div>
-        <div className="grid grid-cols-4 gap-2 text-center">
-          {r.escenarios.map((e) => (
-            <button key={e.n} type="button" onClick={() => setPlazo(e.n)} className={cx("rounded-xl border px-2 py-2 transition", e.n === plazo ? "border-accent bg-accent text-on-accent" : "border-line hover:border-subtle")}>
-              <span className="block text-[0.72rem] opacity-80">{e.n} meses</span><span className="block text-[0.86rem] font-semibold tabular-nums">{dinero(e.m)}</span>
-            </button>
-          ))}
-        </div>
-        {r.mejora ? (
-          <p className="rounded-xl bg-ok-soft px-4 py-3 text-[0.86rem]">Si aporta <strong>{dinero(r.mejora.aportacion)}</strong> baja a <strong>{(r.mejora.tasa * 100).toFixed(2)}%</strong>: mensualidad de <strong>{dinero2(r.mejora.mensualidad)}</strong> ({dinero(q.mensualidad - r.mejora.mensualidad)} menos al mes).</p>
-        ) : null}
-        {q.pctEnganche < 0.4 ? <p className="text-[0.8rem] text-warn">Enganche menor a 40%: el sistema calcula, pero las condiciones las autoriza el banco.</p> : null}
-        <pre className="mt-1 whitespace-pre-wrap rounded-xl bg-bg p-3.5 font-mono text-[0.78rem] leading-relaxed text-muted">{wa}</pre>
-        <div className="flex flex-wrap gap-2">
-          <BotonCopiar texto={wa} etiqueta="Copiar WhatsApp" mensaje="Mensaje copiado" variante="primario" tamano="md" />
-          <BotonEnlace variante="whatsapp" externo href={enlaceWhatsApp(telefono, wa)}>Abrir WhatsApp</BotonEnlace>
-          <BotonEnlace variante="secundario" externo icono={FileText}
-            href={`/cotizacion?${new URLSearchParams({ m: modelo.id, ap: String(Math.round(r.ap)), pl: String(plazo), acc: String(Number(accesorios) || 0), gar: garantia ? "1" : "0", gest: gestoria ? "1" : "0", ...(cliente.trim() ? { cli: cliente.trim() } : {}) })}`}>
-            Cotización en PDF
-          </BotonEnlace>
-        </div>
-      </Tarjeta>
-    </div>
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)] lg:items-start">
+        <section className="aparece grid gap-4 rounded-2xl border border-line bg-surface p-5 shadow-card" key={paso}>
+          <Encabezado n={paso + 1} titulo={["Vehículo y cliente", "Enganche y protección", "Revisa y genera la propuesta"][paso]}
+            sub={["Precios y bonos de la oferta del mes.", "Los accesorios y la garantía se financian.", "Captura lo que te dé Banorte para que la cotización quede verificada."][paso]} />
+
+          {paso === 0 ? (
+            <>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Campo etiqueta="Responsable" htmlFor="c-resp">
+                  <select id="c-resp" className="campo" value={responsable} disabled={!direccion} onChange={(e) => setResponsable(e.target.value)}>
+                    {vendedores.map((v) => <option key={v.id} value={v.id}>{v.nombre} · {v.titulo}</option>)}
+                  </select>
+                </Campo>
+                <Campo etiqueta={<>Nombre del cliente <span className="font-normal text-subtle">opcional</span></>} htmlFor="c-cli">
+                  <input id="c-cli" className="campo" value={cliente} onChange={(e) => setCliente(e.target.value)} placeholder="Nombre para el mensaje" />
+                </Campo>
+              </div>
+              <Campo etiqueta="Modelo" htmlFor="c-modelo">
+                <select id="c-modelo" className="campo" value={modeloId} onChange={(e) => cambiarModelo(e.target.value)}>
+                  {modelos.map((x) => <option key={x.id} value={x.id}>{x.nombre} {x.anio} · {dinero2(x.precio)}</option>)}
+                </select>
+              </Campo>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <Campo etiqueta="Código postal" htmlFor="c-cp"><input id="c-cp" className="campo" inputMode="numeric" maxLength={5} value={cp} onChange={(e) => setCp(e.target.value.replace(/\D/g, ""))} placeholder="66400" /></Campo>
+                <Campo etiqueta="Edad" htmlFor="c-edad"><input id="c-edad" className="campo" inputMode="numeric" maxLength={2} value={edad} onChange={(e) => setEdad(e.target.value.replace(/\D/g, ""))} placeholder="40" /></Campo>
+                <Campo etiqueta="Género (Banorte)" htmlFor="c-gen"><select id="c-gen" className="campo" value={genero} onChange={(e) => setGenero(e.target.value)}><option value="">—</option><option>Masculino</option><option>Femenino</option></select></Campo>
+              </div>
+              <Campo etiqueta={<>WhatsApp del cliente <span className="font-normal text-subtle">opcional</span></>} htmlFor="c-tel">
+                <input id="c-tel" type="tel" className="campo" value={telefono} onChange={(e) => setTelefono(e.target.value)} placeholder="10 dígitos" />
+              </Campo>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                <Tile k="Precio de lista" v={dinero2(m.precio)} />
+                <Tile k="Bono al enganche" v={m.bono ? dinero2(m.bono) : "Sin bono"} acento={!!m.bono} />
+                {m.mensualidadDesde ? <Tile k="Campaña: desde" v={`${dinero(m.mensualidadDesde)}/mes`} /> : null}
+              </div>
+              {m.descripcion ? <p className="text-[0.82rem] text-muted">{m.descripcion} · <a href={`/fotos#${m.clave}`} className="font-semibold text-accent hover:underline">Fotos para el cliente</a></p> : null}
+              <Boton icono={ArrowRight} onClick={() => setPaso(1)} className="w-full">Continuar</Boton>
+            </>
+          ) : null}
+
+          {paso === 1 ? (
+            <>
+              <div className="flex flex-wrap gap-x-6 gap-y-2 rounded-xl border border-line px-4 py-3" role="radiogroup" aria-label="Cómo calcular">
+                {([["enganche", "Capturar enganche"], ["presupuesto", "Presupuesto a la firma"]] as const).map(([v, t]) => (
+                  <label key={v} className="inline-flex items-center gap-2 text-[0.9rem] font-semibold"><input type="radio" name="modo" className="size-4 accent-[var(--accent)]" checked={modo === v} onChange={() => setModo(v)} />{t}</label>
+                ))}
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {modo === "enganche" ? (
+                  <Campo etiqueta="Enganche total, incluido el bono" htmlFor="c-eng" ayuda={c.bonoAplica ? `El cliente pone ${dinero(c.aportacion)} + bono ${dinero(c.bono)}` : "Menos de 5%: no aplica el bono"}>
+                    <input id="c-eng" className="campo" inputMode="decimal" value={enganche} onChange={(e) => setEnganche(e.target.value)} />
+                  </Campo>
+                ) : (
+                  <Campo etiqueta="De la bolsa del cliente a la firma" htmlFor="c-pres" ayuda={`Enganche total resultante: ${dinero(c.engancheTotal)}`}>
+                    <input id="c-pres" className="campo" inputMode="decimal" value={presupuesto} onChange={(e) => setPresupuesto(e.target.value)} />
+                  </Campo>
+                )}
+                <Campo etiqueta="Convenio de Banorte" htmlFor="c-conv" ayuda={`${Math.round(c.pctEnganche * 100)}% de enganche · ${c.convenio.nombre}`}>
+                  <select id="c-conv" className="campo" value={c.manual ? convenioSel : "auto"} onChange={(e) => setConvenioSel(e.target.value)}>
+                    <option value="auto">Automático · mejor tasa disponible</option>
+                    {c.disponibles.map((x) => <option key={claveConvenio(x)} value={claveConvenio(x)}>{x.nombre} · {pct(x.tasa)}</option>)}
+                  </select>
+                </Campo>
+                <Campo etiqueta="Plazo" htmlFor="c-plazo">
+                  <select id="c-plazo" className="campo" value={plazo} onChange={(e) => setPlazo(Number(e.target.value))}>{PLAZOS.map((n) => <option key={n} value={n}>{n} meses</option>)}</select>
+                </Campo>
+                <Campo etiqueta="Otros accesorios financiados" htmlFor="c-otros"><input id="c-otros" className="campo" inputMode="decimal" value={otros} onChange={(e) => setOtros(e.target.value)} placeholder="$0" /></Campo>
+              </div>
+              <ul className="grid gap-1 grid-cols-[minmax(0,1fr)]">
+                {extras.map((x) => (
+                  <li key={x.clave}>
+                    <label className="flex items-center gap-3 rounded-lg px-1 py-1.5 text-[0.92rem] hover:bg-surface-2">
+                      <input type="checkbox" className="size-[18px] accent-[var(--accent)]" checked={marcados.has(x.clave)}
+                        onChange={(e) => { const n = new Set(marcados); if (e.target.checked) n.add(x.clave); else n.delete(x.clave); setMarcados(n); }} />
+                      <span className="flex-1">{x.nombre}</span><span className="font-semibold tabular-nums">{dinero(x.precio)}</span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+              <p className="text-[0.78rem] text-muted">Con menos de 20% de enganche se usan condiciones generales de Banorte, sin convenio especial. Placas y gestoría van aparte.</p>
+              <div className="grid grid-cols-[auto_1fr] gap-2"><Boton variante="secundario" icono={ArrowLeft} onClick={() => setPaso(0)}>Atrás</Boton><Boton icono={ArrowRight} onClick={() => setPaso(2)}>Ver resumen</Boton></div>
+            </>
+          ) : null}
+
+          {paso === 2 ? (
+            <>
+              <p className="rounded-xl bg-accent-soft px-4 py-3 text-[0.92rem]">{nombreModelo} · {plazo} meses · Enganche {dinero2(c.engancheTotal)}</p>
+              <details className="rounded-xl border border-line px-4 py-3" open={!!seguros}>
+                <summary className="cursor-pointer text-[0.9rem] font-semibold">Seguros del primer año · captura del cotizador Banorte</summary>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <Campo etiqueta="Seguro de auto (anual)" htmlFor="c-sa"><input id="c-sa" className="campo" inputMode="decimal" value={seguroAuto} onChange={(e) => setSeguroAuto(e.target.value)} placeholder="$0" /></Campo>
+                  <Campo etiqueta="Seguro de vida / desempleo" htmlFor="c-sv"><input id="c-sv" className="campo" inputMode="decimal" value={seguroVida} onChange={(e) => setSeguroVida(e.target.value)} placeholder="$0" /></Campo>
+                </div>
+                <p className="mt-2 text-[0.76rem] text-muted">Banorte los calcula con código postal {cp || "—"}, edad {edad || "—"} y género {genero || "—"}. Se suman a lo que paga el cliente a la firma.</p>
+              </details>
+              <details className="rounded-xl border border-line px-4 py-3" open={verificado}>
+                <summary className="cursor-pointer text-[0.9rem] font-semibold">Importes oficiales de Banorte (para dejarla verificada)</summary>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <Campo etiqueta="Mensualidad oficial" htmlFor="c-mo"><input id="c-mo" className="campo" inputMode="decimal" value={oficial.mensualidad} onChange={(e) => setOficial({ ...oficial, mensualidad: e.target.value })} placeholder={dinero2(c.mensualidad)} /></Campo>
+                  <Campo etiqueta="Comisión por apertura oficial" htmlFor="c-co"><input id="c-co" className="campo" inputMode="decimal" value={oficial.comision} onChange={(e) => setOficial({ ...oficial, comision: e.target.value })} placeholder={dinero2(c.comision)} /></Campo>
+                </div>
+                {verificado && Math.abs(mensualidadOficial - c.mensualidad) >= 1 ? <p className="mt-2 text-[0.78rem] text-warn">Diferencia contra el estimado: {dinero2(mensualidadOficial - c.mensualidad)}. Revisa seguros financiados o el convenio.</p> : null}
+              </details>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <Boton icono={MessageCircle} variante="whatsapp" onClick={() => window.open(enlaceWhatsApp(telefono, mensaje), "_blank", "noopener")}>Enviar por WhatsApp</Boton>
+                <Boton icono={Copy} variante="secundario" onClick={async () => avisar(await copiarTexto(mensaje) ? "Mensaje copiado" : "No se pudo copiar", "ok")}>Copiar mensaje</Boton>
+                <BotonEnlace icono={FileText} variante="secundario" href={urlPdf} externo>Cotización en PDF</BotonEnlace>
+                <Boton icono={Save} variante="secundario" disabled={ocupado || cliente.trim().length < 2} onClick={guardar} title={cliente.trim().length < 2 ? "Escribe el nombre del cliente en el paso 1" : undefined}>{ocupado ? "Guardando…" : "Guardar en el CRM"}</Boton>
+              </div>
+              <Boton variante="fantasma" icono={ArrowLeft} onClick={() => setPaso(1)}>Ajustar enganche y extras</Boton>
+            </>
+          ) : null}
+        </section>
+
+        {/* Resumen siempre a la vista */}
+        <aside className="grid gap-3 rounded-2xl border border-line bg-surface p-5 shadow-card lg:sticky lg:top-6">
+          <Encabezado n={3} titulo="Resumen de cotización" sub={`${nombreModelo} · ${plazo} meses`} />
+          <div className="rounded-2xl bg-[#0a2c4f] px-5 py-4 text-white">
+            <p className="text-[0.84rem] opacity-85">Mensualidad {verificado ? "Banorte" : "estimada"}</p>
+            <p key={`${mensualidad}`} className="num aparece text-[2.6rem] leading-tight">{dinero2(mensualidad)}</p>
+            <p className="text-[0.78rem] opacity-80">{verificado ? "Importe capturado del cotizador Banorte." : "La cifra oficial se confirma en Banorte."}</p>
+          </div>
+          {verificado ? <Pastilla tono="ok" className="w-fit text-[0.78rem]"><BadgeCheck className="size-3.5" />Verificada con Banorte</Pastilla>
+            : <p className="rounded-xl border border-warn/30 bg-warn-soft px-3 py-2 text-[0.82rem]">Banorte pendiente: captura la mensualidad oficial en el paso 3 para verificarla.</p>}
+          <dl className="grid text-[0.9rem] [&>div]:flex [&>div]:justify-between [&>div]:gap-3 [&>div]:border-b [&>div]:border-line [&>div]:py-2 [&_dd]:font-semibold [&_dd]:tabular-nums [&_dt]:text-muted">
+            <div><dt>Precio de factura</dt><dd>{dinero2(m.precio)}</dd></div>
+            {accesorios ? <div><dt>Accesorios financiados</dt><dd>{dinero2(accesorios)}</dd></div> : null}
+            {garantia ? <div><dt>Garantía financiada</dt><dd>{dinero2(garantia)}</dd></div> : null}
+            <div><dt>Enganche total</dt><dd>{dinero2(c.engancheTotal)}</dd></div>
+            {c.bonoAplica ? <div><dt>Bono aplicado al enganche</dt><dd>−{dinero2(c.bono)}</dd></div> : null}
+            <div><dt>Comisión por apertura</dt><dd>{dinero2(comision)}</dd></div>
+            {seguros ? <div><dt>Seguros primer año</dt><dd>{dinero2(seguros)}</dd></div> : null}
+            <div className="border-b-2!"><dt className="font-semibold text-fg!">De la bolsa del cliente a la firma</dt><dd className="text-[1.15rem] text-accent">{dinero2(bolsa)}</dd></div>
+            <div><dt>Monto a financiar</dt><dd>{dinero2(c.monto)}</dd></div>
+            <div><dt>Tasa</dt><dd>{pct(c.convenio.tasa)}{c.manual ? " · elegida" : ""}</dd></div>
+          </dl>
+          <p className="text-[0.84rem] font-semibold">Otros plazos</p>
+          <div className="grid grid-cols-3 gap-2">
+            {c.plazos.map((p) => (
+              <button key={p.n} type="button" onClick={() => setPlazo(p.n)} className={cx("rounded-xl px-2 py-2 text-center transition", p.n === plazo ? "bg-accent-soft ring-1 ring-accent" : "bg-surface-2 hover:bg-accent-soft/60")}>
+                <span className="block text-[0.72rem] text-muted">{p.n} meses</span><span className="block text-[0.86rem] font-semibold tabular-nums">{dinero2(p.mensualidad)}</span>
+              </button>
+            ))}
+          </div>
+          <p className="text-[0.8rem] text-muted">Trámites aparte: placas {dinero2(placas)} · gestoría {dinero2(parametros.gestoria)} si la agencia realiza el trámite.</p>
+          <p className="flex items-start gap-2 text-[0.74rem] text-subtle"><ShieldCheck className="mt-0.5 size-3.5 shrink-0" />Cotización ilustrativa sujeta a disponibilidad y aprobación de crédito. Seguro anual; renovaciones fuera de estas mensualidades. La primera mensualidad puede diferir por los días del periodo. Vigencia de bonos: {vigencia}.</p>
+        </aside>
+      </div>
+
+      <p className="flex flex-wrap items-center gap-2 text-[0.8rem] text-muted">
+        <Link2 className="size-4" />Cotizador para que el cliente calcule solo:
+        <a href={`/cotiza?a=${encodeURIComponent(usuario)}`} target="_blank" rel="noopener noreferrer" className="font-semibold text-accent hover:underline">abrir</a>·
+        <button type="button" className="font-semibold text-accent hover:underline" onClick={async () => avisar(await copiarTexto(`${location.origin}/cotiza?a=${encodeURIComponent(usuario)}`) ? "Link copiado" : "No se pudo copiar", "ok")}>copiar mi link</button>
+      </p>
     </div>
   );
+}
+
+function Encabezado({ n, titulo, sub }: { n: number; titulo: string; sub: string }) {
+  return (
+    <div className="flex items-start gap-3">
+      <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-accent-soft font-mono text-[0.8rem] font-bold text-accent">{String(n).padStart(2, "0")}</span>
+      <div><h2 className="text-[1.15rem] font-semibold leading-tight">{titulo}</h2><p className="text-[0.84rem] text-muted">{sub}</p></div>
+    </div>
+  );
+}
+function Tile({ k, v, acento }: { k: string; v: string; acento?: boolean }) {
+  return <div className="rounded-xl bg-surface-2 px-4 py-3"><p className="text-[0.76rem] text-muted">{k}</p><p className={cx("text-[1.1rem] font-semibold tabular-nums", acento && "text-accent")}>{v}</p></div>;
 }

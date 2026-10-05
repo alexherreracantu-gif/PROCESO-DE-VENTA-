@@ -36,5 +36,6 @@ insert into public.productos (agencia_id, clave, nombre, nombre_corto, precio, o
   ('0b7d0c3e-5f1a-4c8e-9a51-3c2d7e1f0a01', 'llantas', 'Seguro de llantas', 'Seg. llantas', 4487, 4),
   ('0b7d0c3e-5f1a-4c8e-9a51-3c2d7e1f0a01', 'placas', 'Trámite de placas', 'Placas', 3016, 5),
   ('0b7d0c3e-5f1a-4c8e-9a51-3c2d7e1f0a01', 'seguro', 'Seguro', 'Seguro', null, 6),
-  ('0b7d0c3e-5f1a-4c8e-9a51-3c2d7e1f0a01', 'refaccion', 'Llanta de refacción', 'Refacción', null, 7)
+  ('0b7d0c3e-5f1a-4c8e-9a51-3c2d7e1f0a01', 'refaccion', 'Llanta de refacción', 'Refacción', null, 7),
+  ('0b7d0c3e-5f1a-4c8e-9a51-3c2d7e1f0a01', 'wallbox', 'Instalación Wallbox', 'Wallbox', 9744, 8)
 on conflict (agencia_id, clave) do nothing;

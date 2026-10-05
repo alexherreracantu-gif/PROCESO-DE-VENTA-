@@ -443,3 +443,31 @@ describe("anuncios con la campaña oficial", () => {
     expect(t).toContain("Vigencia al 31 de octubre de 2026");
   });
 });
+
+import { conveniosDisponibles, cotizacionInterna, engancheParaPresupuesto } from "@/lib/dominio/banorte";
+describe("cotizador interno (como el de Grupo TEC)", () => {
+  const song = { clave: "song-plus", anio: 2026, motor: "hibrido" as const, precio: 778800, bono: 78000 };
+  it("reproduce al centavo la cotización del Song Plus con Wallbox, kit y garantía", () => {
+    const c = cotizacionInterna({ modelo: song, engancheTotal: 346000, accesorios: 9744 + 6500, garantia: 9082, plazo: 72, seguros: 21677.35 });
+    expect(c.aportacion).toBe(268000);
+    expect(c.monto).toBe(458126);
+    expect(c.convenio.tasa).toBe(0.1088);
+    expect(c.comision).toBe(10628.52);
+    expect(c.mensualidad).toBe(9146.56);
+    expect(c.bolsaFirma).toBe(300305.87);
+    expect(c.plazos.map((p) => p.mensualidad)).toEqual([40874.14, 21735.68, 15390.5, 12243.42, 10375.35, 9146.56]);
+  });
+  it("lista los convenios a los que alcanza el enganche y respeta el elegido a mano", () => {
+    const d = conveniosDisponibles(0.435, song);
+    expect(d.map((x) => x.tasa)).toEqual([0.1088, 0.1188, 0.1388, 0.1499]);
+    const king = conveniosDisponibles(0.5, { clave: "king-gl", anio: 2027, motor: "hibrido" });
+    expect(king.map((x) => x.tasa).slice(0, 2)).toEqual([0.0718, 0.0788]);
+    const manual = cotizacionInterna({ modelo: song, engancheTotal: 346000, accesorios: 16244, garantia: 9082, plazo: 72, seguros: 0, convenio: d[1] });
+    expect(manual.convenio.tasa).toBe(0.1188);
+  });
+  it("calcula el enganche para un presupuesto a la firma", () => {
+    const base = { modelo: song, accesorios: 16244, garantia: 9082, plazo: 72, seguros: 21677.35 };
+    const et = engancheParaPresupuesto(base, 300305.87);
+    expect(Math.abs(et - 346000)).toBeLessThan(1);
+  });
+});
