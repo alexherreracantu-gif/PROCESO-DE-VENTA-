@@ -21,7 +21,8 @@ export default async function PaginaCotizador() {
       <Cotizador
         modelos={modelos.map((m) => {
           const f = FOTOS_INCLUIDAS[m.clave]?.[1];
-          return { id: m.id, clave: m.clave, nombre: m.nombre, anio: m.anio, motor: m.motor, precio: m.precio, bono: m.bono, descripcion: m.descripcion, mini: f ? `/modelos/${f}-mini.jpg` : null, mensualidadDesde: m.campana?.mensualidad ?? null };
+          return { id: m.id, clave: m.clave, nombre: m.nombre, anio: m.anio, motor: m.motor, precio: m.precio, bono: m.bono, descripcion: m.descripcion, mini: f ? `/modelos/${f}-mini.jpg` : null, mensualidadDesde: m.campana?.mensualidad ?? null,
+            banorte: { submarca: m.banorte_submarca, anio: m.banorte_anio, modelo: m.banorte_modelo } };
         })}
         extras={productos.filter((p) => p.activo && p.precio && p.clave !== "placas").map((p) => ({ clave: p.clave, nombre: p.clave === "accesorios" ? "Kit de accesorios" : p.nombre, precio: p.precio as number }))
           .sort((a, b) => (a.clave === "wallbox" ? -1 : b.clave === "wallbox" ? 1 : 0))}

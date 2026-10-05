@@ -10,7 +10,8 @@
     "setup": "tsx scripts/setup.ts",
     "test": "vitest run",
     "typecheck": "next typegen && tsc --noEmit",
-    "migrar": "tsx scripts/migrar.ts"
+    "migrar": "tsx scripts/migrar.ts",
+    "conector": "tsx scripts/empacar-conector.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",

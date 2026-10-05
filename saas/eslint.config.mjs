@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Extensión de Chrome (código del conector Banorte, se conserva tal cual).
+    "conector-banorte/**",
   ]),
 ]);
 

@@ -457,17 +457,71 @@ describe("cotizador interno (como el de Grupo TEC)", () => {
     expect(c.bolsaFirma).toBe(300305.87);
     expect(c.plazos.map((p) => p.mensualidad)).toEqual([40874.14, 21735.68, 15390.5, 12243.42, 10375.35, 9146.56]);
   });
-  it("lista los convenios a los que alcanza el enganche y respeta el elegido a mano", () => {
-    const d = conveniosDisponibles(0.435, song);
-    expect(d.map((x) => x.tasa)).toEqual([0.1088, 0.1188, 0.1388, 0.1499]);
+  it("lista los convenios que Banorte ofrece para ese enganche y respeta el elegido a mano", () => {
+    expect(conveniosDisponibles(0.435, song).map((x) => x.tasa)).toEqual([0.1088]);
+    expect(conveniosDisponibles(0.15, song).map((x) => x.nombre)).toEqual(["Sin convenio"]);
+    const d = conveniosDisponibles(0.55, song);
+    expect(d.map((x) => `${x.nombre} ${x.tasa}`)).toEqual(["BYD 7.88% 0.0788", "BYD ESP 2% 0.0888"]);
     const king = conveniosDisponibles(0.5, { clave: "king-gl", anio: 2027, motor: "hibrido" });
-    expect(king.map((x) => x.tasa).slice(0, 2)).toEqual([0.0718, 0.0788]);
-    const manual = cotizacionInterna({ modelo: song, engancheTotal: 346000, accesorios: 16244, garantia: 9082, plazo: 72, seguros: 0, convenio: d[1] });
-    expect(manual.convenio.tasa).toBe(0.1188);
+    expect(king.map((x) => x.tasa)).toEqual([0.0718, 0.0788, 0.0888]);
+    const manual = cotizacionInterna({ modelo: song, engancheTotal: 450000, accesorios: 16244, garantia: 9082, plazo: 72, seguros: 0, convenio: d[1] });
+    expect(manual.convenio.tasa).toBe(0.0888);
+    expect(manual.convenio.nombre).toBe("BYD ESP 2%");
   });
   it("calcula el enganche para un presupuesto a la firma", () => {
     const base = { modelo: song, accesorios: 16244, garantia: 9082, plazo: 72, seguros: 21677.35 };
     const et = engancheParaPresupuesto(base, 300305.87);
     expect(Math.abs(et - 346000)).toBeLessThan(1);
+  });
+});
+
+import { faltantesBanorte, leerRespuestaBanorte, ORIGEN_BANORTE, payloadBanorte, urlBanorte, URL_BANORTE } from "@/lib/dominio/conector-banorte";
+import { readFileSync } from "node:fs";
+import { unzipSync, strFromU8 } from "fflate";
+describe("conector Banorte", () => {
+  const datos = {
+    requestId: "abc-123", origen: "https://park-point-two.vercel.app",
+    modelo: { nombre: "Song Plus DM-i", anio: 2026, precio: 778800, submarca: "95629", anioBanorte: "3006", codigo: "BY2608A123723" },
+    accesorios: 16244, descripcionAccesorios: "Instalación Wallbox, Kit de accesorios", garantia: 9082, enganche: 346000, plazo: 72,
+    cp: "66400", edad: 40, genero: "Masculino" as const, convenio: "BYD ESP 2%",
+    esperado: { monto: 458126, comision: 10628.52, mensualidad: 9146.56, tasa: 0.1088 },
+  };
+  it("arma la liga que lee banorte.js (Base64URL de JSON en UTF-8)", () => {
+    const url = urlBanorte(datos);
+    expect(url.startsWith(`${URL_BANORTE}#bydquote=`)).toBe(true);
+    const frag = url.match(/(?:^#|&|#)bydquote=([A-Za-z0-9_-]+)$/)![1];
+    // misma decodificación que la extensión
+    const padded = frag.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(frag.length / 4) * 4, "=");
+    const q = JSON.parse(Buffer.from(padded, "base64").toString("utf8"));
+    expect(q).toMatchObject({
+      requestId: "abc-123", returnOrigin: "https://park-point-two.vercel.app", subbrandCode: "95629", yearCode: "3006", bankModelCode: "BY2608A123723",
+      subbrand: "SONG PLUS", bankModel: "SONG PLUS DM-I MG6 HEV AUT", price: 778800, accessories: 16244, warranty: 9082, down: 346000,
+      term: 72, plazo: 72, zip: "66400", age: 40, gender: "Masculino", convenio: "BYD ESP 2%", accessoriesDesc: "Instalación Wallbox, Kit de accesorios",
+      expected: { principal: 458126, fee: 10628.52, monthly: 9146.56, rate: 10.88 },
+    });
+    expect(payloadBanorte({ ...datos, convenio: "Sin convenio" }).convenio).toBe("Ninguno");
+  });
+  it("pide CP, edad y género antes de abrir Banorte", () => {
+    expect(faltantesBanorte({ codigo: "X", cp: "66400", edad: "40", genero: "Femenino" })).toEqual([]);
+    expect(faltantesBanorte({ codigo: null, cp: "664", edad: "12", genero: "" })).toHaveLength(4);
+  });
+  it("solo acepta la respuesta de la pestaña de Banorte que abrió esta cotización", () => {
+    const ventana = {};
+    const data = { source: "BYD-GRUPO-TEC", requestId: "abc-123", state: "verified", message: "ok", monthly: 9146.56, principal: 458126, fee: 10628.52, insurance: 19158.48, life: 2518.87,
+      official: { rows: [{ plazo: 72, rate: 10.88, monthly: 9146.56 }, { plazo: 60, rate: 10.88, monthly: 10375.35 }] }, connectorVersion: "0.5.0" };
+    const r = leerRespuestaBanorte({ origin: ORIGEN_BANORTE, source: ventana, data }, { ventana, requestId: "abc-123" });
+    expect(r).toMatchObject({ estado: "verified", mensualidad: 9146.56, comision: 10628.52, monto: 458126, seguroAuto: 19158.48, seguroVida: 2518.87, conector: "0.5.0" });
+    expect(r!.filas).toHaveLength(2);
+    expect(leerRespuestaBanorte({ origin: "https://evil.example", source: ventana, data }, { ventana, requestId: "abc-123" })).toBeNull();
+    expect(leerRespuestaBanorte({ origin: ORIGEN_BANORTE, source: {}, data }, { ventana, requestId: "abc-123" })).toBeNull();
+    expect(leerRespuestaBanorte({ origin: ORIGEN_BANORTE, source: ventana, data }, { ventana, requestId: "otra" })).toBeNull();
+    expect(leerRespuestaBanorte({ origin: ORIGEN_BANORTE, source: ventana, data: { ...data, source: "X" } }, { ventana, requestId: "abc-123" })).toBeNull();
+  });
+  it("el ZIP descargable trae la extensión actual y autoriza el portal", () => {
+    const zip = unzipSync(readFileSync("public/conector-banorte.zip"));
+    for (const f of ["manifest.json", "banorte.js", "LEEME.txt"]) expect(strFromU8(zip[`conector-banorte/${f}`])).toBe(readFileSync(`conector-banorte/${f}`, "utf8"));
+    const js = readFileSync("conector-banorte/banorte.js", "utf8");
+    expect(js).toContain("https://park-point-two.vercel.app");
+    expect(JSON.parse(readFileSync("conector-banorte/manifest.json", "utf8")).version).toBe("0.5.0");
   });
 });

@@ -110,12 +110,15 @@ export function aportacionParaPagoFirma(e: Omit<EntradaCotizacion, "aportacion">
   return truncar(aportacion);
 }
 
-/** Todos los convenios a los que alcanza el enganche (mejor tasa primero), para elegir a mano. */
+/**
+ * Convenios que Banorte ofrece para ese % de enganche (mejor tasa primero), para elegir a mano.
+ * Banorte fija la tasa del "BYD ESP 2%" según el tramo de enganche; con 50% o más también
+ * ofrece "BYD 7.88%" (y los especiales KING 2027 / eléctricos), y el ESP 2% baja a 8.88%.
+ */
 export function conveniosDisponibles(pctEnganche: number, modelo: Pick<ModeloCotizable, "clave" | "anio" | "motor">): Convenio[] {
-  const lista: Convenio[] = [];
-  const umbrales = [0.5, 0.4, 0.25, 0.2, 0];
-  for (const u of umbrales) if (pctEnganche >= u) lista.push(convenio(u, modelo));
-  if (pctEnganche >= 0.5 && (lista[0].tasa < 0.0788)) lista.splice(1, 0, { nombre: "BYD 7.88%", tasa: 0.0788, comision: 0.02 });
+  const mejor = convenio(pctEnganche, modelo);
+  if (pctEnganche < 0.5) return [mejor];
+  const lista = [mejor, { nombre: "BYD 7.88%", tasa: 0.0788, comision: 0.02 }, { nombre: "BYD ESP 2%", tasa: 0.0888, comision: 0.02 }];
   const vistos = new Set<string>();
   return lista.filter((c) => { const k = `${c.nombre}-${c.tasa}`; if (vistos.has(k)) return false; vistos.add(k); return true; })
     .sort((a, b) => a.tasa - b.tasa);
