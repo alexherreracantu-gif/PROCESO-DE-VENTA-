@@ -1,0 +1,27 @@
+BYD Grupo Tec · Conector Banorte · v0.5.0
+
+QUÉ HACE
+Cuando presionas "Cotizar y verificar en Banorte" en el Cotizador del portal Park Point,
+se abre el simulador oficial de Banorte, la extensión llena todos los campos, calcula y
+regresa al portal la mensualidad, la comisión, el monto a financiar y los seguros oficiales.
+Solo actúa en el simulador público BYD de Banorte y solo si el portal lo abrió.
+Nunca solicita ni aprueba créditos.
+
+INSTALAR (una vez por computadora, en Chrome)
+1. Descomprime este ZIP en una carpeta que no vayas a borrar (por ejemplo Documentos/conector-banorte).
+2. Abre chrome://extensions y activa "Modo de desarrollador" (arriba a la derecha).
+3. Pulsa "Cargar extensión sin empaquetar" y elige la carpeta descomprimida.
+4. Si ya tenías la v0.4.4 (cotizador anterior), quítala para no tener dos copias activas.
+
+ACTUALIZAR
+Reemplaza banorte.js y manifest.json en la misma carpeta y pulsa "Recargar" en la extensión.
+Cierra la pestaña anterior de Banorte y cotiza de nuevo desde el portal.
+
+USO
+- No toques la pestaña de Banorte mientras trabaja: si das clic o tecleas, se detiene
+  (botón DETENER abajo a la derecha) para que puedas seguir a mano.
+- Si Chrome bloquea la ventana, permite ventanas emergentes para park-point-two.vercel.app.
+
+CAMBIOS v0.5.0
+- Regresa los resultados al portal Park Point (https://park-point-two.vercel.app) y a localhost.
+- El llenado de Banorte es idéntico a la v0.4.4.

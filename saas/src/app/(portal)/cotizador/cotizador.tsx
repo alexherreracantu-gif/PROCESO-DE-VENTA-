@@ -1,17 +1,19 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, BadgeCheck, Copy, FileText, Link2, MessageCircle, Save, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, BadgeCheck, Copy, Download, ExternalLink, FileText, Link2, LoaderCircle, MessageCircle, Save, ShieldCheck } from "lucide-react";
 import { Boton, BotonEnlace, Campo, Pastilla, cx } from "@/components/ui";
 import { copiarTexto, useAviso } from "@/components/cliente";
 import { cotizacionInterna, engancheParaPresupuesto, PLAZOS, type Convenio } from "@/lib/dominio/banorte";
+import { faltantesBanorte, leerRespuestaBanorte, urlBanorte, VERSION_CONECTOR, type RespuestaBanorte } from "@/lib/dominio/conector-banorte";
 import { dinero, dinero2, enlaceWhatsApp } from "@/lib/dominio/formato";
 import { guardarCotizacion } from "./acciones";
 
 export type ModeloC = {
   id: string; clave: string; nombre: string; anio: number; motor: "electrico" | "hibrido"; precio: number; bono: number;
   descripcion: string | null; mini: string | null; mensualidadDesde: number | null;
+  banorte: { submarca: string | null; anio: string | null; modelo: string | null };
 };
 export type ExtraC = { clave: string; nombre: string; precio: number };
 type Parametros = { placasElectrico: number; placasHibrido: number; gestoria: number };
@@ -20,6 +22,8 @@ const PASOS = ["Vehículo y cliente", "Enganche y extras", "Resumen y Banorte"] 
 const num = (v: string) => { const n = Number(String(v).replace(/[^\d.]/g, "")); return Number.isFinite(n) ? n : 0; };
 const pct = (t: number) => `${(t * 100).toFixed(2)} %`;
 const claveConvenio = (c: Convenio) => `${c.nombre}|${c.tasa}`;
+
+type EstadoBanco = { estado: "listo" | "abriendo" | RespuestaBanorte["estado"] | "sin-respuesta"; mensaje: string };
 
 export function Cotizador({ modelos, extras, parametros, vendedores, yo, direccion, usuario, vigencia }: {
   modelos: ModeloC[]; extras: ExtraC[]; parametros: Parametros; vendedores: { id: string; nombre: string; titulo: string }[];
@@ -48,6 +52,28 @@ export function Cotizador({ modelos, extras, parametros, vendedores, yo, direcci
   const [seguroVida, setSeguroVida] = useState("");
   const [oficial, setOficial] = useState({ mensualidad: "", comision: "" });
   const [ocupado, iniciar] = useTransition();
+  // Conector Banorte: pestaña abierta, cotización enviada y lo que regresó la extensión.
+  const ventana = useRef<Window | null>(null);
+  const solicitud = useRef({ id: "", firma: "", respondio: false });
+  const [banco, setBanco] = useState<EstadoBanco>({ estado: "listo", mensaje: "" });
+  const [resultado, setResultado] = useState<{ firma: string; r: RespuestaBanorte } | null>(null);
+
+  useEffect(() => {
+    function recibir(e: MessageEvent) {
+      const r = leerRespuestaBanorte(e, { ventana: ventana.current, requestId: solicitud.current.id });
+      if (!r) return;
+      solicitud.current.respondio = true;
+      if (r.estado === "working") { setBanco({ estado: "working", mensaje: r.mensaje || "Banorte está calculando…" }); return; }
+      setBanco({ estado: r.estado, mensaje: r.mensaje });
+      if (r.estado === "error") return;
+      // Los seguros que cotizó Banorte se capturan solos (se pagan a la firma).
+      if (r.seguroAuto && r.seguroAuto > 0) setSeguroAuto(String(r.seguroAuto));
+      if (r.seguroVida && r.seguroVida > 0) setSeguroVida(String(r.seguroVida));
+      setResultado({ firma: solicitud.current.firma, r });
+    }
+    window.addEventListener("message", recibir);
+    return () => window.removeEventListener("message", recibir);
+  }, []);
 
   function cambiarModelo(id: string) {
     const n = modelos.find((x) => x.id === id);
@@ -71,9 +97,49 @@ export function Cotizador({ modelos, extras, parametros, vendedores, yo, direcci
     return { ...q, engancheTotal: et, disponibles: auto.disponibles, manual: !!elegido };
   }, [m, accesorios, garantia, plazo, seguros, modo, presupuesto, enganche, convenioSel]);
 
-  const mensualidadOficial = num(oficial.mensualidad);
-  const comisionOficial = num(oficial.comision);
+  // Lo que se mandó a Banorte: si cambia algo de esto, la verificación ya no aplica.
+  const firma = [m.id, c.engancheTotal, accesorios, garantia, c.convenio.nombre, c.convenio.tasa].join("|");
+  const deBanorte = resultado && resultado.firma === firma && !resultado.r.ajusteMinimo ? resultado.r : null;
+  const filaBanorte = deBanorte?.filas.find((f) => f.plazo === plazo) ?? null;
+  const autoVerificado = deBanorte?.estado === "verified" && !!filaBanorte;
+  const desactualizado = !!resultado && resultado.firma !== firma;
+  const mensualidadOficial = autoVerificado && filaBanorte ? filaBanorte.monthly : num(oficial.mensualidad);
+  const comisionOficial = autoVerificado && deBanorte?.comision ? deBanorte.comision : num(oficial.comision);
   const verificado = mensualidadOficial > 0;
+  const faltan = faltantesBanorte({ codigo: m.banorte.modelo, cp, edad, genero });
+
+  function abrirBanorte() {
+    if (faltan.length) { setBanco({ estado: "error", mensaje: `Para cotizar en Banorte falta: ${faltan.join(", ")}.` }); return; }
+    if (c.monto <= 0) { setBanco({ estado: "error", mensaje: "Con este enganche no hay monto a financiar. Revisa el enganche o el presupuesto." }); return; }
+    const id = typeof crypto.randomUUID === "function" ? crypto.randomUUID() : String(Date.now());
+    const url = urlBanorte({
+      requestId: id, origen: location.origin,
+      modelo: { nombre: m.nombre, anio: m.anio, precio: m.precio, submarca: m.banorte.submarca, anioBanorte: m.banorte.anio, codigo: m.banorte.modelo },
+      accesorios, garantia, enganche: c.engancheTotal, plazo, cp, edad: Number(edad), genero: genero as "Masculino" | "Femenino",
+      descripcionAccesorios: extras.filter((x) => x.clave !== "garantia" && marcados.has(x.clave)).map((x) => x.nombre).concat(num(otros) ? ["Otros accesorios"] : []).join(", "),
+      convenio: c.convenio.nombre,
+      esperado: { monto: c.monto, comision: c.comision, mensualidad: c.mensualidad, tasa: c.convenio.tasa },
+    });
+    // Pestaña nueva cada vez: la extensión solo lee la cotización al cargar la página.
+    try { if (ventana.current && !ventana.current.closed) ventana.current.close(); } catch {}
+    let w: Window | null = null;
+    try { w = window.open(url, "_blank"); } catch { w = null; }
+    if (!w) { setBanco({ estado: "error", mensaje: "Chrome bloqueó la pestaña de Banorte. Permite ventanas emergentes para este sitio y vuelve a intentar." }); return; }
+    ventana.current = w;
+    solicitud.current = { id, firma, respondio: false };
+    setResultado(null);
+    setBanco({ estado: "abriendo", mensaje: "Banorte abierto. La extensión está llenando el simulador; no toques esa pestaña." });
+    setTimeout(() => {
+      if (solicitud.current.id === id && !solicitud.current.respondio)
+        setBanco({ estado: "sin-respuesta", mensaje: `Banorte no ha respondido. Revisa que la extensión Conector Banorte v${VERSION_CONECTOR} esté instalada y mira la pestaña de Banorte.` });
+    }, 90000);
+  }
+
+  function usarImportesBanorte() {
+    if (!resultado) return;
+    const f = resultado.r.filas.find((x) => x.plazo === plazo);
+    setOficial({ mensualidad: f ? String(f.monthly) : resultado.r.mensualidad ? String(resultado.r.mensualidad) : "", comision: resultado.r.comision ? String(resultado.r.comision) : "" });
+  }
   const mensualidad = verificado ? mensualidadOficial : c.mensualidad;
   const comision = comisionOficial > 0 ? comisionOficial : c.comision;
   const bolsa = c.aportacion + comision + seguros;
@@ -125,7 +191,7 @@ export function Cotizador({ modelos, extras, parametros, vendedores, yo, direcci
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)] lg:items-start">
         <section className="aparece grid gap-4 rounded-2xl border border-line bg-surface p-5 shadow-card" key={paso}>
           <Encabezado n={paso + 1} titulo={["Vehículo y cliente", "Enganche y protección", "Revisa y genera la propuesta"][paso]}
-            sub={["Precios y bonos de la oferta del mes.", "Los accesorios y la garantía se financian.", "Captura lo que te dé Banorte para que la cotización quede verificada."][paso]} />
+            sub={["Precios y bonos de la oferta del mes.", "Los accesorios y la garantía se financian.", "Un clic abre Banorte; la extensión lo llena y regresa los importes oficiales."][paso]} />
 
           {paso === 0 ? (
             <>
@@ -209,6 +275,37 @@ export function Cotizador({ modelos, extras, parametros, vendedores, yo, direcci
           {paso === 2 ? (
             <>
               <p className="rounded-xl bg-accent-soft px-4 py-3 text-[0.92rem]">{nombreModelo} · {plazo} meses · Enganche {dinero2(c.engancheTotal)}</p>
+              <div className="grid gap-3 rounded-xl border border-line p-4">
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <Campo etiqueta="Código postal" htmlFor="b-cp"><input id="b-cp" className="campo" inputMode="numeric" maxLength={5} value={cp} onChange={(e) => setCp(e.target.value.replace(/\D/g, ""))} placeholder="66400" /></Campo>
+                  <Campo etiqueta="Edad" htmlFor="b-edad"><input id="b-edad" className="campo" inputMode="numeric" maxLength={2} value={edad} onChange={(e) => setEdad(e.target.value.replace(/\D/g, ""))} placeholder="40" /></Campo>
+                  <Campo etiqueta="Género" htmlFor="b-gen"><select id="b-gen" className="campo" value={genero} onChange={(e) => setGenero(e.target.value)}><option value="">—</option><option>Masculino</option><option>Femenino</option></select></Campo>
+                </div>
+                <Boton icono={ExternalLink} onClick={abrirBanorte} className="w-full">
+                  {banco.estado === "listo" ? "Cotizar y verificar en Banorte" : "Volver a cotizar en Banorte"}
+                </Boton>
+                {banco.estado !== "listo" && !(desactualizado && banco.estado === "verified") ? (
+                  <p role="status" className={cx("flex items-start gap-2 whitespace-pre-line rounded-lg border px-3 py-2 text-[0.84rem]",
+                    banco.estado === "verified" ? "border-ok/30 bg-ok-soft" : banco.estado === "review" ? "border-warn/30 bg-warn-soft" : banco.estado === "error" || banco.estado === "sin-respuesta" ? "border-bad/30 bg-bad-soft" : "border-accent/30 bg-accent-soft")}>
+                    {banco.estado === "abriendo" || banco.estado === "working" ? <LoaderCircle className="mt-0.5 size-4 shrink-0 animate-spin" /> : null}
+                    <span>{banco.estado === "verified" ? "Banorte coincide con el cotizador. Mensualidad, comisión y seguros oficiales capturados." : banco.mensaje}</span>
+                  </p>
+                ) : <p className="text-[0.8rem] text-muted">Abre el simulador oficial; la extensión llena todo, calcula y regresa aquí la mensualidad, la comisión y los seguros.</p>}
+                {desactualizado ? <p className="text-[0.8rem] text-warn">Cambiaste datos después de cotizar en Banorte{modo === "presupuesto" ? " (o los seguros oficiales movieron el enganche)" : ""}: vuelve a cotizar para verificarla.</p> : null}
+                {resultado && !desactualizado && resultado.r.estado === "review" && resultado.r.filas.length ? (
+                  <Boton variante="secundario" icono={BadgeCheck} onClick={usarImportesBanorte}>Usar los importes de Banorte</Boton>
+                ) : null}
+                <details className="text-[0.82rem]">
+                  <summary className="cursor-pointer font-semibold text-muted">Instalar la extensión de Chrome (una vez por computadora)</summary>
+                  <ol className="mt-2 grid list-decimal gap-1 pl-5 text-muted">
+                    <li>Descarga y descomprime el <a href="/conector-banorte.zip" download className="font-semibold text-accent hover:underline">Conector Banorte v{VERSION_CONECTOR}</a> en una carpeta que no vayas a borrar.</li>
+                    <li>Abre <b>chrome://extensions</b> y activa <b>Modo de desarrollador</b>.</li>
+                    <li>Pulsa <b>Cargar extensión sin empaquetar</b> y elige la carpeta. Si tenías la versión del cotizador anterior, quítala.</li>
+                    <li>Regresa aquí y presiona <b>Cotizar y verificar en Banorte</b>. Si Chrome bloquea la ventana, permite ventanas emergentes para este sitio.</li>
+                  </ol>
+                  <a href="/conector-banorte.zip" download className={cx("mt-2 inline-flex items-center gap-1.5 font-semibold text-accent hover:underline")}><Download className="size-3.5" />Descargar conector-banorte.zip</a>
+                </details>
+              </div>
               <details className="rounded-xl border border-line px-4 py-3" open={!!seguros}>
                 <summary className="cursor-pointer text-[0.9rem] font-semibold">Seguros del primer año · captura del cotizador Banorte</summary>
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -217,8 +314,8 @@ export function Cotizador({ modelos, extras, parametros, vendedores, yo, direcci
                 </div>
                 <p className="mt-2 text-[0.76rem] text-muted">Banorte los calcula con código postal {cp || "—"}, edad {edad || "—"} y género {genero || "—"}. Se suman a lo que paga el cliente a la firma.</p>
               </details>
-              <details className="rounded-xl border border-line px-4 py-3" open={verificado}>
-                <summary className="cursor-pointer text-[0.9rem] font-semibold">Importes oficiales de Banorte (para dejarla verificada)</summary>
+              <details className="rounded-xl border border-line px-4 py-3" open={verificado && !autoVerificado}>
+                <summary className="cursor-pointer text-[0.9rem] font-semibold">Captura manual de Banorte (si la extensión no regresa los importes)</summary>
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
                   <Campo etiqueta="Mensualidad oficial" htmlFor="c-mo"><input id="c-mo" className="campo" inputMode="decimal" value={oficial.mensualidad} onChange={(e) => setOficial({ ...oficial, mensualidad: e.target.value })} placeholder={dinero2(c.mensualidad)} /></Campo>
                   <Campo etiqueta="Comisión por apertura oficial" htmlFor="c-co"><input id="c-co" className="campo" inputMode="decimal" value={oficial.comision} onChange={(e) => setOficial({ ...oficial, comision: e.target.value })} placeholder={dinero2(c.comision)} /></Campo>
@@ -242,10 +339,10 @@ export function Cotizador({ modelos, extras, parametros, vendedores, yo, direcci
           <div className="rounded-2xl bg-[#0a2c4f] px-5 py-4 text-white">
             <p className="text-[0.84rem] opacity-85">Mensualidad {verificado ? "Banorte" : "estimada"}</p>
             <p key={`${mensualidad}`} className="num aparece text-[2.6rem] leading-tight">{dinero2(mensualidad)}</p>
-            <p className="text-[0.78rem] opacity-80">{verificado ? "Importe capturado del cotizador Banorte." : "La cifra oficial se confirma en Banorte."}</p>
+            <p className="text-[0.78rem] opacity-80">{autoVerificado ? "Importe oficial que regresó el simulador Banorte." : verificado ? "Importe capturado del cotizador Banorte." : "La cifra oficial se confirma en Banorte."}</p>
           </div>
           {verificado ? <Pastilla tono="ok" className="w-fit text-[0.78rem]"><BadgeCheck className="size-3.5" />Verificada con Banorte</Pastilla>
-            : <p className="rounded-xl border border-warn/30 bg-warn-soft px-3 py-2 text-[0.82rem]">Banorte pendiente: captura la mensualidad oficial en el paso 3 para verificarla.</p>}
+            : <p className="rounded-xl border border-warn/30 bg-warn-soft px-3 py-2 text-[0.82rem]">Banorte pendiente: en el paso 3 presiona “Cotizar y verificar en Banorte”.</p>}
           <dl className="grid text-[0.9rem] [&>div]:flex [&>div]:justify-between [&>div]:gap-3 [&>div]:border-b [&>div]:border-line [&>div]:py-2 [&_dd]:font-semibold [&_dd]:tabular-nums [&_dt]:text-muted">
             <div><dt>Precio de factura</dt><dd>{dinero2(m.precio)}</dd></div>
             {accesorios ? <div><dt>Accesorios financiados</dt><dd>{dinero2(accesorios)}</dd></div> : null}
@@ -260,7 +357,7 @@ export function Cotizador({ modelos, extras, parametros, vendedores, yo, direcci
           </dl>
           <p className="text-[0.84rem] font-semibold">Otros plazos</p>
           <div className="grid grid-cols-3 gap-2">
-            {c.plazos.map((p) => (
+            {c.plazos.map((x) => ({ n: x.n, mensualidad: (autoVerificado ? deBanorte?.filas.find((f) => f.plazo === x.n)?.monthly : null) ?? x.mensualidad })).map((p) => (
               <button key={p.n} type="button" onClick={() => setPlazo(p.n)} className={cx("rounded-xl px-2 py-2 text-center transition", p.n === plazo ? "bg-accent-soft ring-1 ring-accent" : "bg-surface-2 hover:bg-accent-soft/60")}>
                 <span className="block text-[0.72rem] text-muted">{p.n} meses</span><span className="block text-[0.86rem] font-semibold tabular-nums">{dinero2(p.mensualidad)}</span>
               </button>
