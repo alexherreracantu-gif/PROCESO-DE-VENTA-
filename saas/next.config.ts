@@ -5,6 +5,10 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   // Las fotos de los modelos se suben comprimidas desde el navegador (≈ 300 KB + miniatura).
   experimental: { serverActions: { bodySizeLimit: "4mb" } },
+  // Presentación del convenio con Energon (cifrada, con contraseña): tools/cifrar-convenio.mjs.
+  async rewrites() {
+    return [{ source: "/convenio", destination: "/convenio/index.html" }];
+  },
   async headers() {
     return [
       {
