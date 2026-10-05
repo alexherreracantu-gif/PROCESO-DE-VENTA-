@@ -26,7 +26,12 @@ export type Modelo = {
   id: string; clave: string; nombre: string; anio: number; motor: "electrico" | "hibrido";
   precio: number; bono: number; descripcion: string | null; activo: boolean; orden: number;
   banorte_submarca: string | null; banorte_anio: string | null; banorte_modelo: string | null;
+  /** Autonomía para los anuncios (ej. "COMB. 1,105 KM*"). */
+  autonomia: string | null;
+  /** Cifras oficiales de la campaña del mes: mensualidad desde, tasa desde (0.0788), enganche desde (0.10). */
+  campana: Campana;
 };
+export type Campana = { mensualidad?: number | null; tasa?: number | null; enganche?: number | null };
 export type Producto = { id: string; clave: string; nombre: string; nombre_corto: string; precio: number | null; activo: boolean; orden: number };
 export type Venta = {
   id: string; folio: number; fecha: string; vendedor_id: string; cliente: string; num_cliente: string | null;

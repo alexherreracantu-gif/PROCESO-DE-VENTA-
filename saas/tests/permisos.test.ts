@@ -261,4 +261,19 @@ d("permisos por rol (RLS)", () => {
       const e = await tx.savepoint((sp) => sp`update public.perfiles set clave_temporal = false where id = ${x.omar}`).catch((err) => err);
       expect(String(e)).toMatch(/permission denied/);
     }));
+
+  it("los anuncios oficiales: dirección los sube, el equipo los ve, nadie de otra agencia", () =>
+    escenario(async (tx, x) => {
+      const img = "A".repeat(200);
+      await como(tx, x.omar);
+      const e1 = await tx.savepoint((sp) => sp`insert into public.anuncios_oficiales (mes, titulo, datos, miniatura) values ('2026-10-01', 'x', ${img}, ${img})`).catch((e) => e);
+      expect(String(e1)).toMatch(/row-level security/);
+      await como(tx, x.jorge);
+      await tx`insert into public.anuncios_oficiales (mes, titulo, datos, miniatura) values ('2026-10-01', 'Song Plus', ${img}, ${img})`;
+      await como(tx, x.omar);
+      expect(await tx`select titulo from public.anuncios_oficiales`).toEqual([{ titulo: "Song Plus" }]);
+      expect(await tx`delete from public.anuncios_oficiales returning id`).toHaveLength(0);
+      await como(tx, x.ajeno);
+      expect(await tx`select 1 from public.anuncios_oficiales`).toHaveLength(0);
+    }));
 });

@@ -4,7 +4,7 @@
  * mensualidad, "BUILD YOUR DREAMS" y letra chica.
  */
 
-export type Estilo = "bono" | "mensualidad" | "centrado";
+export type Estilo = "campana" | "bono" | "mensualidad" | "centrado";
 export type Formato = "cuadrado" | "vertical" | "historia";
 
 export const FORMATOS: Record<Formato, { alto: number; etiqueta: string; uso: string }> = {
@@ -67,6 +67,54 @@ export function dibujarAnuncio(d: DatosLienzo, foto: HTMLImageElement, r: Recurs
   const arriba = formato === "historia" ? 190 : 52;
   const abajo = formato === "historia" ? 250 : 40;
   const k = new Lienzo(x, H);
+
+  if (estilo === "campana") {
+    // Como las piezas oficiales de la campaña: pestaña blanca arriba, panel con dos recuadros y el modelo a la derecha.
+    k.degradado(0, 0, 0, H, [[0, "#3aa8f0"], [0.5, "#1683dc"], [1, "#0a56b0"]]);
+    // En vertical e historia la foto horizontal va completa (sin acercar) en medio, fundida con el fondo.
+    const a = foto.naturalWidth / foto.naturalHeight;
+    if (a / (W / H) <= 1.8) k.foto(foto, 0, 0, W, H);
+    else { const alto = Math.min(H * 0.6, (W / a) * 1.12); k.fotoFundida(foto, H * 0.48 - alto / 2, alto); }
+    k.degradado(0, 0, 0, H * 0.32, [[0, "rgba(34,146,232,0.78)"], [1, "rgba(34,146,232,0)"]]);
+    k.degradado(0, H * 0.52, 0, H, [[0, "rgba(10,84,176,0)"], [0.55, "rgba(10,84,176,0.78)"], [1, "rgba(7,58,138,0.96)"]]);
+    k.logo(r.logo, arriba, 300);
+
+    const principal: [string, string] = d.mensualidad !== null ? ["MENSUALIDADES DESDE:", `${dinero(d.mensualidad)}*`]
+      : d.bono !== null ? ["BONO FLEXIBLE:", `${dinero(d.bono)}*`] : ["PRECIO DESDE:", `${dinero(d.precio)}*`];
+    const yTab = arriba + (formato === "cuadrado" ? 110 : 150);
+    const tamValor = k.ajustar(principal[1], ANCHO, 500, 92, 40);
+    const anchoTab = Math.max(k.medir(principal[0], `30px ${ANCHO}`, 2), k.medir(principal[1], `${tamValor}px ${ANCHO}`)) + 130;
+    k.sombra(() => k.caja(-40, yTab, anchoTab + 40, 70 + tamValor * 1.25, [0, 30, 90, 0], "#ffffff"));
+    k.texto(principal[0], 64, yTab + 62, `30px ${ANCHO}`, AZUL_TEXTO, "left", 2);
+    k.texto(principal[1], 64, yTab + 62 + tamValor * 1.12, `${tamValor}px ${ANCHO}`, AZUL, "left", 0, true);
+
+    let y = H - abajo;
+    y = k.legal(d.legal, y, formato) - 18;
+    if (d.contacto) y = k.contacto(d.contacto, y) - 22;
+    y = k.eslogan(y) - 40;
+
+    const cajas: [string, string][] = [];
+    if (d.mensualidad !== null && d.bono !== null) cajas.push(["BONO FLEXIBLE", `${dinero(d.bono)} MXN`]);
+    if (d.enganche !== null && cajas.length < 1) cajas.push(["ENGANCHE DESDE:", `${Math.round(d.enganche * 100)}%`]);
+    if (d.tasa !== null) cajas.push(["TASA DESDE:", `${pct(d.tasa)}`]);
+    if (d.mensualidad === null && d.bono === null && cajas.length < 2) cajas.unshift(["PRECIO:", `${dinero(d.precio)}*`]);
+    const altoCaja = 116, anchoPanel = cajas.length ? 600 : 0;
+    const yCajas = y - altoCaja;
+    if (cajas.length) {
+      k.caja(-40, yCajas - 22, anchoPanel + 40, altoCaja + 44, [0, 22, 22, 0], "rgba(8,46,110,0.45)");
+      k.cajasValor(cajas.slice(0, 2), yCajas, altoCaja, "relleno", 62, anchoPanel - 30);
+    }
+    // Pestaña del modelo a la derecha, a la altura de los recuadros
+    const nombre = `BYD ${d.modelo}`.toUpperCase();
+    const anchoMax = W - anchoPanel - 70;
+    const tamNom = k.ajustar(nombre, ANCHO, anchoMax - 70, 32, 16);
+    const anchoMod = Math.min(anchoMax, Math.max(k.medir(nombre, `${tamNom}px ${ANCHO}`), d.subtitulo ? k.medir(d.subtitulo, `18px ${ANCHO}`) : 0) + 80);
+    const altoMod = d.subtitulo ? 100 : 78;
+    const yMod = yCajas + altoCaja / 2 - altoMod / 2;
+    k.sombra(() => k.caja(W - anchoMod, yMod, anchoMod + 40, altoMod, [26, 0, 0, 26], "#ffffff"));
+    k.texto(nombre, W - anchoMod / 2, yMod + (d.subtitulo ? 48 : 50), `${tamNom}px ${ANCHO}`, AZUL_TEXTO, "center", 0, true);
+    if (d.subtitulo) k.texto(d.subtitulo.toUpperCase(), W - anchoMod / 2, yMod + 80, `18px ${ANCHO}`, AZUL, "center", 1);
+  }
 
   if (estilo === "bono") {
     k.degradado(0, 0, 0, H, [[0, "#1a93e4"], [0.55, "#0e63bd"], [1, "#083f8c"]]);
@@ -335,13 +383,13 @@ class Lienzo {
     return py;
   }
   /** Recuadros con etiqueta y valor: "relleno" (azul con borde) o "corchetes" ([ ] como en los anuncios). */
-  cajasValor(cajas: [string, string][], y: number, alto: number, tipo: "relleno" | "corchetes") {
+  cajasValor(cajas: [string, string][], y: number, alto: number, tipo: "relleno" | "corchetes", x0 = 70, x1 = W - 70) {
     if (!cajas.length) return;
-    const sep = 22, margen = 70;
+    const sep = 22;
     const pesos = cajas.map((_, i) => (tipo === "corchetes" && i === 0 && cajas.length > 1 ? 1.5 : 1));
     const total = pesos.reduce((a, b) => a + b, 0);
-    const util = W - margen * 2 - sep * (cajas.length - 1);
-    let px = margen;
+    const util = x1 - x0 - sep * (cajas.length - 1);
+    let px = x0;
     cajas.forEach(([etq, val], i) => {
       const w = (util * pesos[i]) / total;
       if (tipo === "relleno") {

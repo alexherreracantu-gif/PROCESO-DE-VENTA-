@@ -427,3 +427,19 @@ describe("conversión sin prospectos registrados", () => {
     expect(r.filas[0].conversion).toBeNull();
   });
 });
+
+import { autonomiaDe, textoLegal as legalAnuncio } from "@/lib/anuncios";
+describe("anuncios con la campaña oficial", () => {
+  const song = { clave: "song-plus", anio: 2026, motor: "hibrido" as const, precio: 778800, bono: 78000, nombre: "Song Plus DM-i", descripcion: null, autonomia: "COMB. 1,105 KM*" };
+  it("usa la autonomía del catálogo y si no la de referencia", () => {
+    expect(autonomiaDe(song)).toBe("COMB. 1,105 KM*");
+    expect(autonomiaDe({ clave: "song-pro", autonomia: null })).toBe("COMB. 1,001 KM*");
+    expect(autonomiaDe({ clave: "modelo-nuevo", autonomia: null })).toBe("");
+  });
+  it("con cifras de campaña no inventa plazo ni tasa de Banorte en la letra chica", () => {
+    const t = legalAnuncio({ modelo: song, hoy: "2026-10-05", conBono: true, campana: true });
+    expect(t).toContain("campaña del mes");
+    expect(t).not.toContain("Banorte Plan Tradicional");
+    expect(t).toContain("Vigencia al 31 de octubre de 2026");
+  });
+});

@@ -6,7 +6,7 @@ import { Download, Share2 } from "lucide-react";
 import { Boton, Campo, Tarjeta, TituloTarjeta, cx } from "@/components/ui";
 import { BotonCopiar, descargarArchivo, useAviso } from "@/components/cliente";
 import { FORMATOS, cargarImagen, cargarRecursosAnuncio, dibujarAnuncio, type Estilo, type Formato, type Recursos } from "@/components/anuncios/dibujar";
-import { AUTONOMIA, escenario, telefonoBonito, textoLegal, textosAnuncio, type ModeloAnuncio } from "@/lib/anuncios";
+import { autonomiaDe, escenario, telefonoBonito, textoLegal, textosAnuncio, type ModeloAnuncio } from "@/lib/anuncios";
 import { PLAZOS } from "@/lib/dominio/banorte";
 import { MESES } from "@/lib/dominio/fechas";
 import { dinero } from "@/lib/dominio/formato";
@@ -15,6 +15,7 @@ import { POSICIONES, fuenteFoto, type FotosModelo } from "@/lib/fotos";
 export type ModeloGenerador = ModeloAnuncio & FotosModelo;
 
 const ESTILOS: { valor: Estilo; texto: string; ayuda: string }[] = [
+  { valor: "campana", texto: "Campaña", ayuda: "Como los anuncios oficiales: mensualidad arriba, bono y tasa abajo, modelo a la derecha" },
   { valor: "bono", texto: "Bono", ayuda: "Pestaña con el bono, franja con tasa y mensualidad" },
   { valor: "mensualidad", texto: "Mensualidad", ayuda: "Foto oscura, mensualidad grande y tres recuadros" },
   { valor: "centrado", texto: "Centrado", ayuda: "Fondo azul, nombre grande y foto al centro" },
@@ -32,13 +33,15 @@ export function Generador({ modelos, inicial, hoy, asesor, agencia }: {
   const [clave, setClave] = useState(inicial);
   const m = modelos.find((x) => x.clave === clave) ?? modelos[0];
   const [posFoto, setPosFoto] = useState(() => disponibles(m)[0] ?? 1);
-  const [estilo, setEstilo] = useState<Estilo>("bono");
+  const [estilo, setEstilo] = useState<Estilo>("campana");
+  const tieneCampana = (x: ModeloGenerador) => !!(x.campana?.mensualidad || x.campana?.tasa || x.campana?.enganche);
+  const [fuente, setFuente] = useState<"campana" | "banorte">(tieneCampana(m) ? "campana" : "banorte");
   const [formato, setFormato] = useState<Formato>("cuadrado");
   const [conBono, setConBono] = useState(m.bono > 0);
   const [conMensualidad, setConMensualidad] = useState(true);
   const [enganche, setEnganche] = useState(0.5);
   const [plazo, setPlazo] = useState<number>(72);
-  const [subtitulo, setSubtitulo] = useState(AUTONOMIA[m.clave] ?? "");
+  const [subtitulo, setSubtitulo] = useState(autonomiaDe(m));
   const [kicker, setKicker] = useState(`OFERTA ${mes}`);
   const [extra, setExtra] = useState("");
   const [conContacto, setConContacto] = useState(true);
@@ -55,19 +58,25 @@ export function Generador({ modelos, inicial, hoy, asesor, agencia }: {
     setClave(c);
     setPosFoto(disponibles(n)[0] ?? 1);
     setConBono(n.bono > 0);
-    setSubtitulo(AUTONOMIA[n.clave] ?? "");
+    setSubtitulo(autonomiaDe(n));
+    setFuente(tieneCampana(n) ? "campana" : "banorte");
   }
 
   const esc = useMemo(() => escenario(m, enganche, plazo), [m, enganche, plazo]);
-  const bonoVisible = conBono && m.bono > 0 && esc.bonoAplica;
+  // Cifras: las oficiales de la campaña del mes (Catálogo) o calculadas con el cotizador Banorte.
+  const oficial = fuente === "campana" && tieneCampana(m);
+  const fin = useMemo(() => oficial
+    ? { mensualidad: m.campana?.mensualidad ?? null, tasa: m.campana?.tasa ?? null, enganche: m.campana?.enganche ?? null }
+    : { mensualidad: esc.mensualidad, tasa: esc.tasa, enganche: esc.pctEnganche }, [oficial, m, esc]);
+  const bonoVisible = conBono && m.bono > 0 && (oficial || esc.bonoAplica);
   const legal = useMemo(() => textoLegal({
-    modelo: m, hoy, conBono: bonoVisible, extra: legalExtra,
-    mensualidad: conMensualidad ? { pctEnganche: esc.pctEnganche, plazo, tasa: esc.tasa } : null,
-  }), [m, hoy, bonoVisible, legalExtra, conMensualidad, esc, plazo]);
+    modelo: m, hoy, conBono: bonoVisible, extra: legalExtra, campana: conMensualidad && oficial,
+    mensualidad: conMensualidad && !oficial ? { pctEnganche: esc.pctEnganche, plazo, tasa: esc.tasa } : null,
+  }), [m, hoy, bonoVisible, legalExtra, conMensualidad, oficial, esc, plazo]);
   const textos = useMemo(() => textosAnuncio({
-    modelo: m, conBono: bonoVisible, mensualidad: conMensualidad ? { valor: esc.mensualidad, tasa: esc.tasa } : null,
+    modelo: m, conBono: bonoVisible, mensualidad: conMensualidad && fin.mensualidad != null ? { valor: fin.mensualidad, tasa: fin.tasa ?? esc.tasa } : null,
     asesor: conContacto ? nombre : "", telefono: conContacto ? telefono : "", agencia: agencia.nombre, ciudad: agencia.ciudad,
-  }), [m, bonoVisible, conMensualidad, esc, conContacto, nombre, telefono, agencia]);
+  }), [m, bonoVisible, conMensualidad, fin, esc, conContacto, nombre, telefono, agencia]);
   const fotoUrl = fuenteFoto(m, posFoto)?.grande ?? null;
   const archivo = `anuncio-${m.clave}-${estilo}-${formato}.jpg`;
 
@@ -83,9 +92,9 @@ export function Generador({ modelos, inicial, hoy, asesor, agencia }: {
         const lienzo = dibujarAnuncio({
           modelo: m.nombre, anio: m.anio, subtitulo, kicker, precio: m.precio,
           bono: bonoVisible ? m.bono : null,
-          mensualidad: conMensualidad ? esc.mensualidad : null,
-          tasa: conMensualidad ? esc.tasa : null,
-          enganche: conMensualidad ? esc.pctEnganche : null,
+          mensualidad: conMensualidad ? fin.mensualidad : null,
+          tasa: conMensualidad ? fin.tasa : null,
+          enganche: conMensualidad ? fin.enganche : null,
           extra, legal,
           contacto: conContacto && (nombre.trim() || telefono.trim()) ? { nombre: nombre.trim(), telefono: telefonoBonito(telefono) } : null,
         }, img, r, estilo, formato);
@@ -98,7 +107,7 @@ export function Generador({ modelos, inicial, hoy, asesor, agencia }: {
       }
     }, 180);
     return () => { vigente = false; clearTimeout(t); };
-  }, [fotoUrl, m, subtitulo, kicker, bonoVisible, conMensualidad, esc, extra, legal, conContacto, nombre, telefono, estilo, formato]);
+  }, [fotoUrl, m, subtitulo, kicker, bonoVisible, conMensualidad, fin, extra, legal, conContacto, nombre, telefono, estilo, formato]);
 
   async function compartir() {
     if (!vista) return;
@@ -170,8 +179,20 @@ export function Generador({ modelos, inicial, hoy, asesor, agencia }: {
           <div className="grid gap-4">
             <Casilla marcada={bonoVisible} deshabilitada={!m.bono || !esc.bonoAplica} alCambiar={setConBono}
               texto={m.bono ? `Bono flexible de ${dinero(m.bono)}` : "Este modelo no tiene bono este mes"} />
-            <Casilla marcada={conMensualidad} alCambiar={setConMensualidad} texto="Mensualidad y tasa (cotizador Banorte)" />
-            {conMensualidad ? (
+            <Casilla marcada={conMensualidad} alCambiar={setConMensualidad} texto="Mensualidad, tasa y enganche" />
+            {conMensualidad && tieneCampana(m) ? (
+              <Opciones etiqueta="Cifras" valor={fuente} alCambiar={setFuente} opciones={[{ valor: "campana", texto: "Campaña oficial" }, { valor: "banorte", texto: "Calcular (Banorte)" }]} />
+            ) : null}
+            {conMensualidad && oficial ? (
+              <p className="rounded-xl bg-accent-soft px-3 py-2 text-[0.84rem]">
+                {[m.campana?.mensualidad ? <>Mensualidad desde <strong>{dinero(m.campana.mensualidad)}</strong></> : null,
+                  m.campana?.tasa ? <>tasa desde <strong>{(m.campana.tasa * 100).toFixed(2)}%</strong></> : null,
+                  m.campana?.enganche ? <>enganche desde <strong>{Math.round(m.campana.enganche * 100)}%</strong></> : null]
+                  .filter(Boolean).map((x, i) => <span key={i}>{i ? " · " : ""}{x}</span>)}
+                <span className="block text-[0.76rem] text-muted">Las cifras de la campaña del mes. Se cambian en Catálogo y precios.</span>
+              </p>
+            ) : null}
+            {conMensualidad && !oficial ? (
               <div className="grid grid-cols-2 gap-3">
                 <Campo etiqueta="Enganche (con bono)" htmlFor="a-eng">
                   <select id="a-eng" className="campo" value={enganche} onChange={(e) => setEnganche(Number(e.target.value))}>
