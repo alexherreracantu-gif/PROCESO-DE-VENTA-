@@ -45,7 +45,7 @@ export const ETAPAS: { id: Etapa; label: string }[] = [
   { id: "perdido", label: "Perdido" },
 ];
 export const ETAPAS_CERRADAS: Etapa[] = ["entregado", "referidor", "perdido"];
-export const ORIGENES = ["Park Point", "QR Park Point", "Meta Ads", "Landing", "Instagram", "WhatsApp", "Referido", "Flotilla", "Lead viejo", "Otro"];
+export const ORIGENES = ["Park Point", "QR Park Point", "Meta Ads", "Landing", "Cotizador web", "Instagram", "WhatsApp", "Referido", "Flotilla", "Lead viejo", "Otro"];
 export type Calor = "alta" | "media" | "fria";
 export const CALORES: { id: Calor; label: string }[] = [
   { id: "alta", label: "Caliente" },

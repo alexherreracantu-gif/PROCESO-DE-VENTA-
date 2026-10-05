@@ -2,7 +2,7 @@
  * Rutas que se abren sin sesión. `/api/leads` se protege con su propio LEADS_TOKEN,
  * `/api/cron` con CRON_SECRET y `/panel` es el dashboard general de solo lectura.
  */
-export const RUTAS_PUBLICAS = ["/login", "/configurar", "/salir", "/instalar", "/panel", "/api/leads", "/api/cron"];
+export const RUTAS_PUBLICAS = ["/login", "/configurar", "/salir", "/instalar", "/panel", "/cotiza", "/api/leads", "/api/cron"];
 
 export type Acceso = "pasar" | "no-autorizado" | "al-login" | "al-inicio";
 
