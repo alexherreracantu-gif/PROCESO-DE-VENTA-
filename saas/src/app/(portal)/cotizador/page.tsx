@@ -16,6 +16,7 @@ export default async function PaginaCotizador() {
         modelos={modelos.map((m) => ({ id: m.id, clave: m.clave, nombre: m.nombre, anio: m.anio, motor: m.motor, precio: m.precio, bono: m.bono, descripcion: m.descripcion }))}
         parametros={{ placasElectrico: pa.placas_electrico ?? 1760, placasHibrido: pa.placas_hibrido ?? 5866, gestoria: pa.gestoria ?? 3016, garantia: pa.garantia_extendida ?? 9082, separacion: pa.separacion ?? 5000 }}
         asesor={s.perfil.rol === "ceo" ? "BYD Park Point" : s.perfil.nombre_corto}
+        usuario={s.perfil.usuario}
       />
     </>
   );

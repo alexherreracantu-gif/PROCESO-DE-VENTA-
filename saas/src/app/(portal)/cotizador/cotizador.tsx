@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { FileText } from "lucide-react";
-import { BotonCopiar } from "@/components/cliente";
+import { FileText, Link2 } from "lucide-react";
+import { BotonCopiar, copiarTexto, useAviso } from "@/components/cliente";
 import { BotonEnlace, Campo, Pastilla, Tarjeta, TituloTarjeta, cx } from "@/components/ui";
 import { aportacionParaPagoFirma, cotizar, PLAZOS } from "@/lib/dominio/banorte";
 import { dinero, dinero2, enlaceWhatsApp } from "@/lib/dominio/formato";
@@ -10,7 +10,8 @@ import { dinero, dinero2, enlaceWhatsApp } from "@/lib/dominio/formato";
 type ModeloC = { id: string; clave: string; nombre: string; anio: number; motor: "electrico" | "hibrido"; precio: number; bono: number; descripcion: string | null };
 type Parametros = { placasElectrico: number; placasHibrido: number; gestoria: number; garantia: number; separacion: number };
 
-export function Cotizador({ modelos, parametros, asesor }: { modelos: ModeloC[]; parametros: Parametros; asesor: string }) {
+export function Cotizador({ modelos, parametros, asesor, usuario }: { modelos: ModeloC[]; parametros: Parametros; asesor: string; usuario: string }) {
+  const avisarLink = useAviso();
   const [modeloId, setModeloId] = useState(modelos.find((m) => m.clave.startsWith("king-gl"))?.id ?? modelos[0]?.id ?? "");
   const [modo, setModo] = useState<"aportacion" | "firma">("aportacion");
   const [aportacion, setAportacion] = useState("50000");
@@ -56,7 +57,19 @@ export function Cotizador({ modelos, parametros, asesor }: { modelos: ModeloC[];
   ].filter(Boolean).join("\n");
   const fila = (k: string, v: string, fuerte?: boolean) => <div className="flex justify-between gap-4 text-[0.9rem]"><span className="text-muted">{k}</span><span className={cx("text-right tabular-nums", fuerte && "font-semibold")}>{v}</span></div>;
 
+  async function copiarLink() {
+    const url = `${location.origin}/cotiza?a=${encodeURIComponent(usuario)}`;
+    avisarLink(await copiarTexto(url) ? "Link copiado: pégalo en tu bio, estados o anuncios" : url, "ok");
+  }
+
   return (
+    <div className="grid gap-5">
+    <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-accent/30 bg-accent-soft px-4 py-3 text-[0.88rem]">
+      <Link2 className="size-5 shrink-0 text-accent" aria-hidden />
+      <span className="min-w-0 flex-1"><strong>Tu cotizador para clientes.</strong> Ellos calculan su mensualidad solos y la cotización te llega como prospecto en el CRM.</span>
+      <a href={`/cotiza?a=${encodeURIComponent(usuario)}`} target="_blank" rel="noopener noreferrer" className="font-semibold text-accent hover:underline">Ver</a>
+      <button type="button" onClick={copiarLink} className="rounded-lg bg-accent px-3 py-1.5 font-semibold text-on-accent hover:brightness-110">Copiar mi link</button>
+    </div>
     <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
       <Tarjeta className="grid h-fit gap-4">
         <Campo etiqueta="Modelo" htmlFor="c-modelo">
@@ -124,6 +137,7 @@ export function Cotizador({ modelos, parametros, asesor }: { modelos: ModeloC[];
           </BotonEnlace>
         </div>
       </Tarjeta>
+    </div>
     </div>
   );
 }

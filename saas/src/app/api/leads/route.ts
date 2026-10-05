@@ -1,7 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
-import { supabaseAdmin } from "@/lib/supabase/admin";
-import { buscarModelo, elegirAsesor, esRobot, normalizarLead } from "@/lib/dominio/leads";
-import { hoy } from "@/lib/dominio/fechas";
+import { esRobot, normalizarLead } from "@/lib/dominio/leads";
+import { registrarLead } from "@/lib/leads-servidor";
 
 /**
  * Recibe prospectos de la landing, de Meta Lead Ads (vía Make/Zapier) o de cualquier formulario
@@ -44,41 +43,7 @@ export async function POST(request: Request) {
   const lead = normalizarLead(datos);
   if ("error" in lead) return respuesta({ ok: false, error: lead.error }, 422);
 
-  const admin = supabaseAdmin();
-  const agenciaId = url.searchParams.get("agencia") ?? (await admin.from("agencias").select("id").order("created_at").limit(1).single()).data?.id;
-  if (!agenciaId) return respuesta({ ok: false, error: "No hay agencia configurada." }, 500);
-
-  // Freno contra avalanchas: más de 30 prospectos en 10 minutos no es tráfico normal.
-  const { count: ultimos } = await admin.from("prospectos").select("id", { count: "exact", head: true }).eq("agencia_id", agenciaId).gte("created_at", new Date(Date.now() - 10 * 60_000).toISOString());
-  if ((ultimos ?? 0) >= 30) return respuesta({ ok: false, error: "Demasiados prospectos seguidos. Intenta en unos minutos." }, 429);
-
-  // Si el teléfono ya llegó en los últimos 30 días, se agrega la nota al mismo prospecto.
-  const hace30 = new Date(Date.now() - 30 * 864e5).toISOString();
-  const { data: previo } = await admin.from("prospectos").select("id, asesor_id, notas").eq("agencia_id", agenciaId).eq("telefono", lead.telefono).gte("created_at", hace30).limit(1).maybeSingle();
-  if (previo) {
-    await admin.from("prospectos").update({ notas: [previo.notas, `— Volvió a escribir (${hoy()}) —`, lead.notas].filter(Boolean).join("\n").slice(0, 2000), fecha_siguiente: hoy(), calor: "alta" }).eq("id", previo.id);
-    return respuesta({ ok: true, id: previo.id, asesor_id: previo.asesor_id, duplicado: true });
-  }
-
-  const [{ data: asesores }, { data: modelos }, { data: recientes }] = await Promise.all([
-    admin.from("perfiles").select("id").eq("agencia_id", agenciaId).eq("activo", true).eq("rol", "asesor").eq("vende", true),
-    admin.from("modelos").select("id, nombre").eq("agencia_id", agenciaId).eq("activo", true),
-    admin.from("prospectos").select("asesor_id, created_at").eq("agencia_id", agenciaId).gte("created_at", hace30),
-  ]);
-  const inicioHoy = `${hoy()}T00:00:00-06:00`;
-  const conteo = (asesores ?? []).map((a) => {
-    const suyos = (recientes ?? []).filter((r) => r.asesor_id === a.id);
-    return { id: a.id as string, total: suyos.length, hoy: suyos.filter((r) => new Date(r.created_at) >= new Date(inicioHoy)).length };
-  });
-  const asesor = elegirAsesor(conteo);
-  if (!asesor) return respuesta({ ok: false, error: "No hay asesores activos para asignar." }, 500);
-  const modelo = buscarModelo(lead.modelo, (modelos ?? []) as { id: string; nombre: string }[]);
-
-  const { data, error } = await admin.from("prospectos").insert({
-    agencia_id: agenciaId, asesor_id: asesor, nombre: lead.nombre, telefono: lead.telefono, modelo_id: modelo?.id ?? null,
-    origen: lead.origen, calor: lead.calor, etapa: "nuevo", fecha_siguiente: hoy(), siguiente_accion: "Contactar por WhatsApp en menos de 5 minutos",
-    notas: [lead.modelo && !modelo ? `Modelo que pidió: ${lead.modelo}` : null, lead.notas].filter(Boolean).join("\n") || null,
-  }).select("id").single();
-  if (error || !data) return respuesta({ ok: false, error: "No se pudo guardar: " + (error?.message ?? "") }, 500);
-  return respuesta({ ok: true, id: data.id, asesor_id: asesor });
+  const r = await registrarLead(lead, { agenciaId: url.searchParams.get("agencia") });
+  if (!r.ok) return respuesta({ ok: false, error: r.error }, r.status);
+  return respuesta(r);
 }

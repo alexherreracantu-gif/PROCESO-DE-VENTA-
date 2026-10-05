@@ -6,6 +6,12 @@ describe("decidirAcceso", () => {
     expect(decidirAcceso("/api/leads", false)).toBe("pasar");
   });
 
+  it("el cotizador para clientes es público, la cotización interna no", () => {
+    expect(decidirAcceso("/cotiza", false)).toBe("pasar");
+    expect(decidirAcceso("/cotizacion", false)).toBe("al-login");
+    expect(decidirAcceso("/cotizador", false)).toBe("al-login");
+  });
+
   it("deja pasar el resumen diario de Vercel Cron (lo protege CRON_SECRET)", () => {
     expect(decidirAcceso("/api/cron/resumen", false)).toBe("pasar");
   });
