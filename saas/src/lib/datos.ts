@@ -40,11 +40,11 @@ export async function equipo(s: Sesion): Promise<Perfil[]> {
 }
 
 export async function catalogo(s: Sesion, incluirInactivos = false) {
-  let qm = s.sb.from("modelos").select("id, clave, nombre, anio, motor, precio, bono, descripcion, activo, orden, banorte_submarca, banorte_anio, banorte_modelo").eq("agencia_id", s.agencia.id).order("orden").order("nombre");
+  let qm = s.sb.from("modelos").select("id, clave, nombre, anio, motor, precio, bono, descripcion, activo, orden, banorte_submarca, banorte_anio, banorte_modelo, autonomia, campana").eq("agencia_id", s.agencia.id).order("orden").order("nombre");
   let qp = s.sb.from("productos").select("id, clave, nombre, nombre_corto, precio, activo, orden").eq("agencia_id", s.agencia.id).order("orden");
   if (!incluirInactivos) { qm = qm.eq("activo", true); qp = qp.eq("activo", true); }
   const [m, p] = await Promise.all([qm, qp]);
-  const modelos = revisar<Modelo[]>(m, "los modelos").map((x) => ({ ...x, precio: Number(x.precio), bono: Number(x.bono) }));
+  const modelos = revisar<Modelo[]>(m, "los modelos").map((x) => ({ ...x, precio: Number(x.precio), bono: Number(x.bono), campana: x.campana ?? {} }));
   const productos = revisar<Producto[]>(p, "los productos").map((x) => ({ ...x, precio: x.precio == null ? null : Number(x.precio) }));
   return { modelos, productos };
 }

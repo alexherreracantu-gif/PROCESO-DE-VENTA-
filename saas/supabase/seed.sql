@@ -12,7 +12,7 @@ insert into public.agencias (id, nombre, marca, grupo, ciudad, parametros) value
 ) on conflict (id) do nothing;
 
 insert into public.modelos (agencia_id, clave, nombre, anio, motor, precio, bono, orden, banorte_submarca, banorte_anio, banorte_modelo, descripcion) values
-  ('0b7d0c3e-5f1a-4c8e-9a51-3c2d7e1f0a01', 'dolphin-mini-300', 'Dolphin Mini 300 km', 2026, 'electrico', 399800, 0, 1, '93288', '3006', 'BY2603A123576', 'Entrada tecnológica a BYD. Eléctrico, compacto y bien equipado.'),
+  ('0b7d0c3e-5f1a-4c8e-9a51-3c2d7e1f0a01', 'dolphin-mini-300', 'Dolphin Mini 300 km', 2026, 'electrico', 399800, 25000, 1, '93288', '3006', 'BY2603A123576', 'Entrada tecnológica a BYD. Eléctrico, compacto y bien equipado.'),
   ('0b7d0c3e-5f1a-4c8e-9a51-3c2d7e1f0a01', 'dolphin-mini-380', 'Dolphin Mini 380 km', 2026, 'electrico', 415800, 30000, 2, '93288', '3006', 'BY2603A123577', 'Más autonomía para trayectos metropolitanos.'),
   ('0b7d0c3e-5f1a-4c8e-9a51-3c2d7e1f0a01', 'yuan-pro-dmi', 'Yuan Pro DM-i', 2027, 'hibrido', 519999, 20000, 3, '95630', '3362', 'BY2713A125715', 'SUV compacto híbrido.'),
   ('0b7d0c3e-5f1a-4c8e-9a51-3c2d7e1f0a01', 'king-gl', 'King GL DM-i', 2027, 'hibrido', 524900, 25000, 4, '93388', '3362', 'BY2709A125999', 'Producto héroe de Park Point. Tasa 7.18% con 50% de enganche.'),

@@ -81,9 +81,13 @@ function DialogoModelo({ modelo, alCerrar, siguienteOrden }: { modelo: Modelo | 
 }
 function FormModelo({ m, alCerrar, siguienteOrden }: { m: Modelo | null; alCerrar: () => void; siguienteOrden: number }) {
   const { ocupado, error, correr } = useGuardar();
-  const [f, setF] = useState({ nombre: m?.nombre ?? "", anio: String(m?.anio ?? new Date().getFullYear() + 1), motor: m?.motor ?? "hibrido", precio: String(m?.precio ?? ""), bono: String(m?.bono ?? 0), descripcion: m?.descripcion ?? "", activo: m?.activo ?? true });
+  const [f, setF] = useState({ nombre: m?.nombre ?? "", anio: String(m?.anio ?? new Date().getFullYear() + 1), motor: m?.motor ?? "hibrido", precio: String(m?.precio ?? ""), bono: String(m?.bono ?? 0), descripcion: m?.descripcion ?? "", activo: m?.activo ?? true,
+    autonomia: m?.autonomia ?? "", mensualidad: m?.campana.mensualidad != null ? String(m.campana.mensualidad) : "",
+    tasa: m?.campana.tasa != null ? String(Math.round(m.campana.tasa * 10000) / 100) : "", enganche: m?.campana.enganche != null ? String(Math.round(m.campana.enganche * 100)) : "" });
+  const num = (v: string) => (v.trim() === "" ? null : Number(v));
   return (
-    <form className="grid gap-4" onSubmit={(e) => { e.preventDefault(); correr(() => guardarModelo({ id: m?.id, nombre: f.nombre, anio: Number(f.anio), motor: f.motor as "electrico" | "hibrido", precio: Number(f.precio) || 0, bono: Number(f.bono) || 0, descripcion: f.descripcion, activo: f.activo, orden: m?.orden ?? siguienteOrden }), alCerrar); }}>
+    <form className="grid gap-4" onSubmit={(e) => { e.preventDefault(); correr(() => guardarModelo({ id: m?.id, nombre: f.nombre, anio: Number(f.anio), motor: f.motor as "electrico" | "hibrido", precio: Number(f.precio) || 0, bono: Number(f.bono) || 0, descripcion: f.descripcion, activo: f.activo, orden: m?.orden ?? siguienteOrden,
+      autonomia: f.autonomia, campana: { mensualidad: num(f.mensualidad), tasa: num(f.tasa) == null ? null : num(f.tasa)! / 100, enganche: num(f.enganche) == null ? null : num(f.enganche)! / 100 } }), alCerrar); }}>
       <Campo etiqueta="Nombre" htmlFor="m-nombre" requerido><input id="m-nombre" className="campo" value={f.nombre} onChange={(e) => setF({ ...f, nombre: e.target.value })} /></Campo>
       <div className="grid grid-cols-2 gap-4">
         <Campo etiqueta="Año modelo" htmlFor="m-anio"><input id="m-anio" type="number" className="campo" value={f.anio} onChange={(e) => setF({ ...f, anio: e.target.value })} /></Campo>
@@ -91,6 +95,16 @@ function FormModelo({ m, alCerrar, siguienteOrden }: { m: Modelo | null; alCerra
         <Campo etiqueta="Precio de lista" htmlFor="m-precio" requerido><input id="m-precio" type="number" min={0} className="campo" value={f.precio} onChange={(e) => setF({ ...f, precio: e.target.value })} /></Campo>
         <Campo etiqueta="Bono flexible" htmlFor="m-bono"><input id="m-bono" type="number" min={0} className="campo" value={f.bono} onChange={(e) => setF({ ...f, bono: e.target.value })} /></Campo>
       </div>
+      <fieldset className="grid gap-3 rounded-xl border border-line p-3.5">
+        <legend className="px-1 text-[0.8rem] font-semibold text-muted">Campaña de anuncios del mes (lo que publica mercadotecnia)</legend>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <Campo etiqueta="Mensualidad desde" htmlFor="m-mens"><input id="m-mens" type="number" min={0} className="campo" value={f.mensualidad} onChange={(e) => setF({ ...f, mensualidad: e.target.value })} placeholder="6141" /></Campo>
+          <Campo etiqueta="Tasa desde %" htmlFor="m-tasa"><input id="m-tasa" type="number" min={0} step="0.01" className="campo" value={f.tasa} onChange={(e) => setF({ ...f, tasa: e.target.value })} placeholder="7.88" /></Campo>
+          <Campo etiqueta="Enganche desde %" htmlFor="m-eng"><input id="m-eng" type="number" min={0} max={100} className="campo" value={f.enganche} onChange={(e) => setF({ ...f, enganche: e.target.value })} placeholder="10" /></Campo>
+          <Campo etiqueta="Autonomía" htmlFor="m-aut"><input id="m-aut" className="campo" maxLength={28} value={f.autonomia} onChange={(e) => setF({ ...f, autonomia: e.target.value })} placeholder="COMB. 1,105 KM*" /></Campo>
+        </div>
+        <p className="text-[0.76rem] text-muted">El generador de anuncios usa estas cifras tal cual. Déjalas vacías si el modelo no está en la campaña.</p>
+      </fieldset>
       <Campo etiqueta="Argumento de venta" htmlFor="m-desc"><textarea id="m-desc" className="campo min-h-[64px]" value={f.descripcion} onChange={(e) => setF({ ...f, descripcion: e.target.value })} /></Campo>
       <label className="inline-flex items-center gap-2.5 text-[0.9rem]"><input type="checkbox" className="size-4 accent-[var(--accent)]" checked={f.activo} onChange={(e) => setF({ ...f, activo: e.target.checked })} />A la venta (aparece en el cotizador y en ventas nuevas)</label>
       {error ? <p role="alert" className="rounded-xl bg-bad-soft px-4 py-3 text-sm font-semibold text-bad">{error}</p> : null}

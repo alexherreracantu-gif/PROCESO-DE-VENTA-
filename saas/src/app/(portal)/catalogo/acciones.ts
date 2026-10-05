@@ -18,6 +18,12 @@ const Modelo = z.object({
   descripcion: z.string().trim().max(240).optional().nullable(),
   activo: z.boolean(),
   orden: z.number().int().min(0).max(999),
+  autonomia: z.string().trim().max(28).optional().nullable().transform((v) => (v ? v : null)),
+  campana: z.object({
+    mensualidad: z.number().positive().max(1_000_000).nullable().optional(),
+    tasa: z.number().min(0).max(0.6).nullable().optional(),
+    enganche: z.number().min(0).max(1).nullable().optional(),
+  }).optional().transform((c) => Object.fromEntries(Object.entries(c ?? {}).filter(([, v]) => v != null))),
 });
 
 export async function guardarModelo(e: z.input<typeof Modelo>): Promise<Resultado> {

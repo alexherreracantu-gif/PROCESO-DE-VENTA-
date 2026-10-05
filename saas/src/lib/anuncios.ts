@@ -5,8 +5,9 @@
 import { cotizar, type ModeloCotizable } from "@/lib/dominio/banorte";
 import { MESES } from "@/lib/dominio/fechas";
 import { dinero } from "@/lib/dominio/formato";
+import type { Campana } from "@/lib/tipos";
 
-export type ModeloAnuncio = ModeloCotizable & { nombre: string; descripcion: string | null };
+export type ModeloAnuncio = ModeloCotizable & { nombre: string; descripcion: string | null; autonomia?: string | null; campana?: Campana };
 
 /** Autonomía para la pestaña del modelo (fuentes: BYD México y prensa del lanzamiento). Editable en el generador. */
 export const AUTONOMIA: Record<string, string> = {
@@ -18,7 +19,10 @@ export const AUTONOMIA: Record<string, string> = {
   "king-gl": "COMB. 1,680 KM*",
   "king-gs": "COMB. 1,680 KM*",
   "yuan-pro-dmi": "COMB. 1,045 KM*",
-  "song-plus": "COMB. 1,150 KM*",
+  "song-plus": "COMB. 1,105 KM*",
+  "song-pro": "COMB. 1,001 KM*",
+  "shark-gl": "COMB. 840 KM*",
+  "shark-gs": "COMB. 840 KM*",
   "sealion-7": "456 KM*",
   "m9": "COMB. 945 KM*",
   "atto-8": "COMB. 1,030 KM*",
@@ -62,8 +66,13 @@ export function condicionesModelo(descripcion: string | null): string[] {
 export type OpcionesLegal = {
   modelo: ModeloAnuncio; hoy: string; conBono: boolean;
   mensualidad?: { pctEnganche: number; plazo: number; tasa: number } | null;
+  /** Mensualidad y tasa oficiales de la campaña del mes (no calculadas en el portal). */
+  campana?: boolean;
   extra?: string;
 };
+
+/** Autonomía del modelo: la del catálogo o la de referencia. */
+export const autonomiaDe = (m: Pick<ModeloAnuncio, "clave" | "autonomia">) => m.autonomia || AUTONOMIA[m.clave] || "";
 
 /** Letra chica del anuncio: precio con IVA, condiciones del bono y de la mensualidad, vigencia. */
 export function textoLegal(o: OpcionesLegal): string {
@@ -77,6 +86,9 @@ export function textoLegal(o: OpcionesLegal): string {
   }
   if (o.mensualidad) {
     partes.push(`Mensualidad calculada con Banorte Plan Tradicional, enganche de ${Math.round(o.mensualidad.pctEnganche * 100)}%, plazo de ${o.mensualidad.plazo} meses y tasa fija anual de ${tasaTexto(o.mensualidad.tasa)} sin IVA; no incluye comisión por apertura, seguros, placas ni trámites. Sujeto a aprobación de crédito.`);
+  }
+  if (o.campana && !o.mensualidad) {
+    partes.push("Mensualidades, tasas y enganches de la campaña del mes con financiamiento de las instituciones participantes; sujetos a aprobación de crédito, no incluyen comisión por apertura, seguros, placas ni trámites.");
   }
   if (o.extra?.trim()) partes.push(o.extra.trim());
   partes.push(`Vigencia al ${vigencia(o.hoy)} o hasta agotar existencias. Las tasas, mensualidades y ofertas pueden cambiar sin previo aviso. Imágenes ilustrativas. Consulta términos y condiciones en la agencia.`);
