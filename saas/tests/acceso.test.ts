@@ -12,6 +12,12 @@ describe("decidirAcceso", () => {
     expect(decidirAcceso("/cotizador", false)).toBe("al-login");
   });
 
+  it("la presentación del convenio abre sin sesión (la protege su contraseña)", () => {
+    expect(decidirAcceso("/convenio", false)).toBe("pasar");
+    expect(decidirAcceso("/convenio/index.html", false)).toBe("pasar");
+    expect(decidirAcceso("/convenios", false)).toBe("al-login");
+  });
+
   it("deja pasar el resumen diario de Vercel Cron (lo protege CRON_SECRET)", () => {
     expect(decidirAcceso("/api/cron/resumen", false)).toBe("pasar");
   });
