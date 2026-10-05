@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { catalogo } from "@/lib/datos";
 import { requerirSesion } from "@/lib/sesion";
-import { cotizar, PLAZOS } from "@/lib/dominio/banorte";
+import { cotizacionInterna, PLAZOS } from "@/lib/dominio/banorte";
 import { fechaLarga, hoy } from "@/lib/dominio/fechas";
 import { dinero, dinero2 } from "@/lib/dominio/formato";
 import { telefonoBonito, vigencia } from "@/lib/anuncios";
@@ -31,19 +31,29 @@ export default async function Cotizacion(props: PageProps<"/cotizacion">) {
   if (!modelo) notFound();
   const pa = s.agencia.parametros;
   const plazo = (PLAZOS as readonly number[]).includes(num(sp.pl)) ? num(sp.pl) : 72;
-  const garantia = sp.gar === "1" ? pa.garantia_extendida ?? 9082 : 0;
-  const base = {
-    modelo, aportacion: num(sp.ap), accesorios: num(sp.acc), garantia, plazo,
-    placas: modelo.motor === "electrico" ? pa.placas_electrico ?? 1760 : pa.placas_hibrido ?? 5866,
-    tramites: sp.gest === "1" ? pa.gestoria ?? 3016 : 0,
-  };
-  const q = cotizar(base);
-  const plazos = PLAZOS.filter((n) => n >= 36).map((n) => ({ n, m: cotizar({ ...base, plazo: n }).mensualidad }));
+  const elegidos = new Set(String(sp.ext ?? "").split(",").filter(Boolean));
+  const { productos } = await catalogo(s, true);
+  const conExtras = productos.filter((p) => elegidos.has(p.clave) && p.precio && p.clave !== "placas");
+  const garantia = conExtras.filter((p) => p.clave === "garantia").reduce((t, p) => t + (p.precio ?? 0), 0);
+  const accesorios = conExtras.filter((p) => p.clave !== "garantia").reduce((t, p) => t + (p.precio ?? 0), 0) + num(sp.acc);
+  const seguros = num(sp.seg);
+  const base = { modelo, engancheTotal: num(sp.et), accesorios, garantia, plazo, seguros };
+  const auto = cotizacionInterna(base);
+  const conv = auto.disponibles.find((c) => String(c.tasa) === sp.conv) ?? null;
+  const q = conv ? cotizacionInterna({ ...base, convenio: conv }) : auto;
+  const mensualidad = num(sp.mo) || q.mensualidad;
+  const comision = num(sp.co) || q.comision;
+  const bolsa = q.aportacion + comision + seguros;
+  const placas = modelo.motor === "electrico" ? pa.placas_electrico ?? 1760 : pa.placas_hibrido ?? 5866;
+  const plazos = q.plazos.filter((p) => p.n >= 36).map((p) => ({ n: p.n, m: p.n === plazo ? mensualidad : p.mensualidad }));
   const { data: fotos } = await s.sb.from("modelo_fotos").select("posicion, updated_at").eq("modelo_id", modelo.id).eq("posicion", 1);
   const foto = fuenteFoto({ id: modelo.id, fotos: Object.fromEntries((fotos ?? []).map((f) => [f.posicion, new Date(f.updated_at).getTime()])), incluidas: FOTOS_INCLUIDAS[modelo.clave] ?? {} }, 1);
   const cliente = typeof sp.cli === "string" ? sp.cli.slice(0, 80) : "";
-  const asesor = s.perfil.rol === "ceo" ? "BYD Park Point" : s.perfil.nombre;
-  const tel = telefonoBonito(s.perfil.telefono);
+  // El responsable de la cotización (puede ser otro asesor si la arma dirección).
+  const responsable = typeof sp.r === "string" && /^[0-9a-f-]{36}$/i.test(sp.r)
+    ? (await s.sb.from("perfiles").select("nombre, telefono").eq("id", sp.r).maybeSingle<{ nombre: string; telefono: string | null }>()).data : null;
+  const asesor = responsable?.nombre ?? (s.perfil.rol === "ceo" ? "BYD Park Point" : s.perfil.nombre);
+  const tel = telefonoBonito(responsable ? responsable.telefono : s.perfil.telefono);
   const fila = (k: string, v: string, fuerte?: boolean) => (
     <div className="flex justify-between gap-4 border-b border-[#e3e7ec] py-1.5 text-[0.86rem] last:border-0"><span className="text-[#5b6472]">{k}</span><span className={cx("text-right tabular-nums", fuerte && "font-semibold")}>{v}</span></div>
   );
@@ -74,7 +84,7 @@ export default async function Cotizacion(props: PageProps<"/cotizacion">) {
             ) : null}
             <div className="rounded-xl bg-[#f3f6fa] px-5 py-4 print:[-webkit-print-color-adjust:exact] print:[print-color-adjust:exact]">
               <p className="text-[0.78rem] font-semibold text-[#5b6472]">Mensualidad a {plazo} meses</p>
-              <p className="num text-[2.9rem] leading-none text-[#0a3d7a]">{dinero2(q.mensualidad)}</p>
+              <p className="num text-[2.9rem] leading-none text-[#0a3d7a]">{dinero2(mensualidad)}</p>
               <p className="mt-1 text-[0.8rem] text-[#5b6472]">Tasa fija anual {(q.convenio.tasa * 100).toFixed(2)}% · Banorte {q.convenio.nombre}</p>
             </div>
             <div className="grid grid-cols-4 gap-2 text-center">
@@ -89,21 +99,22 @@ export default async function Cotizacion(props: PageProps<"/cotizacion">) {
           <div className="grid content-start gap-4">
             <div>
               <h2 className="mb-1 text-[0.95rem] font-semibold">Números de tu compra</h2>
-              {fila("Precio de lista", dinero(modelo.precio))}
-              {base.accesorios ? fila("Accesorios", dinero(base.accesorios)) : null}
-              {garantia ? fila("Garantía extendida 6 años", dinero(garantia)) : null}
-              {fila("Tu enganche", dinero(base.aportacion))}
-              {q.bonoAplica ? fila("Bono BYD", `+ ${dinero(q.bono)}`) : null}
-              {fila(`Enganche total (${(q.pctEnganche * 100).toFixed(0)}%)`, dinero(q.enganche), true)}
+              {fila("Precio de lista", dinero2(modelo.precio))}
+              {accesorios ? fila("Accesorios financiados", dinero2(accesorios)) : null}
+              {garantia ? fila("Garantía extendida 6 años", dinero2(garantia)) : null}
+              {fila(`Enganche total (${(q.pctEnganche * 100).toFixed(0)}%)`, dinero2(base.engancheTotal), true)}
+              {q.bonoAplica ? fila("Bono BYD aplicado al enganche", `−${dinero2(q.bono)}`) : null}
+              {fila("Comisión por apertura", dinero2(comision))}
+              {seguros ? fila("Seguros primer año", dinero2(seguros)) : null}
+              {fila("Pago a la firma", dinero2(bolsa), true)}
               {fila("Monto a financiar", dinero2(q.monto))}
-              {fila("Pago aproximado a la firma", dinero2(q.pagoFirma), true)}
             </div>
             <div className="rounded-xl border border-[#e3e7ec] px-4 py-3 text-[0.82rem]">
               <p className="font-semibold">Incluye</p>
               <ul className="mt-1 grid gap-0.5 text-[#3b4452]">
                 <li>✓ Garantía de fábrica BYD</li>
                 {garantia ? <li>✓ Garantía extendida a 6 años, kilometraje ilimitado</li> : null}
-                <li>✓ Placas de Nuevo León{base.tramites ? " y gestoría" : " (pago a la firma)"}</li>
+                {conExtras.filter((p) => p.clave !== "garantia").map((p) => <li key={p.clave}>✓ {p.clave === "accesorios" ? "Kit de accesorios" : p.nombre}</li>)}
                 <li>✓ Prueba de manejo y entrega personalizada</li>
               </ul>
             </div>
@@ -116,7 +127,7 @@ export default async function Cotizacion(props: PageProps<"/cotizacion">) {
         </div>
 
         <footer className="border-t border-[#e3e7ec] px-8 py-4 text-[0.68rem] leading-snug text-[#5b6472]">
-          Cotización informativa, sujeta a autorización de crédito por Banorte (Plan Tradicional). Mensualidad aproximada, no incluye seguros de auto y de vida; el pago a la firma incluye comisión por apertura y placas{base.tramites ? " y gestoría" : ""}.
+          Cotización informativa, sujeta a autorización de crédito por Banorte (Plan Tradicional). Mensualidad aproximada, no incluye seguros de auto y de vida; el pago a la firma incluye enganche, comisión por apertura{seguros ? " y seguros del primer año" : ""}; placas ({dinero(placas)}) y gestoría aparte.
           {q.bonoAplica ? " El bono aplica financiando desde 5% de enganche." : ""} Precios con IVA. Vigencia al {vigencia(hoy())} o hasta agotar existencias.
         </footer>
       </article>

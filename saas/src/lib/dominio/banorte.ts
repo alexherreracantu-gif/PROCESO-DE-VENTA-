@@ -49,6 +49,8 @@ export type EntradaCotizacion = {
   plazo: number;
   placas: number;
   tramites: number;
+  /** Convenio elegido a mano; si no, el de mejor tasa para el enganche. */
+  convenio?: Convenio | null;
 };
 
 export type Cotizacion = {
@@ -74,7 +76,7 @@ export function cotizar(e: EntradaCotizacion): Cotizacion {
   const bono = bonoAplica ? modelo.bono : 0;
   const enganche = Math.min(aportacion + bono, modelo.precio + e.accesorios + e.garantia);
   const pctEnganche = base > 0 ? enganche / base : 0;
-  const c = convenio(pctEnganche, modelo);
+  const c = e.convenio ?? convenio(pctEnganche, modelo);
   const monto = Math.max(0, modelo.precio + e.accesorios + e.garantia - enganche);
   const comision = truncar(c.comision * 1.16 * monto);
   return {
@@ -106,4 +108,50 @@ export function aportacionParaPagoFirma(e: Omit<EntradaCotizacion, "aportacion">
     aportacion = Math.min(total, Math.max(0, aportacion));
   }
   return truncar(aportacion);
+}
+
+/** Todos los convenios a los que alcanza el enganche (mejor tasa primero), para elegir a mano. */
+export function conveniosDisponibles(pctEnganche: number, modelo: Pick<ModeloCotizable, "clave" | "anio" | "motor">): Convenio[] {
+  const lista: Convenio[] = [];
+  const umbrales = [0.5, 0.4, 0.25, 0.2, 0];
+  for (const u of umbrales) if (pctEnganche >= u) lista.push(convenio(u, modelo));
+  if (pctEnganche >= 0.5 && (lista[0].tasa < 0.0788)) lista.splice(1, 0, { nombre: "BYD 7.88%", tasa: 0.0788, comision: 0.02 });
+  const vistos = new Set<string>();
+  return lista.filter((c) => { const k = `${c.nombre}-${c.tasa}`; if (vistos.has(k)) return false; vistos.add(k); return true; })
+    .sort((a, b) => a.tasa - b.tasa);
+}
+
+export type EntradaInterna = {
+  modelo: ModeloCotizable;
+  /** Enganche total que ve el cliente, incluido el bono. */
+  engancheTotal: number;
+  /** Accesorios, Wallbox, Cerocible, seguro de llantas… (todo financiado). */
+  accesorios: number;
+  garantia: number;
+  plazo: number;
+  convenio?: Convenio | null;
+  /** Seguros del primer año que se pagan a la firma (capturados de Banorte). */
+  seguros: number;
+};
+
+/**
+ * Cotización como la hace el asesor: captura el enganche total (con el bono) y el portal separa
+ * cuánto pone el cliente. "De la bolsa del cliente a la firma" = aportación + comisión + seguros
+ * (placas y gestoría van aparte).
+ */
+export function cotizacionInterna(e: EntradaInterna) {
+  const base = e.modelo.precio + e.accesorios;
+  const conBono = e.modelo.bono > 0 && base > 0 && e.engancheTotal / base >= 0.05;
+  const aportacion = Math.max(0, conBono ? e.engancheTotal - e.modelo.bono : e.engancheTotal);
+  const q = cotizar({ modelo: e.modelo, aportacion, accesorios: e.accesorios, garantia: e.garantia, plazo: e.plazo, placas: 0, tramites: 0, convenio: e.convenio });
+  const bolsaFirma = truncar(aportacion + q.comision + e.seguros);
+  const plazos = PLAZOS.map((n) => ({ n, mensualidad: cotizar({ modelo: e.modelo, aportacion, accesorios: e.accesorios, garantia: e.garantia, plazo: n, placas: 0, tramites: 0, convenio: e.convenio }).mensualidad }));
+  return { ...q, aportacion, bolsaFirma, plazos, disponibles: conveniosDisponibles(q.pctEnganche, e.modelo) };
+}
+
+/** Inverso: ¿qué enganche total da un presupuesto a la firma `D`? (seguros incluidos en D). */
+export function engancheParaPresupuesto(e: Omit<EntradaInterna, "engancheTotal">, D: number): number {
+  const ap = aportacionParaPagoFirma({ modelo: e.modelo, accesorios: e.accesorios, garantia: e.garantia, plazo: e.plazo, placas: 0, tramites: e.seguros, convenio: e.convenio }, D);
+  const q = cotizar({ modelo: e.modelo, aportacion: ap, accesorios: e.accesorios, garantia: e.garantia, plazo: e.plazo, placas: 0, tramites: 0, convenio: e.convenio });
+  return truncar(ap + (q.bonoAplica ? q.bono : 0));
 }
