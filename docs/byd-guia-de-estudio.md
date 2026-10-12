@@ -2,7 +2,7 @@
 
 Todo lo que necesitas saber de la marca para vender en Park Point Cumbres, en un solo lugar. Junta lo que ya tienes en tus archivos con lo que faltaba. Precios y bonos de la **oferta de octubre 2026 (OC-2610-1), vigente del 1 al 31 de octubre**.
 
-> Va de la mano con el [plan de 3 unidades en 18 días](plan-3-unidades-18-dias.md) y con [el proceso de venta](proceso-de-venta.md).
+> Va de la mano con el [plan 500k](plan-500k.md), con la [guía de marca personal en redes](marca-personal-redes.md) y con [el proceso de venta](proceso-de-venta.md).
 
 ## 1. Lo que ya tienes en tus archivos
 

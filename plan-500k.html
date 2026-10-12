@@ -1,0 +1,1178 @@
+<title>Plan 500k Park Point</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: igual que el portal Park Point (blanco, azul de marca, tarjetas con sombra suave).
+   En iPhone una columna con pestañas abajo; en pantalla ancha, barra lateral blanca. Solo tema claro, como el portal. */
+:root {
+  --bg: #f5f8fb;
+  --surface: #ffffff;
+  --surface-2: #edf2f7;
+  --glass: rgb(255 255 255 / 0.94);
+  --fg: #11141a;
+  --muted: #586070;
+  --subtle: #8b93a2;
+  --line: #e0e7ef;
+  --accent: #0b6fb3;
+  --accent-soft: #e1f1fc;
+  --on-accent: #ffffff;
+  --bar: #159be6;
+  --bar-track: #e2e8ef;
+  --ok: #23774a;
+  --ok-soft: #dcf0e3;
+  --warn: #9a5f0e;
+  --warn-soft: #f8ead2;
+  --bad: #b3362d;
+  --bad-soft: #f8e1de;
+  --wa: #1f9d55;
+  --brand: #159be6;
+  --brand-deep: #0d7fc4;
+  --side-2: #e8f4fd;
+  --glow-a: rgb(21 155 230 / 0.09);
+  --glow-b: rgb(21 155 230 / 0.06);
+  --shadow: 0 1px 2px rgb(16 20 28 / 0.05), 0 6px 24px -14px rgb(16 20 28 / 0.14);
+  --sans: "IBM Plex Sans", "Segoe UI", -apple-system, system-ui, sans-serif;
+  --display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --tabs-h: 58px;
+  color-scheme: light;
+}
+html { background: var(--bg); -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--bg);
+  background-image:
+    radial-gradient(900px 480px at 100% -8%, var(--glow-a), transparent 70%),
+    radial-gradient(700px 420px at -10% 110%, var(--glow-b), transparent 70%);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+* { box-sizing: border-box; }
+h1, h2, h3 { text-wrap: balance; margin: 0; }
+p { margin: 0; }
+button { font: inherit; color: inherit; touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+button:not(:disabled), label, summary { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+input { font: inherit; color: inherit; }
+
+/* ---------- Armazón ---------- */
+.app { min-height: 100%; }
+.lado { display: none; }
+.cabeza {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 16px; background: var(--glass);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line);
+}
+.insignia {
+  display: grid; place-items: center; width: 34px; height: 34px; flex: none;
+  border-radius: 10px; background: var(--brand); color: var(--on-accent);
+  font: 700 0.95rem/1 var(--display); letter-spacing: 0.04em;
+}
+.marca { min-width: 0; flex: 1; display: grid; }
+.marca b { font: 700 1.3rem/1 var(--display); letter-spacing: 0.04em; }
+.marca span { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.estado { display: inline-flex; align-items: center; gap: 6px; font-size: 0.74rem; color: var(--muted); white-space: nowrap; }
+.estado i { width: 8px; height: 8px; border-radius: 50%; background: var(--subtle); flex: none; }
+.estado[data-m="nube"] i { background: var(--ok); }
+.estado[data-m="guardando"] i { background: var(--bar); }
+.estado[data-m="error"] i { background: var(--warn); }
+
+main {
+  display: grid; gap: 14px; align-content: start;
+  max-width: 760px; margin: 0 auto;
+  padding-inline: 16px;
+  padding-block: 16px calc(var(--tabs-h) + 26px);
+}
+.tabs {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+  background: var(--glass); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  border-top: 1px solid var(--line);
+  padding: 4px 4px env(safe-area-inset-bottom, 0px);
+}
+.tab {
+  position: relative; display: grid; justify-items: center; align-content: center; gap: 3px;
+  min-height: 52px; padding: 6px 2px; border: 0; background: none;
+  color: var(--subtle); font-size: 0.68rem; font-weight: 600; letter-spacing: 0.01em;
+}
+.tab svg { width: 24px; height: 24px; }
+.tab[aria-current="page"] { color: var(--accent); }
+.tab[aria-current="page"]::before {
+  content: ""; position: absolute; top: -4px; left: 30%; right: 30%; height: 3px;
+  border-radius: 0 0 3px 3px; background: var(--brand);
+}
+
+@media (min-width: 960px) {
+  .app { display: grid; grid-template-columns: 248px minmax(0, 1fr); }
+  .cabeza, .tabs { display: none; }
+  .lado {
+    display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh;
+    background: var(--surface); border-right: 1px solid var(--line);
+  }
+  .lado-marca { padding: 24px 20px 16px; display: grid; gap: 10px; }
+  .lado-marca .fila { display: flex; align-items: center; gap: 10px; }
+  .lado-marca b { font: 700 1.45rem/1 var(--display); letter-spacing: 0.04em; }
+  .lado-eti { display: flex; align-items: center; gap: 8px; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  .lado-eti::before { content: ""; width: 16px; height: 1px; background: var(--brand); }
+  .lado nav { flex: 1; padding: 6px 12px; display: grid; align-content: start; gap: 2px; }
+  .lado .tab {
+    display: flex; justify-content: flex-start; align-items: center; gap: 12px;
+    min-height: 42px; padding: 0 12px; border-radius: 10px;
+    font-size: 0.9rem; font-weight: 500; color: var(--fg);
+  }
+  .lado .tab svg { width: 18px; height: 18px; color: var(--muted); }
+  .lado .tab:hover { background: var(--side-2); }
+  .lado .tab[aria-current="page"] { background: var(--side-2); color: var(--accent); font-weight: 600; }
+  .lado .tab[aria-current="page"] svg { color: var(--accent); }
+  .lado .tab[aria-current="page"]::before { top: 8px; bottom: 8px; left: 0; right: auto; width: 3px; height: auto; border-radius: 0 3px 3px 0; }
+  .lado-pie { padding: 14px 18px; border-top: 1px solid var(--line); display: grid; gap: 4px; }
+  .lado-pie small { color: var(--muted); font-size: 0.74rem; }
+  main { padding-block: 32px 48px; padding-inline: 32px; }
+}
+
+/* ---------- Piezas ---------- */
+.eyebrow { display: flex; align-items: center; gap: 8px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.eyebrow::before { content: ""; width: 16px; height: 2px; border-radius: 2px; background: var(--brand); }
+.num { font-family: var(--display); font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1; letter-spacing: 0.005em; }
+.titulo { display: grid; gap: 6px; }
+.titulo h1 { font: 600 2.1rem/1 var(--display); letter-spacing: -0.005em; }
+.titulo .sub { color: var(--muted); font-size: 0.9rem; max-width: 62ch; }
+
+.tarjeta {
+  min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+  padding: 16px; box-shadow: var(--shadow); display: grid; gap: 12px;
+  animation: entrar 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.tarjeta:nth-child(2) { animation-delay: 0.03s; }
+.tarjeta:nth-child(3) { animation-delay: 0.06s; }
+.tarjeta:nth-child(4) { animation-delay: 0.09s; }
+.tar-cab { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.tar-cab h2 { flex: 1; min-width: 0; font-size: 1rem; font-weight: 600; }
+.tar-cab .nota { font-size: 0.78rem; color: var(--muted); }
+.chip {
+  display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
+  padding: 3px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 600;
+  background: var(--surface-2); color: var(--muted);
+}
+.chip.ok { background: var(--ok-soft); color: var(--ok); }
+.chip.warn { background: var(--warn-soft); color: var(--warn); }
+.chip.bad { background: var(--bad-soft); color: var(--bad); }
+.chip.azul { background: var(--accent-soft); color: var(--accent); }
+.barra { position: relative; display: block; height: 8px; border-radius: 4px; background: var(--bar-track); overflow: visible; }
+.barra i { position: absolute; inset: 0 auto 0 0; border-radius: 4px; background: var(--bar); transform-origin: left; animation: crecer 0.5s ease-out both; }
+.barra b { position: absolute; top: -4px; bottom: -4px; width: 2px; border-radius: 1px; background: var(--fg); }
+.aviso { border-radius: 14px; padding: 12px 14px; font-size: 0.88rem; background: var(--accent-soft); color: var(--fg); }
+.aviso.ok { background: var(--ok-soft); }
+.aviso.warn { background: var(--warn-soft); }
+.aviso b { font-weight: 600; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 48px; padding: 0 18px; border-radius: 14px; border: 1px solid var(--line);
+  background: var(--surface); font-weight: 600; font-size: 0.92rem; box-shadow: var(--shadow);
+}
+.btn svg { width: 18px; height: 18px; }
+.btn.prim { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn.wa { background: var(--wa); border-color: var(--wa); color: var(--on-accent); }
+.btn.ancho { width: 100%; }
+.btn:active { transform: scale(0.98); }
+.link { border: 0; background: none; color: var(--accent); font-weight: 600; font-size: 0.86rem; padding: 6px 0; min-height: 44px; }
+
+/* Navegación de día */
+.dia-nav { display: grid; grid-template-columns: 48px minmax(0, 1fr) 48px; align-items: center; gap: 8px; }
+.dia-nav .centro { text-align: center; display: grid; gap: 4px; justify-items: center; }
+.dia-nav h1 { font: 600 1.85rem/1.02 var(--display); }
+.dia-nav p { font-size: 0.82rem; color: var(--muted); }
+.ico-btn {
+  display: grid; place-items: center; width: 48px; height: 48px; border-radius: 14px;
+  border: 1px solid var(--line); background: var(--surface); box-shadow: var(--shadow);
+}
+.ico-btn svg { width: 22px; height: 22px; }
+.ico-btn:disabled { opacity: 0.35; box-shadow: none; }
+
+/* Contadores */
+.cont { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; padding-block: 10px; border-top: 1px solid var(--line); }
+.tar-cab + .cont { border-top: 0; padding-top: 2px; }
+.cont-info { display: grid; gap: 4px; min-width: 0; }
+.cont-et { font-weight: 600; font-size: 0.95rem; }
+.cont-sub { font-size: 0.78rem; color: var(--muted); }
+.cont.lleno .cont-sub { color: var(--ok); font-weight: 600; }
+.cont.lleno .barra i { background: var(--ok); }
+.cont-ctrl { display: flex; align-items: center; gap: 6px; }
+.cont-num { min-width: 58px; text-align: center; font-size: 2.1rem; }
+.cont-num small { font-size: 1.05rem; color: var(--subtle); font-weight: 500; }
+.cont.lleno .cont-num { color: var(--ok); }
+.btn-red {
+  display: grid; place-items: center; width: 48px; height: 48px; border-radius: 14px;
+  border: 1px solid var(--line); background: var(--surface-2); color: var(--fg);
+}
+.btn-red svg { width: 22px; height: 22px; }
+.btn-red.mas { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn-red:disabled { opacity: 0.35; }
+.btn-red:active { transform: scale(0.94); }
+
+/* Pendientes */
+.grupo-eti { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding-top: 4px; }
+.lista { display: grid; }
+.item {
+  display: grid; grid-template-columns: 28px minmax(0, 1fr); align-items: start; gap: 12px;
+  min-height: 52px; padding: 12px 2px; border-top: 1px solid var(--line);
+}
+.lista .item:first-child { border-top: 0; }
+.item input {
+  appearance: none; -webkit-appearance: none; margin: 0; width: 26px; height: 26px; border-radius: 8px;
+  border: 2px solid var(--subtle); background: var(--surface); display: grid; place-items: center; flex: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+.item input::after {
+  content: ""; width: 7px; height: 13px; margin-top: -3px;
+  border: solid var(--on-accent); border-width: 0 3px 3px 0; transform: rotate(45deg) scale(0);
+  transition: transform 0.15s;
+}
+.item input:checked { background: var(--ok); border-color: var(--ok); }
+.item input:checked::after { transform: rotate(45deg) scale(1); }
+.item-txt { font-size: 0.93rem; line-height: 1.4; padding-top: 2px; }
+.item.on .item-txt { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--subtle); }
+.hora { display: inline-block; margin-right: 8px; font: 500 0.76rem/1 var(--mono); color: var(--accent); background: var(--accent-soft); border-radius: 6px; padding: 3px 6px; vertical-align: 1px; }
+.item.on .hora { color: var(--muted); background: var(--surface-2); }
+.dia-et { font-size: 0.78rem; font-weight: 600; color: var(--muted); padding-top: 8px; }
+
+/* Avance */
+.heroe { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: center; }
+.heroe .grande { font-size: 4.2rem; }
+.heroe .grande small { font-size: 1.8rem; color: var(--subtle); }
+.heroe p { font-size: 0.86rem; color: var(--muted); }
+.heroe h2 { font-size: 1.05rem; font-weight: 600; }
+.metrica { display: grid; gap: 6px; padding-block: 10px; border-top: 1px solid var(--line); }
+.tar-cab + .metrica { border-top: 0; padding-top: 0; }
+.metrica .fila { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.metrica .fila span:first-child { flex: 1; font-weight: 600; font-size: 0.92rem; }
+.metrica .val { font-weight: 600; font-variant-numeric: tabular-nums; }
+.leyenda { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.74rem; color: var(--muted); }
+.leyenda span { display: inline-flex; align-items: center; gap: 6px; }
+.leyenda i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.cal .cab { text-align: center; font-size: 0.7rem; font-weight: 600; color: var(--subtle); }
+.dia-c {
+  aspect-ratio: 1; max-width: 100%; border-radius: 12px; border: 1px solid var(--line);
+  background: var(--surface); display: grid; place-items: center; align-content: center; gap: 2px; padding: 0;
+}
+.dia-c .num { font-size: 1.25rem; }
+.dia-c small { font-size: 0.6rem; color: var(--muted); font-weight: 600; }
+.dia-c.ok { background: var(--ok-soft); border-color: transparent; color: var(--ok); }
+.dia-c.medio { background: var(--warn-soft); border-color: transparent; color: var(--warn); }
+.dia-c.nada { background: var(--bad-soft); border-color: transparent; color: var(--bad); }
+.dia-c.fut { background: var(--surface-2); border-color: transparent; color: var(--subtle); }
+.dia-c.hoy { outline: 2px solid var(--accent); outline-offset: 1px; }
+.consejos { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.consejos li { font-size: 0.9rem; padding-left: 16px; position: relative; }
+.consejos li::before { content: ""; position: absolute; left: 0; top: 0.6em; width: 6px; height: 6px; border-radius: 50%; background: var(--warn); }
+
+/* Plan */
+.embudo { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.embudo div { background: var(--surface-2); border-radius: 12px; padding: 10px 8px; text-align: center; display: grid; gap: 4px; }
+.embudo .num { font-size: 1.9rem; color: var(--accent); }
+.embudo small { font-size: 0.7rem; color: var(--muted); line-height: 1.2; }
+.regla { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 0.88rem; color: var(--muted); }
+.regla b { font: 700 1.3rem/1 var(--display); color: var(--fg); letter-spacing: 0.04em; }
+.meta-fase { font-size: 0.86rem; background: var(--surface-2); border-radius: 12px; padding: 10px 12px; }
+.fase.actual { border-color: var(--bar); }
+.no-hacer { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 0.9rem; }
+
+/* Mensajes */
+.campo-et { font-size: 0.8rem; font-weight: 600; color: var(--muted); }
+.campo {
+  width: 100%; min-width: 0; min-height: 48px; padding: 10px 14px; border-radius: 12px;
+  border: 1px solid var(--line); background: var(--surface); font-size: 16px;
+}
+.campo:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+.msg h2 { font-size: 0.95rem; font-weight: 600; }
+.msg-txt {
+  background: var(--accent-soft); border-radius: 4px 16px 16px 16px; padding: 12px 14px;
+  font-size: 0.94rem; line-height: 1.5; -webkit-user-select: text; user-select: text; white-space: pre-wrap;
+}
+.msg .cuando { font-size: 0.78rem; color: var(--muted); }
+
+/* Estudio */
+.pitch { font-size: 1rem; line-height: 1.55; border-left: 3px solid var(--brand); padding-left: 12px; }
+.modelo { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; padding-block: 10px; border-top: 1px solid var(--line); align-items: baseline; }
+.tar-cab + .modelo { border-top: 0; padding-top: 0; }
+.modelo b { font-weight: 600; font-size: 0.92rem; }
+.modelo .precio { font-variant-numeric: tabular-nums; font-weight: 600; font-size: 0.92rem; text-align: right; }
+.modelo small { font-size: 0.76rem; color: var(--muted); }
+.modelo .chip { justify-self: end; }
+.tabla-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.88rem; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 9px 6px; border-top: 1px solid var(--line); }
+th { font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); border-top: 0; }
+td:not(:first-child), th:not(:first-child) { text-align: right; }
+details { border-top: 1px solid var(--line); }
+.tar-cab + details { border-top: 0; }
+summary { list-style: none; display: flex; align-items: center; gap: 10px; min-height: 48px; font-weight: 600; font-size: 0.92rem; }
+summary::-webkit-details-marker { display: none; }
+summary::after { content: ""; margin-left: auto; width: 8px; height: 8px; border: solid var(--muted); border-width: 0 2px 2px 0; transform: rotate(45deg); transition: transform 0.2s; }
+details[open] summary::after { transform: rotate(-135deg); }
+details p { padding: 0 0 12px; font-size: 0.9rem; color: var(--muted); }
+.externo { color: var(--accent); font-weight: 600; font-size: 0.9rem; text-decoration: none; }
+
+.toast {
+  position: fixed; left: 16px; right: 16px; z-index: 50;
+  bottom: calc(var(--tabs-h) + 14px + env(safe-area-inset-bottom, 0px));
+  display: flex; justify-content: center; pointer-events: none;
+}
+.toast span {
+  background: var(--fg); color: var(--on-accent); border-radius: 12px; padding: 10px 14px;
+  font-size: 0.86rem; font-weight: 500; box-shadow: var(--shadow); animation: entrar 0.25s ease-out both; max-width: 420px;
+}
+@media (min-width: 960px) { .toast { bottom: 24px; } }
+
+@keyframes entrar { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes crecer { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+@media (max-width: 380px) {
+  .cont-num { min-width: 50px; font-size: 1.85rem; }
+  .btn-red { width: 44px; height: 44px; }
+  .embudo .num { font-size: 1.6rem; }
+}
+
+/* ---------- Dinero, escalones y controles nuevos ---------- */
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; padding: 4px; background: var(--surface-2); border-radius: 14px; }
+.seg button { min-height: 40px; border: 0; border-radius: 10px; background: none; font-weight: 600; font-size: 0.86rem; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--accent); box-shadow: var(--shadow); }
+.dinero { display: grid; gap: 6px; }
+.dinero .grande { font-size: 3.1rem; }
+.dinero .de { font-size: 0.9rem; color: var(--muted); }
+.esc { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.esc div { border-radius: 12px; padding: 8px 6px; background: var(--surface-2); display: grid; gap: 3px; text-align: center; }
+.esc div.on { background: var(--accent-soft); box-shadow: inset 0 0 0 2px var(--bar); }
+.esc b { font: 600 1.35rem/1 var(--display); font-variant-numeric: tabular-nums; }
+.esc small { font-size: 0.7rem; color: var(--muted); line-height: 1.2; }
+.datos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.dato { display: grid; gap: 2px; background: var(--surface-2); border-radius: 12px; padding: 10px 12px; }
+.dato span { font-size: 0.74rem; color: var(--muted); font-weight: 600; }
+.dato b { font: 600 1.55rem/1.05 var(--display); font-variant-numeric: tabular-nums; }
+.dato.verde b { color: var(--ok); }
+.mes-fila { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 10px; padding-block: 12px; border-top: 1px solid var(--line); align-items: center; }
+.tar-cab + .mes-fila { border-top: 0; padding-top: 2px; }
+.mes-fila .nom { font-weight: 600; font-size: 0.95rem; }
+.mes-fila .det { grid-column: 1 / -1; font-size: 0.8rem; color: var(--muted); }
+.obj { display: flex; gap: 6px; }
+.obj button { min-width: 52px; min-height: 40px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); font-weight: 600; font-size: 0.9rem; }
+.obj button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.ajuste { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; background: var(--surface-2); border-radius: 12px; padding: 8px 8px 8px 12px; }
+.ajuste span { font-size: 0.84rem; }
+.ajuste .cont-num { font-size: 1.7rem; min-width: 40px; }
+.ajuste .btn-red { width: 44px; height: 44px; background: var(--surface); }
+.ajuste .btn-red.mas { background: var(--accent); }
+.cfg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.cfg label { display: grid; gap: 4px; font-size: 0.78rem; font-weight: 600; color: var(--muted); min-width: 0; }
+.cal-cab { display: flex; align-items: center; gap: 8px; }
+.cal-cab h3 { flex: 1; text-align: center; font: 600 1.25rem/1 var(--display); text-transform: capitalize; }
+.cal-cab .ico-btn { width: 40px; height: 40px; }
+.cal .vacio { visibility: hidden; }
+.semana { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 10px; padding-block: 10px; border-top: 1px solid var(--line); align-items: start; }
+.tar-cab + .semana { border-top: 0; padding-top: 2px; }
+.semana b { font: 600 1.05rem/1.2 var(--display); color: var(--accent); }
+.semana p { font-size: 0.9rem; }
+.semana small { display: block; color: var(--muted); font-size: 0.78rem; }
+.pasos { margin: 0; padding-left: 20px; display: grid; gap: 8px; font-size: 0.9rem; }
+.pasos b { font-weight: 600; }
+</style>
+
+<div class="app">
+  <aside class="lado" aria-label="Menú">
+    <div class="lado-marca">
+      <div class="fila"><span class="insignia" aria-hidden="true">PP</span><b>PARK POINT</b></div>
+      <span class="lado-eti">Plan 500k</span>
+    </div>
+    <nav id="nav-lado" aria-label="Secciones"></nav>
+    <div class="lado-pie">
+      <span class="estado" data-m="conectando"><i></i><span>Conectando…</span></span>
+      <small>Del 12 de octubre al 31 de diciembre de 2026</small>
+    </div>
+  </aside>
+
+  <div class="col">
+    <header class="cabeza">
+      <span class="insignia" aria-hidden="true">PP</span>
+      <span class="marca"><b>PARK POINT</b><span>Plan 500k</span></span>
+      <span class="estado" data-m="conectando"><i></i><span>Conectando…</span></span>
+    </header>
+    <main id="main"></main>
+  </div>
+
+  <nav class="tabs" id="nav-tabs" aria-label="Secciones"></nav>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ================= Fechas ================= */
+  var INICIO = "2026-10-12", FIN = "2026-12-31";
+  var MESES = ["2026-10", "2026-11", "2026-12"];
+  var DOW = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+  var DOW_C = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+  var MES_N = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+  function aUTC(f) { var p = f.split("-").map(Number); return Date.UTC(p[0], p[1] - 1, p[2]); }
+  function deUTC(ms) { return new Date(ms).toISOString().slice(0, 10); }
+  function sumar(f, d) { return deUTC(aUTC(f) + d * 864e5); }
+  function dif(a, b) { return Math.round((aUTC(b) - aUTC(a)) / 864e5); }
+  function dow(f) { return new Date(aUTC(f)).getUTCDay(); }
+  function diaN(f) { return dif(INICIO, f) + 1; }
+  var TOTAL = diaN(FIN);
+  function clampF(f) { return f < INICIO ? INICIO : f > FIN ? FIN : f; }
+  function mesDe(f) { return f.slice(0, 7); }
+  function finDeMes(mk) { var p = mk.split("-").map(Number); return deUTC(Date.UTC(p[0], p[1], 0)); }
+  function inicioDeMes(mk) { var i = mk + "-01"; return i < INICIO ? INICIO : i; }
+  function nombreMes(mk) { return MES_N[Number(mk.slice(5, 7)) - 1]; }
+  function largo(f) { var d = new Date(aUTC(f)); return DOW[d.getUTCDay()] + " " + d.getUTCDate() + " de " + MES_N[d.getUTCMonth()]; }
+  function corto(f) { var d = new Date(aUTC(f)); return DOW_C[d.getUTCDay()] + " " + d.getUTCDate(); }
+  function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+  function hoyMty() {
+    try { return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Monterrey", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()); }
+    catch (e) { var d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+  }
+
+  /* ================= Contenido ================= */
+  var HABITOS = [
+    { id: "h1", hora: "11:00", t: "Contestar lo que llegó en la noche (WhatsApp, Meta y redes) y confirmar las citas de hoy" },
+    { id: "h2", hora: "11:30", t: "Bloque de mensajes a cartera o referidos, siempre con una razón" },
+    { id: "h3", hora: "14:30", t: "Citas y pruebas: diagnóstico, un solo modelo y pregunta de cierre" },
+    { id: "h4", hora: "18:00", t: "Confirmar las citas de mañana, con la ubicación del módulo" },
+    { id: "h5", hora: "Día", t: "Publicar el video del día en TikTok, Reels, Shorts, Facebook y tus estados" },
+    { id: "h7", hora: "Día", t: "Contestar comentarios y mensajes de redes en menos de una hora" },
+    { id: "h6", hora: "20:00", t: "Corte de piso en el portal y CRM con siguiente acción y fecha" }
+  ];
+  var ESTUDIO = [
+    { id: "e1", f: "2026-10-12", t: "Academia módulos 1 y 2: marca y tecnología", listo: "Dices el pitch de 30 segundos sin leer" },
+    { id: "e2", f: "2026-10-13", t: "Academia módulo 3: catálogo, precios y bonos", listo: "Te sabes precio y bono de KING GL, Song Plus, Song Pro, Dolphin Mini y Shark" },
+    { id: "e3", f: "2026-10-14", t: "Módulos 4 y 5: KING y Banorte, más 3 cotizaciones de práctica", listo: "Explicas la tabla de convenio sin verla" },
+    { id: "e4", f: "2026-10-15", t: "Módulos 6 y 7: proceso y objeciones", listo: "Respondes las 8 objeciones en voz alta" },
+    { id: "e5", f: "2026-10-16", t: "Examen final de la Academia y video de 30 segundos del KING", listo: "18 de 20 o más, y un video que sí mandarías a un cliente" }
+  ];
+  var TAREAS = {
+    "2026-10-12": [["t1a", "Hablar con Jorge: qué fecha cuenta para el escalón (apartada, facturada o entregada), cuándo te pagan, si hay leads de agencia y si hay incentivo por referido"], ["t1b", "Limpiar el CRM: cada prospecto con siguiente acción y fecha"], ["t1c", "Armar la lista de cartera caliente (cotizaron de agosto a octubre y no compraron) y la de clientes entregados"], ["t1d", "Anotar en Avance las ventas de octubre que ya llevas"]],
+    "2026-10-13": [["t2a", "Montar la campaña de Meta: Song Plus con bono de $78,000 y KING GL desde $6,307"], ["t2b", "Conectar el formulario de Meta al CRM del portal"], ["t2c", "10 mensajes de referidos a clientes entregados, familia y amigos (mensaje 2)"], ["t2d", "Imprimir el QR de tu cotizador para el módulo"], ["t2e", "Arreglar tus cuentas de TikTok, Instagram y Facebook como asesor (pestaña Redes)"]],
+    "2026-10-14": [["t3a", "Terminar los 30 mensajes de reactivación (mensaje 1)"], ["t3b", "Meter 2 solicitudes de crédito al banco"], ["t3c", "Preguntarle a Jorge si puedes grabar videos y hacer lives en el módulo"]],
+    "2026-10-15": [["t4a", "Agendar citas para el fin de semana 17 y 18"], ["t4b", "Seguimiento a todos los que cotizaron esta semana (mensaje 7)"], ["t4c", "Primer video: «BYD en 30 segundos»"]],
+    "2026-10-16": [["t5a", "Revisar Meta: apagar el anuncio que no da conversaciones y subir el que sí"], ["t5b", "Confirmar todas las citas del fin de semana"]],
+    "2026-10-17": [["t6a", "Todo el día en piso: es el fin de semana con más gente"], ["t6b", "Prueba de manejo a cada cita, sin excepción"]],
+    "2026-10-18": [["t7a", "Todo el día en piso"], ["t7b", "Revisión: ¿ya tienes un crédito aprobado? Si no, aplica lo de Avance"]],
+    "2026-10-19": [["t8a", "Seguimiento a todos los que hicieron prueba el fin de semana"], ["t8b", "Pedir documentos a quien le gustó el auto (mensaje 5)"]],
+    "2026-10-20": [["t9a", "Revisar cada crédito en banco y pedir lo que falte"], ["t9b", "Separación a cada crédito aprobado (mensaje 6)"]],
+    "2026-10-21": [["t10a", "Revisión de mitad: ¿vas para 7? Mira la meta del día en Hoy"], ["t10b", "Si para el escalón cuenta la venta facturada, hoy es el último día para meter créditos de octubre"]],
+    "2026-10-22": [["t11a", "Mensaje a todos los que hicieron prueba y no han cerrado: el bono se acaba el 31"], ["t11b", "Agendar citas para el último fin de semana con bono (24 y 25)"]],
+    "2026-10-23": [["t12a", "Confirmar las citas del fin de semana"], ["t12b", "Créditos rechazados: otro banco (BBVA, Santander, KUNA), más enganche o toma a cuenta"]],
+    "2026-10-24": [["t13a", "Fecha límite: todos los créditos de octubre metidos al banco hoy"], ["t13b", "Todo el día en piso"]],
+    "2026-10-25": [["t14a", "Todo el día en piso: último fin de semana con bono de octubre"], ["t14b", "Separación a cada crédito aprobado"]],
+    "2026-10-26": [["t15a", "Cuenta: ¿cuántas te faltan para 7? Cada prospecto caliente con fecha de cierre"]],
+    "2026-10-27": [["t16a", "Separaciones aplicadas en caja a Accesorios, alta en Quiter y número de cliente"], ["t16b", "Agendar enganches y firmas"]],
+    "2026-10-28": [["t17a", "Enganche, firma y desembolso; cuadre sin un peso de adeudo"], ["t17b", "Registrar cada venta en el portal con VIN y productos (garantía, Cerocible, llantas, Wallbox)"]],
+    "2026-10-29": [["t18a", "Fechas de entrega programadas y referidos pedidos en cada firma"], ["t18b", "Pedir reseña en Google, con tu nombre, a cada cliente entregado"]],
+    "2026-10-30": [["t19a", "Penúltimo día del mes: si te falta una para el escalón, hoy se cierra"], ["t19b", "Llamar a cada crédito aprobado que no ha separado"]],
+    "2026-10-31": [["t20a", "Último día de octubre y del bono de octubre: cruza tu escalón"], ["t20b", "Lo que no cerró pasa a noviembre con fecha y hora en el CRM"]],
+    "2026-11-01": [["n1a", "Planea noviembre: objetivo 13 (escalón de $22,000). Pide la oferta de noviembre a Jorge"], ["n1b", "Revisa tu objetivo del mes en Avance"]],
+    "2026-11-02": [["n2a", "Mensaje a todos los que no cerraron en octubre con la oferta de noviembre"], ["n2b", "Ajustar la campaña de Meta a la oferta de noviembre"]],
+    "2026-11-03": [["n3a", "Pedir 10 referidos a tus clientes de octubre (mensaje 2)"]],
+    "2026-11-07": [["n7a", "Revisión de la semana: para 13 necesitas unas 3 ventas por semana"]],
+    "2026-11-09": [["n9a", "Pregúntale a Jorge qué promoción habrá en el Buen Fin (13 al 17) y prepara 3 videos"], ["n9b", "Lista de prospectos que esperan el Buen Fin para decidir"]],
+    "2026-11-12": [["n12a", "Mensaje a toda tu cartera: mañana empieza el Buen Fin (mensaje 8)"], ["n12b", "Agendar citas del viernes 13 al martes 17"]],
+    "2026-11-13": [["n13a", "Buen Fin día 1: todo el día en piso y live en la noche"]],
+    "2026-11-14": [["n14a", "Buen Fin: todo el día en piso"]],
+    "2026-11-15": [["n15a", "Buen Fin: todo el día en piso"]],
+    "2026-11-16": [["n16a", "Buen Fin (día festivo): todo el día en piso y live"]],
+    "2026-11-17": [["n17a", "Último día del Buen Fin: mensaje de cierre a todos los que cotizaron"]],
+    "2026-11-18": [["n18a", "Seguimiento a cada prospecto del Buen Fin y documentos al banco"]],
+    "2026-11-21": [["n21a", "Revisión: deberías ir en 8. Si no, súbele a la meta del día"]],
+    "2026-11-24": [["n24a", "Fecha límite: todos los créditos de noviembre metidos al banco hoy"]],
+    "2026-11-25": [["n25a", "Si vas en 10 a 12, todo a cruzar 13: esa venta es la que más vale del mes"]],
+    "2026-11-28": [["n28a", "Fin de semana de cierre: todo el día en piso"]],
+    "2026-11-30": [["n30a", "Último día de noviembre: cruza el escalón"], ["n30b", "Lo que no cerró pasa a diciembre con fecha y hora en el CRM"]],
+    "2026-12-01": [["d1a", "Planea diciembre: objetivo 7 o 13 según cómo cerró noviembre. Pide la oferta de diciembre"]],
+    "2026-12-02": [["d2a", "Mensaje a los dueños de negocio de tu cartera: deducción de autos eléctricos e híbridos (mensaje 9)"]],
+    "2026-12-04": [["d4a", "Campaña «tu aguinaldo como enganche»: video y mensaje a cartera (mensaje 10)"]],
+    "2026-12-07": [["d7a", "Revisión de la semana: ¿vas al ritmo de tu objetivo?"]],
+    "2026-12-15": [["d15a", "Fecha límite: créditos de diciembre en banco antes de las vacaciones de fin de año"]],
+    "2026-12-18": [["d18a", "El aguinaldo se paga a más tardar el 20: mensaje a quienes lo esperaban para el enganche"]],
+    "2026-12-21": [["d21a", "Entregas antes de Navidad: confirma fecha con cada cliente"]],
+    "2026-12-26": [["d26a", "Cierre de año: todo el día en piso"]],
+    "2026-12-28": [["d28a", "Pedir reseña y referidos a todos tus clientes del año"]],
+    "2026-12-30": [["d30a", "Penúltimo día del año: cruza tu escalón"]],
+    "2026-12-31": [["d31a", "Cuenta final: ¿llegaste a tu meta? Planea enero"]]
+  };
+  var BLOQUES = {
+    "2026-10": [
+      { t: "Arranque y cosecha", desde: "2026-10-12", hasta: "2026-10-14", meta: "Cartera caliente contactada, Meta corriendo, tus redes listas y 2 créditos en banco" },
+      { t: "Volumen de pruebas", desde: "2026-10-15", hasta: "2026-10-21", meta: "La mitad de lo que te falta para 7, ya separado o con crédito en banco" },
+      { t: "Cierre", desde: "2026-10-22", hasta: "2026-10-26", meta: "Todos los créditos de octubre en banco a más tardar el sábado 24" },
+      { t: "Amarre y escalón", desde: "2026-10-27", hasta: "2026-10-31", meta: "Cruzar el escalón de 7 antes del sábado 31" }
+    ],
+    "2026-11": [
+      { t: "Arranque modo 13", desde: "2026-11-01", hasta: "2026-11-08", meta: "3 ventas en la primera semana, con 12-4-2 diario" },
+      { t: "Buen Fin", desde: "2026-11-09", hasta: "2026-11-17", meta: "Del viernes 13 al martes 17: todo el día en piso, live diario y toda tu cartera avisada" },
+      { t: "Créditos al banco", desde: "2026-11-18", hasta: "2026-11-24", meta: "8 ventas y todos los créditos del mes en banco a más tardar el martes 24" },
+      { t: "Cierre del escalón", desde: "2026-11-25", hasta: "2026-11-30", meta: "Cruzar 13 antes del lunes 30" }
+    ],
+    "2026-12": [
+      { t: "Negocios y aguinaldo", desde: "2026-12-01", hasta: "2026-12-07", meta: "Mensaje de deducción a dueños de negocio y campaña de aguinaldo" },
+      { t: "Créditos antes de vacaciones", desde: "2026-12-08", hasta: "2026-12-15", meta: "Todos los créditos del mes en banco a más tardar el martes 15" },
+      { t: "Aguinaldo", desde: "2026-12-16", hasta: "2026-12-23", meta: "Separaciones con el aguinaldo como enganche y entregas antes de Navidad" },
+      { t: "Cierre de año", desde: "2026-12-24", hasta: "2026-12-31", meta: "Cruzar tu escalón y contar si llegaste a tu meta" }
+    ]
+  };
+  var LIVES = ["Cotizo en vivo: mándame tu enganche y te digo tu mensualidad", "Recorrido en vivo de un modelo", "Pregúntale al asesor BYD: crédito, carga y servicio"];
+
+  var MENSAJES = [
+    { t: "1. Reactivación de cartera", cuando: "A todos los que cotizaron y no compraron. Nunca «¿sigues interesado?».",
+      b: "Hola {nombre}, soy {yo} de BYD Park Point. Te escribo porque este mes el {modelo} trae bono de ${bono} financiando, y se acaba a fin de mes. Ya te actualicé los números con tu enganche: ¿te los mando por aquí o prefieres venir a manejarlo esta semana?" },
+    { t: "2. Referidos", cuando: "A tus clientes entregados, familia y amigos.",
+      b: "Hola {nombre}, ¿cómo te ha ido con tu {modelo}? Te escribo por algo rápido: este mes hay bonos fuertes en varios modelos. ¿Conoces a alguien que esté pensando en cambiar de carro? Pásame su nombre y le escribo de tu parte, sin compromiso." },
+    { t: "3. Prospecto de Meta, cotizador o redes", cuando: "En menos de 5 minutos, a la hora que llegue.",
+      b: "Hola {nombre}, soy {yo}, asesor BYD en Park Point Cumbres. Vi que te interesa el {modelo}. Para armarte la mensualidad exacta: ¿con cuánto de enganche te gustaría arrancar y a cuántos meses? Y si quieres manejarlo, tengo espacio hoy a las {hora} o mañana a las {hora}." },
+    { t: "4. Confirmación de cita", cuando: "Un día antes. Repite 2 horas antes.",
+      b: "Hola {nombre}, te confirmo tu prueba de manejo del {modelo} mañana a las {hora} en BYD Park Point Cumbres. Trae tu licencia vigente. ¿Te espero?" },
+    { t: "5. Cierre después de la prueba", cuando: "Cuando le gustó el auto y va con crédito.",
+      b: "¿Te gustó? Para asegurar el bono del mes, lo que sigue es meter tu crédito hoy: INE por ambos lados, 3 estados de cuenta y comprobante de domicilio. En cuanto aprueben, apartamos tu color." },
+    { t: "6. Crédito aprobado", cuando: "La separación se pide después de la aprobación. De contado se aparta el mismo día.",
+      b: "{nombre}, ¡ya te aprobaron! Para apartar tu {modelo} con el interior que elegiste y asegurar el bono son $5,000, y forman parte de tu enganche. ¿Te paso los datos para la transferencia?" },
+    { t: "7. Seguimiento a «lo voy a pensar»", cuando: "Siempre con una razón nueva.",
+      b: "Hola {nombre}, te actualicé la cotización del {modelo}: con el bono del mes la mensualidad queda en ${mensualidad}. El bono se acaba a fin de mes. ¿Lo vemos el {día} a las {hora}?" },
+    { t: "8. Buen Fin", cuando: "Jueves 12 de noviembre, a toda tu cartera. Confirma antes la promoción con Jorge.",
+      b: "Hola {nombre}, soy {yo} de BYD Park Point. Del viernes 13 al martes 17 es el Buen Fin y te quiero apartar los números del {modelo} con lo mejor que tengamos esos días. ¿Te mando tu cotización o vienes a manejarlo?" },
+    { t: "9. Dueños de negocio (diciembre)", cuando: "A clientes con negocio propio. Que lo confirme su contador.",
+      b: "Hola {nombre}, una idea para tu negocio antes de cerrar el año: un auto eléctrico o híbrido se puede deducir hasta $250,000, contra $175,000 de uno de gasolina. Pregúntale a tu contador si te conviene comprarlo a nombre del negocio en diciembre. Si quieres, te armo los números del {modelo}." },
+    { t: "10. Aguinaldo como enganche", cuando: "Primera semana de diciembre y cuando llegue el aguinaldo.",
+      b: "Hola {nombre}, ¿ya pensaste en usar tu aguinaldo como enganche? Con ${enganche} de enganche, el {modelo} te queda en unos ${mensualidad} al mes con la oferta de diciembre. ¿Te paso la cotización?" },
+    { t: "11. Aviso de live", cuando: "Un día antes y una hora antes, en estados e historias.",
+      b: "Hoy a las 9 de la noche hago live: cotizo en vivo el {modelo}. Si quieres que haga la tuya, mándame tu enganche y a cuántos meses lo quieres." }
+  ];
+  var IDEAS = [
+    ["Números", "v1", "¿Cuánto pagas al mes por un KING con $50,000 de enganche? (con el cotizador en pantalla)"],
+    ["Números", "v2", "Gasolina contra KING: cuánto ahorras al mes en Monterrey"],
+    ["Números", "v3", "Song Plus con $78,000 de bono: qué significa para tu enganche"],
+    ["Números", "v4", "El bono flexible: por qué conviene financiar aunque tengas el dinero"],
+    ["Números", "v5", "Placas de un eléctrico contra un híbrido en Nuevo León"],
+    ["Modelos", "v6", "KING en 30 segundos"],
+    ["Modelos", "v7", "Dolphin Mini: el eléctrico para la ciudad"],
+    ["Modelos", "v8", "Shark: la troca híbrida, lo que nadie te dice"],
+    ["Modelos", "v9", "Song Pro contra Song Plus: cuál te conviene"],
+    ["Modelos", "v10", "M9: la familiar grande con $100,000 de bono"],
+    ["Mitos", "v11", "¿Se incendia la batería? La prueba del clavo"],
+    ["Mitos", "v12", "Vivo en departamento: ¿puedo tener un BYD?"],
+    ["Mitos", "v13", "¿Y el servicio? Dónde se le da mantenimiento en Monterrey"],
+    ["Mitos", "v14", "¿BYD es chino barato? 3 datos que no sabías"],
+    ["Mitos", "v15", "¿Me aprueban el crédito? Lo que pide el banco"],
+    ["Día a día", "v16", "Entrega de un cliente (con su permiso, sin placas ni datos)"],
+    ["Día a día", "v17", "Un día de trabajo en Park Point Cumbres"],
+    ["Día a día", "v18", "Lo que me preguntan todos los días en el módulo"],
+    ["Día a día", "v19", "Prueba de manejo: lo que tienes que revisar"],
+    ["Día a día", "v20", "Baches de Monterrey: por qué mis clientes agregan seguro de llantas"]
+  ];
+  var PERFIL = [
+    ["r1", "Mismo nombre en TikTok, Instagram y Facebook: tu nombre + BYD Monterrey"],
+    ["r2", "Bio: «Asesor BYD en Park Point Cumbres. Te ayudo a estrenar híbrido o eléctrico. Cotiza aquí»"],
+    ["r3", "Link de tu cotizador del portal (Cotizador → Copiar mi link) en la bio"],
+    ["r4", "Foto de perfil profesional junto a un BYD"],
+    ["r5", "Preguntarle a Jorge la política de la agencia para usar la marca y grabar en el módulo"],
+    ["r6", "Respuesta automática: quien comenta «KING» recibe tu link por mensaje (ManyChat o Chattrace)"]
+  ];
+  var SEMANA = [
+    ["Lun", "Números", "Mensualidad real de un modelo, con el cotizador en pantalla. Graba los videos de la semana."],
+    ["Mar", "Modelo", "Un modelo en 30 segundos. Live a las 21:00."],
+    ["Mié", "Mito", "Una objeción contestada: batería, carga, servicio o crédito."],
+    ["Jue", "Ahorro", "Gasolina contra BYD con números de Monterrey. Live a las 21:00."],
+    ["Vie", "Clientes", "Una entrega o un testimonio, con permiso."],
+    ["Sáb", "Piso", "Un día en Park Point o lo que te preguntan en el módulo."],
+    ["Dom", "Repite", "Vuelve a subir tu video con más vistas de la semana, con otro gancho."]
+  ];
+  var CATALOGO = [
+    ["Dolphin Mini 300 km", "Eléctrico", 399800, 25000, ""],
+    ["Dolphin Mini 380 km", "Eléctrico", 415800, 30000, ""],
+    ["Yuan Pro DM-i", "Híbrido SUV", 519999, 20000, "Desde $7,945/mes"],
+    ["KING GL 2027", "Híbrido sedán · producto héroe", 524900, 25000, "Desde $6,307/mes con 10% de enganche"],
+    ["Yuan Pro EV", "Eléctrico SUV", 536500, 0, "Precio especial de octubre"],
+    ["KING GS", "Híbrido sedán", 579900, 25000, "Bono solo con interior gris/azul"],
+    ["Song Pro DM-i", "Híbrido SUV", 599880, 35000, "Desde $8,645/mes"],
+    ["Song Plus DM-i", "Híbrido SUV · el bono más fuerte", 778800, 78000, "Desde $6,141/mes"],
+    ["Seal RWD", "Eléctrico sedán", 778800, 0, ""],
+    ["Seal AWD", "Eléctrico sedán", 888800, 0, ""],
+    ["Shark GL", "Pickup DMO", 899980, 55000, "Desde $14,731/mes"],
+    ["Sealion 7", "Eléctrico SUV", 949800, 61700, ""],
+    ["Shark GS", "Pickup DMO", 969800, 55000, ""],
+    ["M9", "Híbrido familiar grande", 979800, 100000, "10% de enganche"],
+    ["Atto 8", "Premium grande", 1199800, 0, ""]
+  ];
+  var BANORTE = [["Menos de 20%", "14.99%", "2.5%"], ["20 a 24.9%", "13.88%", "2%"], ["25 a 39.9%", "11.88%", "2%"], ["40 a 49.9%", "10.88%", "2%"], ["50% o más", "7.88%", "2%"], ["KING con 50% o más", "7.18%", "2%"]];
+  var OBJECIONES = [
+    ["«Está caro»", "«¿Caro contra qué? Hagamos la cuenta con lo que gastas hoy en gasolina.» Resta el ahorro a la mensualidad."],
+    ["«Lo voy a pensar»", "«¿Qué parte te falta: el auto, la mensualidad o el enganche?» Aísla la objeción y deja fecha y hora."],
+    ["«Es chino»", "Tamaño mundial, fabrica en casa batería, motores y chips, y ya está en el top de ventas en México. No es un ensamblador, es un fabricante de tecnología."],
+    ["«¿Y si se incendia la batería?»", "Blade: química LFP (litio-fierro-fosfato), pasa la prueba del clavo sin incendiarse."],
+    ["«¿Dónde la cargo?»", "En un DM-i no dependes del cargador. En eléctrico: wallbox en casa, y se puede financiar."],
+    ["«¿Y el servicio?»", "Servicio en la agencia BYD Grupo TEC Cumbres. Confirma con Jorge qué otras sucursales dan servicio BYD."],
+    ["«Lo pago de contado»", "El bono solo aplica financiando desde 5% de enganche: enséñale los dos escenarios."],
+    ["«Tengo que vender mi carro»", "Lo tomamos a cuenta: marca, año, versión, km, saldo y fotos, y lo mandas a evaluación."]
+  ];
+  var CONSEJOS = {
+    conv: "Duplica los mensajes a cartera caliente, pídele a Jorge leads de agencia y sube presupuesto al anuncio que mejor funciona.",
+    citas: "Termina cada conversación con dos horarios concretos: «hoy a las 5 o mañana a las 12».",
+    pruebas: "Confirma cada cita dos veces (un día antes y 2 horas antes) y manda la ubicación del módulo.",
+    creditos: "A quien le gustó la prueba, pídele documentos ese mismo día (mensaje 5).",
+    sep: "¿Recomendaste un solo modelo? ¿Hiciste la cuenta contra su gasolina? ¿Hiciste la pregunta de cierre? Rechazados: otro banco, co-acreditado, más enganche o un modelo de menor precio."
+  };
+
+  /* ================= Estado ================= */
+  var LLAVE = "plan18-parkpoint-v1";
+  var CFG0 = { base: 12000, e1: 7, m1: 18000, e2: 13, m2: 22000, meta: 500000, fecha: "2026-12-31" };
+  var OBJ0 = { "2026-10": 7, "2026-11": 13, "2026-12": 7 };
+  function nuevo() { return { v: 2, cont: {}, hechos: {}, nombre: "", ajuste: {}, objetivo: {}, cfg: {} }; }
+  function obj(x) { return x && typeof x === "object" && !Array.isArray(x) ? x : {}; }
+  function normalizar(s) {
+    s = obj(s);
+    s.cont = obj(s.cont); s.hechos = obj(s.hechos); s.ajuste = obj(s.ajuste); s.objetivo = obj(s.objetivo); s.cfg = obj(s.cfg);
+    if (typeof s.nombre !== "string") s.nombre = "";
+    Object.keys(CFG0).forEach(function (k) { if (s.cfg[k] === undefined || s.cfg[k] === null || s.cfg[k] === "") s.cfg[k] = CFG0[k]; });
+    MESES.forEach(function (mk) { if (!s.objetivo[mk]) s.objetivo[mk] = OBJ0[mk]; });
+    s.v = 2;
+    return s;
+  }
+  function leerLocal() { try { var t = localStorage.getItem(LLAVE); return t ? normalizar(JSON.parse(t)) : null; } catch (e) { return null; } }
+  function guardarLocal() { try { localStorage.setItem(LLAVE, JSON.stringify(S)); } catch (e) {} }
+  function tieneDatos(s) { return Object.keys(s.cont).length > 0 || Object.keys(s.hechos).length > 0 || !!s.nombre || Object.keys(s.ajuste).length > 0; }
+  function contDe(f) { var c = S.cont[f] || {}; return { conv: c.conv || 0, citas: c.citas || 0, pruebas: c.pruebas || 0, creditos: c.creditos || 0, sep: c.sep || 0 }; }
+
+  /* ================= Dinero y metas ================= */
+  function pagoPor(n) { var c = S.cfg; return n >= c.e2 ? c.m2 : n >= c.e1 ? c.m1 : c.base; }
+  function ganancia(n) { return n * pagoPor(n); }
+  function ventasMes(mk, antesDe) {
+    var t = Number(S.ajuste[mk]) || 0;
+    Object.keys(S.cont).forEach(function (f) { if (mesDe(f) === mk && (!antesDe || f < antesDe)) t += S.cont[f].sep || 0; });
+    return t;
+  }
+  function totalesMes(mk) {
+    var t = { conv: 0, citas: 0, pruebas: 0, creditos: 0, sep: 0 };
+    Object.keys(S.cont).forEach(function (f) { if (mesDe(f) === mk) { var c = contDe(f); Object.keys(t).forEach(function (k) { t[k] += c[k]; }); } });
+    return t;
+  }
+  function mesesMeta() { return MESES.filter(function (mk) { return mk + "-01" <= S.cfg.fecha; }); }
+  function mesHoy() { return mesDe(clampF(hoyMty())); }
+  function ganadoMeta() { return mesesMeta().reduce(function (a, mk) { return a + ganancia(ventasMes(mk)); }, 0); }
+  function proyeccion() {
+    var mh = mesHoy();
+    return mesesMeta().reduce(function (a, mk) { var v = ventasMes(mk); return a + ganancia(mk < mh ? v : Math.max(v, S.objetivo[mk])); }, 0);
+  }
+  function siguienteEscalon(n) {
+    var c = S.cfg;
+    if (n < c.e1) return { faltan: c.e1 - n, monto: c.m1, a: c.e1 };
+    if (n < c.e2) return { faltan: c.e2 - n, monto: c.m2, a: c.e2 };
+    return null;
+  }
+  function metasDia(f) {
+    var mk = mesDe(f), o = S.objetivo[mk] || 7, vend = ventasMes(mk, f), faltan = o - vend;
+    var dias = dif(f, finDeMes(mk)) + 1;
+    var base = o * 4 / 26;
+    var p = faltan > 0 ? Math.max(base, faltan * 4 / dias) : base;
+    var dura = p > 3;
+    p = Math.min(p, 3);
+    return { conv: Math.max(1, Math.round(p * 6)), citas: Math.max(1, Math.round(p * 2)), pruebas: Math.max(1, Math.round(p)), obj: o, vend: vend, faltan: faltan, dias: dias, dura: dura };
+  }
+  function metasCumplidas(c, m) { return c.conv >= m.conv && c.citas >= m.citas && c.pruebas >= m.pruebas; }
+
+  /* ================= Pendientes ================= */
+  function especialesDe(f) {
+    var arr = [];
+    ESTUDIO.forEach(function (e) { if (e.f === f) arr.push({ key: e.id, t: "Estudio: " + e.t, hora: "10:00" }); });
+    var d = dow(f);
+    if (f >= "2026-10-19" && d === 1) arr.push({ key: "g-" + f, t: "Grabar los videos de la semana (5 a 7) con el calendario de Redes", hora: "10:00" });
+    if (f >= "2026-10-20" && (d === 2 || d === 4)) {
+      var i = Math.floor(dif("2026-10-20", f) / 2) % LIVES.length;
+      arr.push({ key: "l-" + f, t: "Live de 30 minutos: " + LIVES[i] + " (avísalo con el mensaje 11)", hora: "21:00" });
+    }
+    (TAREAS[f] || []).forEach(function (t) { arr.push({ key: t[0], t: t[1] }); });
+    return arr;
+  }
+  function habitosDe(f) { return HABITOS.map(function (x) { return { key: f + ":" + x.id, t: x.t, hora: x.hora }; }); }
+  function estadoDia(f) {
+    var c = contDe(f), m = metasDia(f);
+    var items = especialesDe(f).concat(habitosDe(f));
+    var hechos = items.filter(function (i) { return S.hechos[i.key]; }).length;
+    if (metasCumplidas(c, m) && hechos === items.length) return "ok";
+    if (c.conv || c.citas || c.pruebas || c.creditos || c.sep || hechos) return "medio";
+    return "nada";
+  }
+
+  /* ================= Estado de pantalla ================= */
+  var S = leerLocal() || normalizar(nuevo());
+  var TABS = [
+    { id: "hoy", et: "Hoy", ico: "hoy" },
+    { id: "avance", et: "Avance", ico: "avance" },
+    { id: "plan", et: "Plan", ico: "plan" },
+    { id: "redes", et: "Redes", ico: "redes" },
+    { id: "guia", et: "Guía", ico: "libro" }
+  ];
+  var tab = "hoy";
+  try { var tg = localStorage.getItem(LLAVE + "-tab"); if (tg) tab = tg; } catch (e) {}
+  var hsh = (location.hash || "").replace("#", "");
+  if (TABS.some(function (x) { return x.id === hsh; })) tab = hsh;
+  if (!TABS.some(function (x) { return x.id === tab; })) tab = "hoy";
+  var diaVista = clampF(hoyMty());
+  var mesPlan = mesHoy(), mesCal = mesHoy(), guia = "mensajes";
+
+  /* ================= Guardado en la cuenta ================= */
+  var ref = null, sucio = false, escribiendo = false, timer = null, reintento = 0, migrado = false, modo = "conectando";
+  var MODOS = { conectando: "Conectando…", nube: "Guardado en tu cuenta", guardando: "Guardando…", local: "Guardado en este dispositivo", error: "Sin conexión: guardado aquí" };
+  function ponerModo(m) {
+    modo = m;
+    document.querySelectorAll(".estado").forEach(function (el) { el.dataset.m = m; el.lastElementChild.textContent = MODOS[m]; });
+  }
+  function cambio(rerender) {
+    guardarLocal();
+    if (ref) { sucio = true; programar(700); }
+    if (rerender !== false) render();
+  }
+  function programar(ms) { clearTimeout(timer); timer = setTimeout(escribir, ms); }
+  async function escribir() {
+    if (!ref) { sucio = false; return; }
+    if (escribiendo) { programar(400); return; }
+    escribiendo = true; sucio = false; ponerModo("guardando");
+    try {
+      await ref.set(JSON.parse(JSON.stringify(S)));
+      reintento = 0; ponerModo("nube");
+    } catch (e) {
+      var code = e && e.code;
+      if (code === "invalid_argument" || code === "revoked" || code === "not_granted" || code === "capability_disabled" || code === "capability_removed") { ref = null; ponerModo("local"); }
+      else if (reintento < 1) { reintento++; sucio = true; ponerModo("error"); setTimeout(function () { programar(0); }, 1500 + Math.random() * 1500); }
+      else { reintento = 0; ponerModo("error"); }
+    } finally {
+      escribiendo = false;
+      if (sucio && ref) programar(400);
+    }
+  }
+  async function conectar() {
+    var c = window.claude;
+    if (!c || typeof c.use !== "function") { ponerModo("local"); return; }
+    try {
+      var r = await Promise.all([c.use("db"), c.use("user")]);
+      var db = r[0], user = r[1];
+      if (!db || !user) { ponerModo("local"); return; }
+      var id = await user.id();
+      if (!id) { ponerModo("local"); return; }
+      ref = db.doc("data/users/" + id + "/plan18");
+      ref.onSnapshot(function (snap) {
+        if (snap.metadata.hasPendingWrites || sucio || escribiendo) return;
+        if (snap.exists) {
+          S = normalizar(JSON.parse(JSON.stringify(snap.data())));
+          guardarLocal();
+          if (modo !== "error") ponerModo("nube");
+          render();
+        } else if (!migrado && tieneDatos(S)) {
+          migrado = true; sucio = true; programar(0);
+        } else {
+          ponerModo("nube");
+        }
+      }, function () { ref = null; ponerModo("local"); });
+    } catch (e) { ponerModo("local"); }
+  }
+
+  /* ================= Íconos ================= */
+  function svg(p) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + "</svg>"; }
+  var I = {
+    hoy: svg('<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="m9 16 2 2 4-4"/>'),
+    avance: svg('<path d="M3 3v18h18"/><path d="M8 17v-6M13 17V7M18 17v-4"/>'),
+    plan: svg('<path d="m3 7 2 2 4-4"/><path d="m3 17 2 2 4-4"/><path d="M13 6h8M13 12h8M13 18h8"/>'),
+    redes: svg('<rect x="2" y="6" width="14" height="12" rx="2"/><path d="m22 8-6 4 6 4z"/>'),
+    libro: svg('<path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/>'),
+    izq: svg('<path d="m15 18-6-6 6-6"/>'),
+    der: svg('<path d="m9 18 6-6-6-6"/>'),
+    mas: svg('<path d="M12 5v14M5 12h14"/>'),
+    menos: svg('<path d="M5 12h14"/>'),
+    copiar: svg('<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>')
+  };
+
+  /* ================= Utilidades ================= */
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function pesos(n) { return "$" + Math.round(n).toLocaleString("es-MX"); }
+  function miles(n) { return n >= 1000 ? "$" + Math.round(n / 1000) + "k" : pesos(n); }
+  function itemHtml(key, texto, hora) {
+    var on = !!S.hechos[key];
+    return '<label class="item' + (on ? " on" : "") + '"><input type="checkbox" data-id="' + key + '" data-k="chk-' + key + '"' + (on ? " checked" : "") + ">" +
+      '<span class="item-txt">' + (hora ? '<span class="hora">' + hora + "</span>" : "") + esc(texto) + "</span></label>";
+  }
+  function seg(grupo, actual, opciones) {
+    return '<div class="seg" role="group">' + opciones.map(function (o) {
+      return '<button type="button" data-act="seg" data-g="' + grupo + '" data-v="' + o[0] + '" data-k="seg-' + grupo + "-" + o[0] + '" aria-pressed="' + (o[0] === actual) + '">' + o[1] + "</button>";
+    }).join("") + "</div>";
+  }
+  function stepper(act, attrs, v, et, puedeMenos) {
+    return '<button type="button" class="btn-red" data-act="' + act + '" ' + attrs + ' data-d="-1" data-k="' + act + '-menos" aria-label="Restar uno en ' + et + '"' + (puedeMenos ? "" : " disabled") + ">" + I.menos + "</button>" +
+      '<span class="cont-num num">' + v + "</span>" +
+      '<button type="button" class="btn-red mas" data-act="' + act + '" ' + attrs + ' data-d="1" data-k="' + act + '-mas" aria-label="Sumar uno en ' + et + '">' + I.mas + "</button>";
+  }
+
+  /* ================= Vista: Hoy ================= */
+  function contador(c, et, meta, v, sub) {
+    var lleno = meta && v >= meta;
+    var pct = meta ? Math.min(100, v / meta * 100) : 0;
+    var texto = meta ? (lleno ? "Meta cumplida" : "Meta " + meta + " · faltan " + (meta - v)) : sub;
+    return '<div class="cont' + (lleno ? " lleno" : "") + '">' +
+      '<div class="cont-info"><span class="cont-et">' + et + '</span><span class="cont-sub">' + texto + "</span>" +
+      (meta ? '<span class="barra" aria-hidden="true"><i style="width:' + pct + '%"></i></span>' : "") + "</div>" +
+      '<div class="cont-ctrl">' +
+      '<button type="button" class="btn-red" data-act="menos" data-c="' + c + '" data-k="menos-' + c + '" aria-label="Restar uno en ' + et + '"' + (v <= 0 ? " disabled" : "") + ">" + I.menos + "</button>" +
+      '<span class="cont-num num">' + v + (meta ? "<small>/" + meta + "</small>" : "") + "</span>" +
+      '<button type="button" class="btn-red mas" data-act="mas" data-c="' + c + '" data-k="mas-' + c + '" aria-label="Sumar uno en ' + et + '">' + I.mas + "</button>" +
+      "</div></div>";
+  }
+  function vHoy() {
+    var f = diaVista, c = contDe(f), m = metasDia(f), hoyF = hoyMty(), mk = mesDe(f);
+    var esp = especialesDe(f), hab = habitosDe(f), todos = esp.concat(hab);
+    var hechos = todos.filter(function (i) { return S.hechos[i.key]; }).length;
+    var cumplidas = metasCumplidas(c, m);
+    var vm = ventasMes(mk), sig = siguienteEscalon(vm), valorSig = ganancia(vm + 1) - ganancia(vm);
+    var banner = "";
+    if (hoyF < INICIO) banner = '<div class="aviso">El plan arranca el <b>lunes 12 de octubre</b>.</div>';
+    else if (hoyF > FIN) banner = '<div class="aviso">El plan terminó el 31 de diciembre. Revisa tu resultado en <b>Avance</b>.</div>';
+    else if (f > hoyF) banner = '<div class="aviso">Estás viendo un día que todavía no llega.</div>';
+    if (cumplidas && hechos === todos.length) banner = '<div class="aviso ok"><b>Día cumplido.</b> Meta del día y todos los pendientes listos.</div>';
+    var porque = m.faltan > 0
+      ? "Te faltan " + m.faltan + " para " + m.obj + " en " + nombreMes(mk) + " y quedan " + m.dias + " días del mes."
+      : "Ya llegaste a tu objetivo de " + m.obj + " en " + nombreMes(mk) + ". Mantén el ritmo para el siguiente escalón.";
+    if (m.dura) porque += " Con lo que falta, este escalón ya está muy difícil: asegura el anterior y llena tu embudo para el siguiente mes.";
+    return '' +
+      '<section class="titulo"><p class="eyebrow">Requerimientos diarios</p>' +
+      '<div class="dia-nav">' +
+      '<button type="button" class="ico-btn" data-act="dia" data-d="-1" data-k="dia-prev" aria-label="Día anterior"' + (f <= INICIO ? " disabled" : "") + ">" + I.izq + "</button>" +
+      '<div class="centro"><h1>' + cap(largo(f)) + "</h1><p>Día " + diaN(f) + " de " + TOTAL + " · Objetivo de " + nombreMes(mk) + ": " + m.obj + "</p>" +
+      (f !== clampF(hoyF) ? '<button type="button" class="link" data-act="ir" data-f="' + clampF(hoyF) + '" data-k="ir-hoy">Volver a hoy</button>' : "") + "</div>" +
+      '<button type="button" class="ico-btn" data-act="dia" data-d="1" data-k="dia-next" aria-label="Día siguiente"' + (f >= FIN ? " disabled" : "") + ">" + I.der + "</button>" +
+      "</div></section>" + banner +
+      '<section class="tarjeta"><div class="tar-cab"><h2>Tu mes</h2><span class="chip azul">' + pesos(pagoPor(vm)) + " por venta</span></div>" +
+      '<div class="datos"><div class="dato"><span>Ventas de ' + nombreMes(mk) + "</span><b>" + vm + " / " + m.obj + "</b></div>" +
+      '<div class="dato verde"><span>Llevas ganado</span><b>' + pesos(ganancia(vm)) + "</b></div></div>" +
+      '<p class="cont-sub">' + (sig ? "Te faltan <b>" + sig.faltan + "</b> para el escalón de " + pesos(sig.monto) + ". Tu siguiente venta vale <b>" + pesos(valorSig) + "</b>." : "Estás en el escalón más alto. Cada venta más vale " + pesos(valorSig) + ".") + "</p></section>" +
+      '<section class="tarjeta"><div class="tar-cab"><h2>Meta de hoy: ' + m.conv + "-" + m.citas + "-" + m.pruebas + '</h2><span class="chip ' + (cumplidas ? "ok" : "azul") + '">' + (cumplidas ? "Cumplida" : "Conversaciones, citas, pruebas") + "</span></div>" +
+      '<p class="cont-sub">' + esc(porque) + "</p>" +
+      contador("conv", "Conversaciones nuevas", m.conv, c.conv) +
+      contador("citas", "Citas agendadas", m.citas, c.citas) +
+      contador("pruebas", "Pruebas de manejo", m.pruebas, c.pruebas) +
+      "</section>" +
+      '<section class="tarjeta"><div class="tar-cab"><h2>Créditos y ventas</h2></div>' +
+      contador("creditos", "Solicitudes de crédito", null, c.creditos, "INE, 3 estados de cuenta y comprobante") +
+      contador("sep", "Ventas (separaciones)", null, c.sep, "Crédito aprobado y $5,000, o contado") +
+      "</section>" +
+      '<section class="tarjeta"><div class="tar-cab"><h2>Pendientes del día</h2><span class="chip ' + (hechos === todos.length ? "ok" : "") + '">' + hechos + " de " + todos.length + "</span></div>" +
+      (esp.length ? '<p class="grupo-eti">Lo especial de hoy</p><div class="lista">' + esp.map(function (i) { return itemHtml(i.key, i.t, i.hora); }).join("") + "</div>" : "") +
+      '<p class="grupo-eti">Todos los días</p><div class="lista">' + hab.map(function (i) { return itemHtml(i.key, i.t, i.hora); }).join("") + "</div>" +
+      '<p class="cont-sub">Los prospectos de Meta, del cotizador y de redes se contestan en menos de 5 minutos.</p>' +
+      "</section>" +
+      '<button type="button" class="btn wa ancho" data-act="corte" data-k="corte">' + I.copiar + "Copiar corte del día para WhatsApp</button>";
+  }
+
+  /* ================= Vista: Avance ================= */
+  function vAvance() {
+    var cfg = S.cfg, hoyF = hoyMty(), mh = mesHoy();
+    var ganado = ganadoMeta(), proy = proyeccion(), alcanza = proy >= cfg.meta;
+    var fechaTxt = cfg.fecha === "2026-11-30" ? "30 de noviembre" : "31 de diciembre";
+    var vm = ventasMes(mh), sig = siguienteEscalon(vm);
+    var escal = [[1, cfg.base, "1 a " + (cfg.e1 - 1) + " ventas"], [cfg.e1, cfg.m1, cfg.e1 + " a " + (cfg.e2 - 1)], [cfg.e2, cfg.m2, cfg.e2 + " o más"]].map(function (e, i) {
+      var on = (i === 0 && vm < cfg.e1) || (i === 1 && vm >= cfg.e1 && vm < cfg.e2) || (i === 2 && vm >= cfg.e2);
+      return '<div class="' + (on ? "on" : "") + '"><b>' + miles(e[1]) + "</b><small>" + e[2] + "</small></div>";
+    }).join("");
+    // Embudo del mes en curso contra su objetivo
+    var o = S.objetivo[mh], porVender = Math.max(0, o - (Number(S.ajuste[mh]) || 0));
+    var ini = inicioDeMes(mh), finM = finDeMes(mh), tot = totalesMes(mh);
+    var diasPer = dif(ini, finM) + 1, transcurridos = Math.max(0, Math.min(diasPer, dif(ini, clampF(hoyF)) + 1));
+    var MET = [["conv", "Conversaciones", 24], ["citas", "Citas", 8], ["pruebas", "Pruebas de manejo", 4], ["creditos", "Créditos en banco", 1.5], ["sep", "Ventas registradas aquí", 1]];
+    var atras = [];
+    var filas = MET.map(function (x) {
+      var total = Math.max(1, Math.ceil(porVender * x[2])), esp = Math.round(total * transcurridos / diasPer), real = tot[x[0]];
+      var falta = esp - real; if (falta > 0) atras.push(x[0]);
+      return '<div class="metrica"><div class="fila"><span>' + x[1] + '</span><span class="val">' + real + " / " + total + "</span>" +
+        (falta > 0 ? '<span class="chip warn">Faltan ' + falta + " para hoy</span>" : '<span class="chip ok">Al día</span>') + "</div>" +
+        '<span class="barra"><i style="width:' + Math.min(100, real / total * 100) + '%"></i><b style="left:calc(' + Math.min(100, esp / total * 100) + '% - 1px)" title="Lo que deberías llevar hoy"></b></span></div>';
+    }).join("");
+    var meses = MESES.map(function (mk) {
+      var v = ventasMes(mk), dentro = mk + "-01" <= cfg.fecha, pasado = mk < mh;
+      var o2 = S.objetivo[mk], g = ganancia(v), gp = ganancia(Math.max(v, o2));
+      return '<div class="mes-fila"><span class="nom">' + cap(nombreMes(mk)) + "</span>" +
+        '<div class="obj" role="group" aria-label="Objetivo de ' + nombreMes(mk) + '">' + [cfg.e1, cfg.e2].map(function (n) {
+          return '<button type="button" data-act="obj" data-mk="' + mk + '" data-v="' + n + '" data-k="obj-' + mk + "-" + n + '" aria-pressed="' + (o2 === n) + '">' + n + "</button>";
+        }).join("") + "</div>" +
+        '<span class="det">' + v + " ventas · " + pesos(g) + (pasado ? "" : " · si llegas a " + o2 + ": " + pesos(gp)) + (dentro ? "" : " · después de tu fecha") + "</span></div>";
+    }).join("");
+    var cal = calendario();
+    return '' +
+      '<section class="titulo"><p class="eyebrow">Avance</p><h1>Meta ' + pesos(cfg.meta) + "</h1><p class=\"sub\">Comisiones de " + mesesMeta().map(nombreMes).join(", ") + " al " + fechaTxt + ".</p></section>" +
+      '<section class="tarjeta dinero"><span class="num grande" style="color:' + (ganado >= cfg.meta ? "var(--ok)" : "var(--fg)") + '">' + pesos(ganado) + '</span><span class="de">de ' + pesos(cfg.meta) + " · te faltan " + pesos(Math.max(0, cfg.meta - ganado)) + "</span>" +
+      '<span class="barra"><i style="width:' + Math.min(100, ganado / cfg.meta * 100) + '%"></i></span>' +
+      '<div class="aviso ' + (alcanza ? "ok" : "warn") + '">' + (alcanza ? "Con tus objetivos llegas a <b>" + pesos(proy) + "</b> al " + fechaTxt + "." : "Con tus objetivos llegas a <b>" + pesos(proy) + "</b>: te faltarían " + pesos(cfg.meta - proy) + ". Sube el objetivo de un mes a " + cfg.e2 + " o cambia la fecha.") + "</div></section>" +
+      '<section class="tarjeta"><div class="tar-cab"><h2>' + cap(nombreMes(mh)) + '</h2><span class="nota">' + vm + " ventas · " + pesos(ganancia(vm)) + "</span></div>" +
+      '<div class="esc">' + escal + "</div>" +
+      '<p class="cont-sub">' + (sig ? "Te faltan <b>" + sig.faltan + "</b> para " + pesos(sig.monto) + " por venta. Tu siguiente venta vale <b>" + pesos(ganancia(vm + 1) - ganancia(vm)) + "</b>." : "Estás en el escalón más alto.") + " El pago sube para todas las ventas del mes.</p>" +
+      '<div class="ajuste"><span>Ventas del mes que no registraste aquí (por ejemplo, antes del 12 de octubre)</span><div class="cont-ctrl">' +
+      stepper("ajuste", 'data-mk="' + mh + '"', Number(S.ajuste[mh]) || 0, "ventas sin registrar", (Number(S.ajuste[mh]) || 0) > 0) + "</div></div></section>" +
+      '<section class="tarjeta"><div class="tar-cab"><h2>Objetivo por mes</h2><span class="nota">Toca 7 o 13</span></div>' + meses + "</section>" +
+      '<section class="tarjeta"><div class="tar-cab"><h2>Embudo de ' + nombreMes(mh) + '</h2><span class="chip azul">Para ' + porVender + ' ventas</span></div><p class="cont-sub">La rayita negra es lo que deberías llevar al cierre de hoy.</p>' + filas + "</section>" +
+      (atras.length ? '<section class="tarjeta"><div class="tar-cab"><h2>Qué ajustar</h2></div><ul class="consejos">' + atras.map(function (k) { return "<li>" + CONSEJOS[k] + "</li>"; }).join("") + "</ul></section>" : "") +
+      cal +
+      '<section class="tarjeta"><div class="tar-cab"><h2>Tus números</h2><span class="nota">Cámbialos si tu pago cambia</span></div>' +
+      '<div class="cfg">' + [["base", "Pago base por venta"], ["e1", "Primer escalón (ventas)"], ["m1", "Pago en el primer escalón"], ["e2", "Segundo escalón (ventas)"], ["m2", "Pago en el segundo escalón"], ["meta", "Meta de dinero"]].map(function (x) {
+        return '<label for="cfg-' + x[0] + '">' + x[1] + '<input class="campo" id="cfg-' + x[0] + '" data-cfg="' + x[0] + '" type="text" inputmode="numeric" pattern="[0-9]*" value="' + cfg[x[0]] + '"></label>';
+      }).join("") + "</div>" +
+      '<p class="campo-et">Fecha de tu meta</p>' + seg("fecha", cfg.fecha, [["2026-11-30", "30 de noviembre"], ["2026-12-31", "31 de diciembre"]]) +
+      '<p class="cont-sub">Montos aproximados. Confirma con Jorge si son antes o después de impuestos y qué fecha cuenta para el escalón.</p></section>';
+  }
+  function calendario() {
+    var mk = mesCal, ini = inicioDeMes(mk), fin = finDeMes(mk), hoyF = hoyMty();
+    var html = ["L", "M", "M", "J", "V", "S", "D"].map(function (d) { return '<span class="cab">' + d + "</span>"; }).join("");
+    var lead = (dow(ini) + 6) % 7;
+    for (var i = 0; i < lead; i++) html += '<span class="vacio"></span>';
+    for (var f = ini; f <= fin; f = sumar(f, 1)) {
+      var cls = f > hoyF ? "fut" : estadoDia(f);
+      if (f === hoyF && cls === "nada") cls = "fut";
+      if (f === hoyF) cls += " hoy";
+      html += '<button type="button" class="dia-c ' + cls + '" data-act="ir" data-f="' + f + '" data-k="cal-' + f + '" aria-label="' + cap(largo(f)) + '"><span class="num">' + Number(f.slice(8)) + "</span></button>";
+    }
+    var idx = MESES.indexOf(mk);
+    return '<section class="tarjeta"><div class="cal-cab">' +
+      '<button type="button" class="ico-btn" data-act="calmes" data-d="-1" data-k="cal-prev" aria-label="Mes anterior"' + (idx <= 0 ? " disabled" : "") + ">" + I.izq + "</button>" +
+      "<h3>" + nombreMes(mk) + "</h3>" +
+      '<button type="button" class="ico-btn" data-act="calmes" data-d="1" data-k="cal-next" aria-label="Mes siguiente"' + (idx >= MESES.length - 1 ? " disabled" : "") + ">" + I.der + "</button></div>" +
+      '<div class="cal">' + html + "</div>" +
+      '<div class="leyenda"><span><i style="background:var(--ok-soft)"></i>Cumplido</span><span><i style="background:var(--warn-soft)"></i>A medias</span><span><i style="background:var(--bad-soft)"></i>Sin registro</span><span><i style="background:var(--surface-2)"></i>Por venir</span></div></section>';
+  }
+
+  /* ================= Vista: Plan ================= */
+  function vPlan() {
+    var mk = mesPlan, hoyF = hoyMty(), cfg = S.cfg, o = S.objetivo[mk];
+    var bloques = BLOQUES[mk].map(function (b, i) {
+      var actual = hoyF >= b.desde && hoyF <= b.hasta, paso = hoyF > b.hasta;
+      var chip = actual ? '<span class="chip azul">En curso</span>' : paso ? '<span class="chip ok">Terminado</span>' : '<span class="chip">Próximo</span>';
+      var dias = "";
+      for (var f = b.desde; f <= b.hasta; f = sumar(f, 1)) {
+        var t = TAREAS[f];
+        if (t) dias += '<p class="dia-et">' + corto(f) + '</p><div class="lista">' + t.map(function (x) { return itemHtml(x[0], x[1]); }).join("") + "</div>";
+      }
+      return '<section class="tarjeta fase' + (actual ? " actual" : "") + '"><div class="tar-cab"><div style="flex:1;min-width:0"><p class="eyebrow">Bloque ' + (i + 1) + " · " + corto(b.desde) + " al " + corto(b.hasta) + "</p><h2>" + b.t + "</h2></div>" + chip + "</div>" +
+        '<p class="meta-fase"><b>Meta:</b> ' + b.meta + "</p>" + dias + "</section>";
+    }).join("");
+    var embudo = [[o * 24, "conversaciones"], [o * 8, "citas"], [o * 4, "pruebas"], [o, "ventas"]];
+    return '' +
+      '<section class="titulo"><p class="eyebrow">Plan</p><h1>Mes por mes</h1><p class="sub">Con tus proporciones: 1 de cada 3 conversaciones da cita, la mitad de las citas termina en prueba y cierras 1 de cada 4 pruebas.</p></section>' +
+      seg("mes", mk, MESES.map(function (m) { return [m, cap(nombreMes(m))]; })) +
+      '<section class="tarjeta"><div class="tar-cab"><h2>Objetivo de ' + nombreMes(mk) + ": " + o + " ventas</h2><span class=\"chip ok\">" + pesos(ganancia(o)) + "</span></div>" +
+      '<div class="embudo">' + embudo.map(function (e) { return '<div><span class="num">' + e[0] + "</span><small>" + e[1] + "</small></div>"; }).join("") + "</div>" +
+      '<p class="regla"><b>' + (o >= cfg.e2 ? "12-4-2" : "6-2-1") + "</b> diario en un mes completo. La meta de cada día en Hoy se ajusta con lo que te falta.</p>" +
+      (mk === "2026-10" ? '<div class="aviso warn"><b>Pregúntale a Jorge</b> qué fecha cuenta para el escalón: apartada, facturada o entregada. Si cuenta la facturada, los créditos entran a más tardar el miércoles 21.</div>' : "") +
+      "</section>" + bloques +
+      '<section class="tarjeta"><div class="tar-cab"><h2>Lo que no se hace</h2></div><ul class="no-hacer">' +
+      "<li>Mandar «¿sigues interesado?»</li><li>Enseñar todo el catálogo</li><li>Inventar especificaciones, garantías o tiempos de carga</li><li>Pedir la separación antes de la aprobación del crédito</li><li>Detener a un cliente que quiere comprar hoy para cuadrar el mes</li><li>Dejar un prospecto sin siguiente acción y fecha en el CRM</li><li>Prometer entrega con adeudo pendiente</li></ul></section>";
+  }
+
+  /* ================= Vista: Redes ================= */
+  function vRedes() {
+    var hechasIdeas = IDEAS.filter(function (x) { return S.hechos[x[1]]; }).length;
+    var grupos = {};
+    IDEAS.forEach(function (x) { (grupos[x[0]] = grupos[x[0]] || []).push(x); });
+    return '' +
+      '<section class="titulo"><p class="eyebrow">Redes</p><h1>El asesor BYD de Monterrey</h1><p class="sub">Un video diario en todas tus redes, dos lives a la semana y contestar rápido. El mismo video va a TikTok, Reels, Shorts, Facebook y tus estados.</p></section>' +
+      '<section class="tarjeta"><div class="tar-cab"><h2>Cómo te vuelves el número uno</h2></div><ol class="pasos">' +
+      "<li><b>El que más vende:</b> primer lugar del ranking del portal en Cumbres cada mes.</li>" +
+      "<li><b>El más visible:</b> un video diario y dos lives por semana.</li>" +
+      "<li><b>El más rápido:</b> todo prospecto contestado en menos de 5 minutos.</li>" +
+      "<li><b>El más recomendado:</b> referidos y reseña en Google con tu nombre en cada entrega.</li>" +
+      "<li><b>El que más sabe:</b> 20 de 20 en el examen de la Academia y números siempre del Cotizador.</li></ol></section>" +
+      '<section class="tarjeta"><div class="tar-cab"><h2>Arma tu perfil</h2><span class="chip">' + PERFIL.filter(function (x) { return S.hechos[x[0]]; }).length + " de " + PERFIL.length + '</span></div><div class="lista">' +
+      PERFIL.map(function (x) { return itemHtml(x[0], x[1]); }).join("") + "</div></section>" +
+      '<section class="tarjeta"><div class="tar-cab"><h2>Tu semana de contenido</h2><span class="nota">Graba todo el lunes en una hora</span></div>' +
+      SEMANA.map(function (d) { return '<div class="semana"><b>' + d[0] + "</b><p><span style=\"font-weight:600\">" + d[1] + "</span><small>" + d[2] + "</small></p></div>"; }).join("") + "</section>" +
+      '<section class="tarjeta"><div class="tar-cab"><h2>Cómo hacer cada video</h2></div><ol class="pasos">' +
+      "<li><b>Gancho en los primeros 2 segundos:</b> «Si gastas más de $4,000 de gasolina al mes, mira esto».</li>" +
+      "<li><b>Vertical, de 20 a 45 segundos</b>, con subtítulos: casi todos lo ven sin sonido.</li>" +
+      "<li><b>Un solo dato por video.</b> Nada de catálogo completo, igual que en piso.</li>" +
+      "<li><b>Cierre con acción:</b> «Comenta KING y te mando tu cotización» o «Agenda tu prueba de manejo».</li>" +
+      "<li><b>Precios y mensualidades con la letra chica oficial</b> (vigencia, sujeto a crédito). Las piezas oficiales y el Generador de anuncios del portal ya la traen.</li></ol></section>" +
+      '<section class="tarjeta"><div class="tar-cab"><h2>Lives: martes y jueves, 21:00</h2></div><ol class="pasos">' +
+      LIVES.map(function (l) { return "<li>" + l + "</li>"; }).join("") + "</ol>" +
+      '<p class="cont-sub">TikTok pide un mínimo de seguidores para transmitir en vivo (las guías hablan de unos 1,000) y ser mayor de edad: revísalo en tu app. Mientras, haz el live en Instagram o Facebook. Avísalo un día antes con el mensaje 11. Para transmitir desde el módulo, pide permiso a la agencia.</p></section>' +
+      '<section class="tarjeta"><div class="tar-cab"><h2>20 ideas de video</h2><span class="chip">' + hechasIdeas + " de 20 publicadas</span></div>" +
+      Object.keys(grupos).map(function (g) { return '<p class="grupo-eti">' + g + '</p><div class="lista">' + grupos[g].map(function (x) { return itemHtml(x[1], x[2]); }).join("") + "</div>"; }).join("") + "</section>" +
+      '<section class="tarjeta"><div class="tar-cab"><h2>Cuidados</h2></div><ul class="no-hacer">' +
+      "<li>Clientes en video solo con su permiso, sin placas, VIN ni datos personales.</li>" +
+      "<li>Nunca prometas tasa ni mensualidad sin el Cotizador.</li>" +
+      "<li>Pregunta la política de la agencia para usar logos y grabar en el módulo.</li>" +
+      "<li>Cada prospecto de redes va al CRM con origen «Redes», para saber cuánto te dejan.</li></ul></section>";
+  }
+
+  /* ================= Vista: Guía ================= */
+  function textoMsg(m) { return m.b.replace(/\{yo\}/g, S.nombre ? S.nombre : "{tu nombre}"); }
+  function vGuia() {
+    var cuerpo;
+    if (guia === "mensajes") {
+      cuerpo = '<section class="tarjeta"><label class="campo-et" for="nombre">Tu nombre (se pone solo en los mensajes)</label>' +
+        '<input class="campo" id="nombre" type="text" autocomplete="given-name" placeholder="Ej. Alex" value="' + esc(S.nombre) + '"></section>' +
+        MENSAJES.map(function (m, i) {
+          return '<section class="tarjeta msg"><div class="tar-cab"><h2>' + m.t + '</h2></div><p class="cuando">' + m.cuando + "</p>" +
+            '<p class="msg-txt" id="msg-' + i + '">' + esc(textoMsg(m)) + "</p>" +
+            '<button type="button" class="btn" data-act="copiar" data-i="' + i + '" data-k="copiar-' + i + '">' + I.copiar + "Copiar mensaje</button></section>";
+        }).join("");
+    } else {
+      var cat = CATALOGO.map(function (m) {
+        return '<div class="modelo"><b>' + m[0] + '</b><span class="precio">' + pesos(m[2]) + "</span>" +
+          "<small>" + m[1] + (m[4] ? " · " + m[4] : "") + "</small>" +
+          (m[3] ? '<span class="chip ok">Bono ' + pesos(m[3]) + "</span>" : '<span class="chip">Sin bono</span>') + "</div>";
+      }).join("");
+      cuerpo = '<section class="tarjeta"><div class="tar-cab"><h2>Plan de estudio</h2><span class="chip">' + ESTUDIO.filter(function (e) { return S.hechos[e.id]; }).length + ' de 5</span></div><div class="lista">' +
+        ESTUDIO.map(function (e) { return itemHtml(e.id, cap(largo(e.f)) + ": " + e.t + ". Ya quedó si: " + e.listo + "."); }).join("") + "</div></section>" +
+        '<section class="tarjeta"><div class="tar-cab"><h2>BYD en 30 segundos</h2><span class="nota">De memoria</span></div>' +
+        '<p class="pitch">«BYD empezó fabricando baterías y hoy fabrica en casa la batería, los motores, la electrónica y los chips de sus autos. Por eso te da más tecnología por tu dinero. En 2025 fue el fabricante de autos eléctricos e híbridos enchufables más grande del mundo, y en México ya vende más que marcas como Ford. Tu próximo BYD empieza aquí: te acompaño de la cotización a la entrega.»</p></section>' +
+        '<section class="tarjeta"><div class="tar-cab"><h2>Catálogo de octubre</h2><span class="nota">Precio con IVA · bono solo financiando desde 5%</span></div>' + cat +
+        '<p class="cont-sub">Las mensualidades «desde» son de la campaña oficial. Al cliente dale siempre la del Cotizador. Cada mes, actualiza con la oferta nueva.</p></section>' +
+        '<section class="tarjeta"><div class="tar-cab"><h2>Tasas Banorte</h2></div><div class="tabla-wrap"><table><thead><tr><th>Enganche</th><th>Tasa</th><th>Comisión</th></tr></thead><tbody>' +
+        BANORTE.map(function (r) { return "<tr><td>" + r[0] + "</td><td>" + r[1] + "</td><td>" + r[2] + "</td></tr>"; }).join("") + "</tbody></table></div>" +
+        '<p class="cont-sub">Placas MTY: eléctrico $1,760 · híbrido $5,866 · gestoría $3,016 (confírmala en caja). Separación $5,000 a Accesorios.</p></section>' +
+        '<section class="tarjeta"><div class="tar-cab"><h2>Las 8 objeciones</h2></div>' +
+        OBJECIONES.map(function (o) { return "<details><summary>" + o[0] + "</summary><p>" + o[1] + "</p></details>"; }).join("") + "</section>" +
+        '<section class="tarjeta"><div class="tar-cab"><h2>Guía completa</h2></div><p class="cont-sub">Historia de la marca, tecnología explicada, diagnóstico y fuentes.</p>' +
+        '<a class="externo" href="https://github.com/alexherreracantu-gif/PROCESO-DE-VENTA-/blob/claude/dreamy-euler-ow3wpq/docs/byd-guia-de-estudio.md" target="_blank" rel="noopener">Abrir la guía de estudio →</a></section>';
+    }
+    return '<section class="titulo"><p class="eyebrow">Guía</p><h1>' + (guia === "mensajes" ? "Mensajes listos" : "BYD al 100%") + "</h1></section>" +
+      seg("guia", guia, [["mensajes", "Mensajes"], ["estudio", "Estudio"]]) + cuerpo;
+  }
+
+  var VISTAS = { hoy: vHoy, avance: vAvance, plan: vPlan, redes: vRedes, guia: vGuia };
+
+  /* ================= Render y eventos ================= */
+  var $main = document.getElementById("main");
+  function navHtml() {
+    return TABS.map(function (x) {
+      return '<button type="button" class="tab" data-tab="' + x.id + '"' + (x.id === tab ? ' aria-current="page"' : "") + ">" + I[x.ico] + "<span>" + x.et + "</span></button>";
+    }).join("");
+  }
+  function render() {
+    var a = document.activeElement, k = a && a.dataset ? a.dataset.k : null;
+    $main.innerHTML = VISTAS[tab]();
+    document.getElementById("nav-tabs").innerHTML = navHtml();
+    document.getElementById("nav-lado").innerHTML = navHtml();
+    if (k) {
+      var el = $main.querySelector('[data-k="' + k + '"]');
+      if (el && !el.disabled) el.focus({ preventScroll: true });
+    }
+  }
+  function irA(t) {
+    tab = t;
+    try { localStorage.setItem(LLAVE + "-tab", t); } catch (e) {}
+    try { history.replaceState(null, "", "#" + t); } catch (e) {}
+    render();
+    window.scrollTo(0, 0);
+  }
+  document.addEventListener("click", function (ev) {
+    var tb = ev.target.closest("[data-tab]");
+    if (tb) { irA(tb.dataset.tab); return; }
+    var b = ev.target.closest("[data-act]");
+    if (!b || b.disabled) return;
+    var act = b.dataset.act;
+    if (act === "mas" || act === "menos") {
+      var f = diaVista, c = contDe(f), k = b.dataset.c;
+      c[k] = Math.max(0, c[k] + (act === "mas" ? 1 : -1));
+      S.cont[f] = c;
+      cambio();
+    } else if (act === "dia") {
+      diaVista = clampF(sumar(diaVista, Number(b.dataset.d))); render();
+    } else if (act === "ir") {
+      diaVista = clampF(b.dataset.f);
+      if (tab !== "hoy") irA("hoy"); else render();
+    } else if (act === "obj") {
+      S.objetivo[b.dataset.mk] = Number(b.dataset.v); cambio();
+    } else if (act === "ajuste") {
+      var mk = b.dataset.mk;
+      S.ajuste[mk] = Math.max(0, (Number(S.ajuste[mk]) || 0) + Number(b.dataset.d)); cambio();
+    } else if (act === "calmes") {
+      var i = MESES.indexOf(mesCal) + Number(b.dataset.d);
+      if (i >= 0 && i < MESES.length) { mesCal = MESES[i]; render(); }
+    } else if (act === "seg") {
+      var g = b.dataset.g, v = b.dataset.v;
+      if (g === "mes") { mesPlan = v; render(); }
+      else if (g === "guia") { guia = v; render(); }
+      else if (g === "fecha") { S.cfg.fecha = v; cambio(); }
+    } else if (act === "corte") {
+      copiar(textoCorte());
+    } else if (act === "copiar") {
+      copiar(textoMsg(MENSAJES[Number(b.dataset.i)]), document.getElementById("msg-" + b.dataset.i));
+    }
+  });
+  document.addEventListener("change", function (ev) {
+    var el = ev.target;
+    if (el.matches && el.matches('input[type="checkbox"][data-id]')) {
+      if (el.checked) S.hechos[el.dataset.id] = true; else delete S.hechos[el.dataset.id];
+      cambio();
+    } else if (el.dataset && el.dataset.cfg) {
+      var n = Number(String(el.value).replace(/[^0-9]/g, ""));
+      var k = el.dataset.cfg;
+      if (!n || (k === "e2" && n <= S.cfg.e1) || (k === "e1" && n >= S.cfg.e2) || (k === "e1" && n < 2)) { el.value = S.cfg[k]; toast("Ese número no cuadra con tus escalones."); return; }
+      S.cfg[k] = n; cambio();
+    }
+  });
+  var tNombre = null;
+  document.addEventListener("input", function (ev) {
+    if (ev.target.id !== "nombre") return;
+    S.nombre = ev.target.value.slice(0, 40);
+    MENSAJES.forEach(function (m, i) { var p = document.getElementById("msg-" + i); if (p) p.textContent = textoMsg(m); });
+    guardarLocal();
+    clearTimeout(tNombre);
+    tNombre = setTimeout(function () { cambio(false); }, 600);
+  });
+
+  function textoCorte() {
+    var f = diaVista, c = contDe(f), m = metasDia(f), mk = mesDe(f), vm = ventasMes(mk);
+    return "Corte " + largo(f) + "\n" +
+      "Conversaciones nuevas: " + c.conv + "/" + m.conv + "\n" +
+      "Citas agendadas: " + c.citas + "/" + m.citas + "\n" +
+      "Pruebas de manejo: " + c.pruebas + "/" + m.pruebas + "\n" +
+      "Solicitudes de crédito: " + c.creditos + "\n" +
+      "Ventas hoy: " + c.sep + "\n" +
+      "Ventas de " + nombreMes(mk) + ": " + vm + " de " + m.obj;
+  }
+  var tToast = null;
+  function toast(msg) {
+    var el = document.getElementById("toast");
+    el.innerHTML = "<span>" + esc(msg) + "</span>";
+    clearTimeout(tToast);
+    tToast = setTimeout(function () { el.innerHTML = ""; }, 2600);
+  }
+  function seleccionar(el) {
+    if (!el) return;
+    try { var r = document.createRange(); r.selectNodeContents(el); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); } catch (e) {}
+  }
+  function copiar(txt, el) {
+    var hecho = function () { toast("Copiado. Pégalo en WhatsApp."); };
+    var respaldo = function () {
+      var ok = false;
+      try {
+        var ta = document.createElement("textarea");
+        ta.value = txt; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.top = "0"; ta.style.opacity = "0"; ta.style.fontSize = "16px";
+        document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, txt.length);
+        ok = document.execCommand("copy"); ta.remove();
+      } catch (e) {}
+      if (ok) hecho();
+      else { seleccionar(el); toast("No se pudo copiar solo: mantén presionado el texto y elige Copiar."); }
+    };
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(hecho, respaldo);
+      else respaldo();
+    } catch (e) { respaldo(); }
+  }
+
+  render();
+  ponerModo("conectando");
+  conectar();
+})();
+</script>
