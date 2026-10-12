@@ -62,6 +62,8 @@ La sección **Aprende** tiene las reglas de oro, los 11 pasos explicados y tus *
 | `assets/app.js` | El motor de la app (no necesitas tocarlo) |
 | `landing.html` | Landing para anuncios de Meta, para cuando quieras conseguir prospectos |
 | `docs/proceso-de-venta.md` | Tu guía de capacitación |
+| `docs/byd-guia-de-estudio.md` | La marca BYD al 100 %: tecnología, catálogo y bonos del mes, Banorte, objeciones y plan de estudio de 5 días |
+| `docs/plan-3-unidades-18-dias.md` | Plan para vender 3 unidades del 12 al 29 de octubre de 2026: embudo, fases, día de piso, Meta Ads y mensajes de WhatsApp |
 
 ## Dónde abrirla
 
