@@ -64,6 +64,7 @@ La sección **Aprende** tiene las reglas de oro, los 11 pasos explicados y tus *
 | `docs/proceso-de-venta.md` | Tu guía de capacitación |
 | `docs/byd-guia-de-estudio.md` | La marca BYD al 100 %: tecnología, catálogo y bonos del mes, Banorte, objeciones y plan de estudio de 5 días |
 | `docs/plan-3-unidades-18-dias.md` | Plan para vender 3 unidades del 12 al 29 de octubre de 2026: embudo, fases, día de piso, Meta Ads y mensajes de WhatsApp |
+| `plan-18-dias.html` | El mismo plan como app para iPhone con el estilo del portal: requerimientos diarios 6-2-1, avance, fases, mensajes y estudio. Publicada en https://claude.ai/artifact/QcKuhiRPysFmVrwarqPzFi (lo que marcas se guarda en tu cuenta de Claude) |
 
 ## Dónde abrirla
 
