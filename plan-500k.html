@@ -28,6 +28,7 @@
   --wa: #1f9d55;
   --brand: #159be6;
   --brand-deep: #0d7fc4;
+  --shine: rgb(255 255 255 / 0.55);
   --side-2: #e8f4fd;
   --glow-a: rgb(21 155 230 / 0.09);
   --glow-b: rgb(21 155 230 / 0.06);
@@ -355,7 +356,7 @@ details p { padding: 0 0 12px; font-size: 0.9rem; color: var(--muted); }
 .esc small { font-size: 0.7rem; color: var(--muted); line-height: 1.2; }
 .datos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .dato { display: grid; gap: 2px; background: var(--surface-2); border-radius: 12px; padding: 10px 12px; }
-.dato span { font-size: 0.74rem; color: var(--muted); font-weight: 600; }
+.dato > span { font-size: 0.74rem; color: var(--muted); font-weight: 600; }
 .dato b { font: 600 1.55rem/1.05 var(--display); font-variant-numeric: tabular-nums; }
 .dato.verde b { color: var(--ok); }
 .mes-fila { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 10px; padding-block: 12px; border-top: 1px solid var(--line); align-items: center; }
@@ -383,6 +384,60 @@ details p { padding: 0 0 12px; font-size: 0.9rem; color: var(--muted); }
 .semana small { display: block; color: var(--muted); font-size: 0.78rem; }
 .pasos { margin: 0; padding-left: 20px; display: grid; gap: 8px; font-size: 0.9rem; }
 .pasos b { font-weight: 600; }
+
+/* ---------- Animaciones: solo al cambiar de vista, no en cada toque ---------- */
+.tarjeta { animation: none; }
+.anim > * { animation: entrar 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.anim > *:nth-child(2) { animation-delay: 0.04s; }
+.anim > *:nth-child(3) { animation-delay: 0.08s; }
+.anim > *:nth-child(4) { animation-delay: 0.12s; }
+.anim > *:nth-child(5) { animation-delay: 0.16s; }
+.anim > *:nth-child(6) { animation-delay: 0.2s; }
+.anim > *:nth-child(n+7) { animation-delay: 0.24s; }
+.barra i { animation: none; transition: width 0.8s cubic-bezier(0.2, 0.7, 0.2, 1), background-color 0.3s; }
+.barra.gruesa { height: 12px; border-radius: 6px; }
+.barra.gruesa i { border-radius: 6px; }
+.barra.brillo i {
+  background-color: var(--bar);
+  background-image: linear-gradient(100deg, transparent 20%, var(--shine) 50%, transparent 80%);
+  background-size: 220% 100%;
+  animation: brillo 2.6s linear infinite;
+}
+.cifra { display: inline-block; }
+.cifra.bump { animation: bump 0.4s cubic-bezier(0.2, 0.7, 0.2, 1); }
+.item input.recien { animation: pop 0.35s cubic-bezier(0.2, 0.7, 0.2, 1); }
+.tab[aria-current="page"] svg { animation: saltito 0.4s cubic-bezier(0.2, 0.7, 0.2, 1); }
+.dia-c.hoy { animation: latido 2.4s ease-in-out infinite; }
+.btn-red, .btn, .ico-btn, .obj button, .seg button, .dia-c { transition: transform 0.12s, background-color 0.2s, box-shadow 0.2s; }
+.obj button:active, .seg button:active, .dia-c:active { transform: scale(0.95); }
+#fiesta { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 70; }
+@keyframes brillo { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+@keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.22); } 100% { transform: scale(1); } }
+@keyframes pop { 0% { transform: scale(0.7); } 60% { transform: scale(1.18); } 100% { transform: scale(1); } }
+@keyframes saltito { 0% { transform: translateY(0); } 40% { transform: translateY(-4px); } 100% { transform: translateY(0); } }
+@keyframes latido { 0%, 100% { outline-color: var(--accent); } 50% { outline-color: var(--bar-track); } }
+
+/* ---------- Regla del día, método y reglas MX ---------- */
+.consejo {
+  display: grid; gap: 4px; padding: 14px 16px; border-radius: 18px;
+  background: linear-gradient(135deg, var(--accent), var(--brand-deep)); color: var(--on-accent);
+  box-shadow: var(--shadow);
+}
+.consejo-et { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.85; }
+.consejo b { font: 600 1.35rem/1.1 var(--display); }
+.consejo p { font-size: 0.86rem; line-height: 1.45; opacity: 0.95; }
+.metodo { margin: 0; padding-left: 22px; display: grid; gap: 12px; }
+.metodo li { font-size: 0.9rem; }
+.metodo li > * { display: block; margin-top: 3px; }
+.metodo li::marker { font: 600 1rem var(--display); color: var(--accent); }
+.metodo b { font-weight: 600; }
+.metodo span { color: var(--muted); }
+.fuente { color: var(--accent); font-weight: 600; font-size: 0.8rem; text-decoration: none; }
+.fuentes { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.regla-mx { gap: 8px; }
+.regla-mx .item { border-top: 0; padding-top: 0; }
+.regla-p { font-size: 0.88rem; color: var(--muted); line-height: 1.5; }
+@media (prefers-reduced-motion: reduce) { .barra i { transition: none; } }
 </style>
 
 <div class="app">
@@ -410,6 +465,7 @@ details p { padding: 0 0 12px; font-size: 0.9rem; color: var(--muted); }
   <nav class="tabs" id="nav-tabs" aria-label="Secciones"></nav>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<canvas id="fiesta" aria-hidden="true"></canvas>
 
 <script>
 (function () {
@@ -544,18 +600,18 @@ details p { padding: 0 0 12px; font-size: 0.9rem; color: var(--muted); }
     { t: "6. Crédito aprobado", cuando: "La separación se pide después de la aprobación. De contado se aparta el mismo día.",
       b: "{nombre}, ¡ya te aprobaron! Para apartar tu {modelo} con el interior que elegiste y asegurar el bono son $5,000, y forman parte de tu enganche. ¿Te paso los datos para la transferencia?" },
     { t: "7. Seguimiento a «lo voy a pensar»", cuando: "Siempre con una razón nueva.",
-      b: "Hola {nombre}, te actualicé la cotización del {modelo}: con el bono del mes la mensualidad queda en ${mensualidad}. El bono se acaba a fin de mes. ¿Lo vemos el {día} a las {hora}?" },
+      b: "Hola {nombre}, te actualicé la cotización del {modelo}: con el bono del mes la mensualidad queda en ${mensualidad}, sujeta a aprobación de crédito. El bono se acaba a fin de mes. ¿Lo vemos el {día} a las {hora}?" },
     { t: "8. Buen Fin", cuando: "Jueves 12 de noviembre, a toda tu cartera. Confirma antes la promoción con Jorge.",
       b: "Hola {nombre}, soy {yo} de BYD Park Point. Del viernes 13 al martes 17 es el Buen Fin y te quiero apartar los números del {modelo} con lo mejor que tengamos esos días. ¿Te mando tu cotización o vienes a manejarlo?" },
     { t: "9. Dueños de negocio (diciembre)", cuando: "A clientes con negocio propio. Que lo confirme su contador.",
       b: "Hola {nombre}, una idea para tu negocio antes de cerrar el año: un auto eléctrico o híbrido se puede deducir hasta $250,000, contra $175,000 de uno de gasolina. Pregúntale a tu contador si te conviene comprarlo a nombre del negocio en diciembre. Si quieres, te armo los números del {modelo}." },
     { t: "10. Aguinaldo como enganche", cuando: "Primera semana de diciembre y cuando llegue el aguinaldo.",
-      b: "Hola {nombre}, ¿ya pensaste en usar tu aguinaldo como enganche? Con ${enganche} de enganche, el {modelo} te queda en unos ${mensualidad} al mes con la oferta de diciembre. ¿Te paso la cotización?" },
+      b: "Hola {nombre}, ¿ya pensaste en usar tu aguinaldo como enganche? Con ${enganche} de enganche, el {modelo} te queda en unos ${mensualidad} al mes con la oferta de diciembre, sujeto a aprobación de crédito. ¿Te paso la cotización?" },
     { t: "11. Aviso de live", cuando: "Un día antes y una hora antes, en estados e historias.",
       b: "Hoy a las 9 de la noche hago live: cotizo en vivo el {modelo}. Si quieres que haga la tuya, mándame tu enganche y a cuántos meses lo quieres." }
   ];
   var IDEAS = [
-    ["Números", "v1", "¿Cuánto pagas al mes por un KING con $50,000 de enganche? (con el cotizador en pantalla)"],
+    ["Números", "v1", "¿Cuánto pagas al mes por un KING con $50,000 de enganche? (cotizador en pantalla y CAT de la pieza oficial)"],
     ["Números", "v2", "Gasolina contra KING: cuánto ahorras al mes en Monterrey"],
     ["Números", "v3", "Song Plus con $78,000 de bono: qué significa para tu enganche"],
     ["Números", "v4", "El bono flexible: por qué conviene financiar aunque tengas el dinero"],
@@ -628,6 +684,28 @@ details p { padding: 0 0 12px; font-size: 0.9rem; color: var(--muted); }
     creditos: "A quien le gustó la prueba, pídele documentos ese mismo día (mensaje 5).",
     sep: "¿Recomendaste un solo modelo? ¿Hiciste la cuenta contra su gasolina? ¿Hiciste la pregunta de cierre? Rechazados: otro banco, co-acreditado, más enganche o un modelo de menor precio."
   };
+
+  var METODO = [
+    { t: "Contesta en menos de 5 minutos", p: "Un estudio de Harvard Business Review con 1.25 millones de prospectos encontró que contactar en la primera hora hace casi 7 veces más probable tener una conversación con quien decide que esperar una hora más, y más de 60 veces más que esperar un día.", f: ["Harvard Business Review, 2011", "https://hbr.org/2011/03/the-short-life-of-online-sales-leads"] },
+    { t: "Cada cliente vale por 250", p: "Joe Girard vendió 13,001 autos entre 1963 y 1978 y tuvo el récord Guinness de más autos vendidos en un año (1,425 en 1973). Su sistema: contacto con cada cliente todos los meses y pedir referidos, porque cada persona conoce a unas 250.", f: ["Joe Girard (Wikipedia)", "https://en.wikipedia.org/wiki/Joe_Girard"] },
+    { t: "Sin prueba de manejo casi no hay venta", p: "Regla de tu Academia: cada cita termina en prueba de manejo. El paso 4 no es opcional.", f: null },
+    { t: "Diagnóstico y un solo modelo", p: "Cinco preguntas y una recomendación. Si enseñas todo el catálogo, el cliente se va a pensarlo.", f: null },
+    { t: "Vende lo que se vende en Cumbres", p: "En los 7 expedientes de ventas de la agencia que tienes en Drive (abril a septiembre), 6 fueron híbridos DM-i: Song Pro, KING y Song Plus. A nivel nacional, el Dolphin es el BYD más vendido y el Song Plus el segundo.", f: ["InformaBTL, 2026", "https://www.informabtl.com/precio-del-byd-song-plus-2026-costo-del-segundo-auto-mas-popular-despues-del-byd-dolphin/"] },
+    { t: "Junta tus ventas para cruzar escalones", p: "La venta 7 vale $54,000 y la 13 vale $70,000. Concentra citas, seguimiento y créditos para que caigan en el mismo mes.", f: null },
+    { t: "Sé visible todos los días", p: "Un video diario y dos lives por semana, para que en Monterrey te ubiquen como el asesor BYD.", f: null }
+  ];
+  var VENDIDOS = [["Song Pro DM-i", 2, "Bono $35,000"], ["KING DM-i", 2, "Bono $25,000"], ["Song Plus DM-i", 2, "Bono $78,000"], ["Dolphin Mini", 1, "Bono $25,000 a $30,000"]];
+  var REGLAS = [
+    { id: "q1", t: "Efectivo: nunca $376,565 o más por un auto", p: "La ley antilavado (LFPIORPI, art. 32) prohíbe recibir efectivo por 3,210 UMA o más en la compra de un vehículo. Con la UMA 2026 ($117.31) son $376,565. Desde ese monto la agencia identifica al cliente, y desde 6,420 UMA ($753,130) presenta aviso al SAT. Una reforma al reglamento de marzo de 2026 suma IVA y accesorios. Nunca sugieras partir el pago en efectivo: todo por transferencia y cualquier duda a cumplimiento de la agencia.", f: [["UMA 2026 (IDC)", "https://idconline.mx/laboral/2026/01/09/valor-uma-2026-inegi-publica-nuevos-montos"], ["Efectivo para comprar auto (El Universal)", "https://www.eluniversal.com.mx/autopistas/cuanto-dinero-en-efectivo-puedo-usar-para-comprar-un-auto/"]] },
+    { id: "q2", t: "Tasa o mensualidad en publicidad: con CAT", p: "Banxico regula el CAT (Costo Anual Total) para fines informativos y de publicidad. Si un video, anuncio o estado dice tasa o mensualidad, usa la pieza oficial con CAT promedio, fecha de cálculo, vigencia y «sujeto a aprobación de crédito». Si usas el Generador de anuncios del portal, agrega el CAT que te dé Banorte.", f: [["Banxico, Circular 15/2007 (CAT)", "https://www.abm.org.mx/legislacion-y-regulacion/juridico/banxico/circulares/2007/Circular%2015%202007.pdf"]] },
+    { id: "q3", t: "Precio total y sin engaños (Profeco)", p: "Anuncia precios con IVA, con vigencia y condiciones, y autonomías con su letra chica. La NOM-160-SCFI-2014 regula la venta de autos nuevos; en 2025 Profeco suspendió una agencia por falta de transparencia en precios. Entrega cotización por escrito y su copia del contrato.", f: [["NOM-160-SCFI-2014", "https://platiica.economia.gob.mx/normalizacion/wp-content/uploads/sites/2/PDF_Normas_Publicas/160scfi2014.pdf"], ["Caso Profeco 2025 (Crónica)", "https://www.cronica.com.mx/estados/2025/07/09/profeco-suspende-operaciones-de-agencia-jac-en-aguascalientes/"]] },
+    { id: "q4", t: "Datos personales (ley de marzo de 2025)", p: "Cuando pidas INE, estados de cuenta y comprobante, el cliente debe conocer el aviso de privacidad de la agencia: pídele a Jorge el link. Usa esos datos solo para el trámite y bórralos de tu WhatsApp al terminar la venta.", f: [["Nueva LFPDPPP (Garrigues)", "https://www.garrigues.com/es_ES/noticia/mexico-nueva-ley-federal-proteccion-datos-personales-posesion-particulares-introduce"]] },
+    { id: "q5", t: "Clientes en video, solo con permiso", p: "Pide permiso por mensaje antes de publicar una entrega. Nunca muestres placas, VIN, domicilio ni documentos.", f: null },
+    { id: "q6", t: "El crédito lo decide el banco", p: "Nunca prometas aprobación ni tasa: siempre «sujeto a aprobación de crédito», con números del Cotizador.", f: null },
+    { id: "q7", t: "Bono flexible por escrito", p: "Cada bono va con su carta de aceptación firmada, como en los expedientes de la agencia. No es canjeable por efectivo.", f: null },
+    { id: "q8", t: "No das asesoría fiscal", p: "Lo de la deducción (hasta $250,000 eléctricos e híbridos contra $175,000 de gasolina, Ley del ISR art. 36) es información: que lo confirme su contador.", f: [["Ley del ISR, art. 36", "https://sdv.com.mx/compendio/ley-isr/articulo-36/"]] },
+    { id: "q9", t: "Tus comisiones pagan impuestos", p: "Son ingreso gravado. Pregunta si te retienen ISR y cuenta tus $500,000 ya con impuestos.", f: null }
+  ];
 
   /* ================= Estado ================= */
   var LLAVE = "plan18-parkpoint-v1";
@@ -801,9 +879,80 @@ details p { padding: 0 0 12px; font-size: 0.9rem; color: var(--muted); }
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function pesos(n) { return "$" + Math.round(n).toLocaleString("es-MX"); }
   function miles(n) { return n >= 1000 ? "$" + Math.round(n / 1000) + "k" : pesos(n); }
+  /* ================= Animaciones ================= */
+  var prevN = {}, prevW = {}, ultimoMarcado = null;
+  function quieto() { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } }
+  function fmt(v, t) { return t === "pesos" ? pesos(v) : String(Math.round(v)); }
+  function barra(key, pct, marca, cls) {
+    pct = Math.max(0, Math.min(100, pct));
+    var desde = prevW[key] !== undefined ? prevW[key] : 0;
+    return '<span class="barra' + (cls ? " " + cls : "") + '" aria-hidden="true"><i data-bk="' + key + '" data-w="' + pct + '" style="width:' + desde + '%"></i>' +
+      (marca != null ? '<b style="left:calc(' + Math.max(0, Math.min(100, marca)) + '% - 1px)"></b>' : "") + "</span>";
+  }
+  function cifra(key, v, tipo, desdeCero) {
+    var desde = prevN[key] !== undefined ? prevN[key] : (desdeCero ? 0 : v);
+    return '<span class="cifra" data-nk="' + key + '" data-to="' + v + '" data-t="' + (tipo || "int") + '" data-from="' + desde + '">' + fmt(desde, tipo) + "</span>";
+  }
+  function animar() {
+    var q = quieto();
+    $main.querySelectorAll("[data-bk]").forEach(function (el) {
+      var w = Number(el.dataset.w); prevW[el.dataset.bk] = w;
+      if (q) { el.style.width = w + "%"; return; }
+      requestAnimationFrame(function () { requestAnimationFrame(function () { el.style.width = w + "%"; }); });
+    });
+    $main.querySelectorAll("[data-nk]").forEach(function (el) {
+      var to = Number(el.dataset.to), from = Number(el.dataset.from), t = el.dataset.t;
+      prevN[el.dataset.nk] = to;
+      if (from === to || q) { el.textContent = fmt(to, t); return; }
+      el.classList.add("bump");
+      var t0 = performance.now(), dur = t === "pesos" ? 900 : 380;
+      (function paso(now) {
+        var p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+        el.textContent = fmt(from + (to - from) * e, t);
+        if (p < 1) requestAnimationFrame(paso);
+      })(t0);
+    });
+  }
+  var lienzo = document.getElementById("fiesta"), lctx = lienzo.getContext ? lienzo.getContext("2d") : null, parts = [], corriendo = false;
+  var COLORES = ["#159be6", "#0b6fb3", "#23774a", "#e9b949", "#7cc4f0", "#11141a"];
+  function fiesta(n, x, y) {
+    if (quieto() || !lctx) return;
+    var dpr = window.devicePixelRatio || 1;
+    if (!corriendo) { lienzo.width = innerWidth * dpr; lienzo.height = innerHeight * dpr; lctx.setTransform(dpr, 0, 0, dpr, 0, 0); }
+    for (var i = 0; i < n; i++) {
+      var a = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 0.95, v = 5 + Math.random() * 8;
+      parts.push({ x: x, y: y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, g: 0.22 + Math.random() * 0.12, r: Math.random() * 6.3, vr: (Math.random() - 0.5) * 0.35, w: 5 + Math.random() * 7, h: 3 + Math.random() * 4, c: COLORES[i % COLORES.length], vida: 80 + Math.random() * 50 });
+    }
+    if (!corriendo) { corriendo = true; requestAnimationFrame(cuadro); }
+  }
+  function cuadro() {
+    lctx.clearRect(0, 0, innerWidth, innerHeight);
+    parts = parts.filter(function (p) {
+      p.vida--; p.vy += p.g; p.vx *= 0.985; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+      lctx.save(); lctx.translate(p.x, p.y); lctx.rotate(p.r);
+      lctx.globalAlpha = Math.max(0, Math.min(1, p.vida / 30)); lctx.fillStyle = p.c;
+      lctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); lctx.restore();
+      return p.vida > 0 && p.y < innerHeight + 40;
+    });
+    if (parts.length) requestAnimationFrame(cuadro);
+    else { corriendo = false; lctx.clearRect(0, 0, innerWidth, innerHeight); }
+  }
+  function logros(f) {
+    var v = ventasMes(mesDe(f));
+    return { dia: estadoDia(f) === "ok", esc: v >= S.cfg.e2 ? 2 : v >= S.cfg.e1 ? 1 : 0, meta: ganadoMeta() >= S.cfg.meta, v: v };
+  }
+  function celebrar(a, d, x, y) {
+    if (d.meta && !a.meta) { fiesta(240, innerWidth / 2, innerHeight * 0.35); toast("¡Llegaste a tu meta de " + pesos(S.cfg.meta) + "!"); return true; }
+    if (d.esc > a.esc) { fiesta(170, innerWidth / 2, innerHeight * 0.4); toast("¡Escalón de " + pesos(d.esc === 2 ? S.cfg.m2 : S.cfg.m1) + "! Todas tus ventas del mes suben."); return true; }
+    if (d.v > a.v) { fiesta(80, x, y); toast("¡Venta! Llevas " + d.v + " este mes."); return true; }
+    if (d.dia && !a.dia) { fiesta(130, innerWidth / 2, innerHeight * 0.4); toast("¡Día cumplido!"); return true; }
+    return false;
+  }
+
   function itemHtml(key, texto, hora) {
     var on = !!S.hechos[key];
-    return '<label class="item' + (on ? " on" : "") + '"><input type="checkbox" data-id="' + key + '" data-k="chk-' + key + '"' + (on ? " checked" : "") + ">" +
+    var recien = on && key === ultimoMarcado;
+    return '<label class="item' + (on ? " on" : "") + '"><input type="checkbox"' + (recien ? ' class="recien"' : "") + ' data-id="' + key + '" data-k="chk-' + key + '"' + (on ? " checked" : "") + ">" +
       '<span class="item-txt">' + (hora ? '<span class="hora">' + hora + "</span>" : "") + esc(texto) + "</span></label>";
   }
   function seg(grupo, actual, opciones) {
@@ -824,12 +973,16 @@ details p { padding: 0 0 12px; font-size: 0.9rem; color: var(--muted); }
     var texto = meta ? (lleno ? "Meta cumplida" : "Meta " + meta + " · faltan " + (meta - v)) : sub;
     return '<div class="cont' + (lleno ? " lleno" : "") + '">' +
       '<div class="cont-info"><span class="cont-et">' + et + '</span><span class="cont-sub">' + texto + "</span>" +
-      (meta ? '<span class="barra" aria-hidden="true"><i style="width:' + pct + '%"></i></span>' : "") + "</div>" +
+      (meta ? barra("c-" + c, pct) : "") + "</div>" +
       '<div class="cont-ctrl">' +
       '<button type="button" class="btn-red" data-act="menos" data-c="' + c + '" data-k="menos-' + c + '" aria-label="Restar uno en ' + et + '"' + (v <= 0 ? " disabled" : "") + ">" + I.menos + "</button>" +
-      '<span class="cont-num num">' + v + (meta ? "<small>/" + meta + "</small>" : "") + "</span>" +
+      '<span class="cont-num num">' + cifra("c-" + c + "-" + diaVista, v) + (meta ? "<small>/" + meta + "</small>" : "") + "</span>" +
       '<button type="button" class="btn-red mas" data-act="mas" data-c="' + c + '" data-k="mas-' + c + '" aria-label="Sumar uno en ' + et + '">' + I.mas + "</button>" +
       "</div></div>";
+  }
+  function consejoDelDia(f) {
+    var m = METODO[(diaN(f) - 1) % METODO.length];
+    return '<section class="consejo"><span class="consejo-et">Regla del día</span><b>' + m.t + "</b><p>" + m.p + "</p></section>";
   }
   function vHoy() {
     var f = diaVista, c = contDe(f), m = metasDia(f), hoyF = hoyMty(), mk = mesDe(f);
@@ -854,11 +1007,13 @@ details p { padding: 0 0 12px; font-size: 0.9rem; color: var(--muted); }
       (f !== clampF(hoyF) ? '<button type="button" class="link" data-act="ir" data-f="' + clampF(hoyF) + '" data-k="ir-hoy">Volver a hoy</button>' : "") + "</div>" +
       '<button type="button" class="ico-btn" data-act="dia" data-d="1" data-k="dia-next" aria-label="Día siguiente"' + (f >= FIN ? " disabled" : "") + ">" + I.der + "</button>" +
       "</div></section>" + banner +
+      consejoDelDia(f) +
       '<section class="tarjeta"><div class="tar-cab"><h2>Tu mes</h2><span class="chip azul">' + pesos(pagoPor(vm)) + " por venta</span></div>" +
-      '<div class="datos"><div class="dato"><span>Ventas de ' + nombreMes(mk) + "</span><b>" + vm + " / " + m.obj + "</b></div>" +
-      '<div class="dato verde"><span>Llevas ganado</span><b>' + pesos(ganancia(vm)) + "</b></div></div>" +
+      '<div class="datos"><div class="dato"><span>Ventas de ' + nombreMes(mk) + "</span><b>" + cifra("vm-" + mk, vm) + " / " + m.obj + "</b></div>" +
+      '<div class="dato verde"><span>Llevas ganado</span><b>' + cifra("gm-" + mk, ganancia(vm), "pesos", true) + "</b></div></div>" +
+      barra("vm-" + mk, vm / m.obj * 100, null, "brillo") +
       '<p class="cont-sub">' + (sig ? "Te faltan <b>" + sig.faltan + "</b> para el escalón de " + pesos(sig.monto) + ". Tu siguiente venta vale <b>" + pesos(valorSig) + "</b>." : "Estás en el escalón más alto. Cada venta más vale " + pesos(valorSig) + ".") + "</p></section>" +
-      '<section class="tarjeta"><div class="tar-cab"><h2>Meta de hoy: ' + m.conv + "-" + m.citas + "-" + m.pruebas + '</h2><span class="chip ' + (cumplidas ? "ok" : "azul") + '">' + (cumplidas ? "Cumplida" : "Conversaciones, citas, pruebas") + "</span></div>" +
+      '<section class="tarjeta"><div class="tar-cab"><h2>Meta de hoy: ' + m.conv + "-" + m.citas + "-" + m.pruebas + '</h2><span class="chip ' + (cumplidas ? "ok" : "azul") + '">' + (cumplidas ? "Cumplida" : "Por hacer") + "</span></div>" +
       '<p class="cont-sub">' + esc(porque) + "</p>" +
       contador("conv", "Conversaciones nuevas", m.conv, c.conv) +
       contador("citas", "Citas agendadas", m.citas, c.citas) +
@@ -897,7 +1052,7 @@ details p { padding: 0 0 12px; font-size: 0.9rem; color: var(--muted); }
       var falta = esp - real; if (falta > 0) atras.push(x[0]);
       return '<div class="metrica"><div class="fila"><span>' + x[1] + '</span><span class="val">' + real + " / " + total + "</span>" +
         (falta > 0 ? '<span class="chip warn">Faltan ' + falta + " para hoy</span>" : '<span class="chip ok">Al día</span>') + "</div>" +
-        '<span class="barra"><i style="width:' + Math.min(100, real / total * 100) + '%"></i><b style="left:calc(' + Math.min(100, esp / total * 100) + '% - 1px)" title="Lo que deberías llevar hoy"></b></span></div>';
+        barra("e-" + x[0], real / total * 100, esp / total * 100) + "</div>";
     }).join("");
     var meses = MESES.map(function (mk) {
       var v = ventasMes(mk), dentro = mk + "-01" <= cfg.fecha, pasado = mk < mh;
@@ -911,8 +1066,9 @@ details p { padding: 0 0 12px; font-size: 0.9rem; color: var(--muted); }
     var cal = calendario();
     return '' +
       '<section class="titulo"><p class="eyebrow">Avance</p><h1>Meta ' + pesos(cfg.meta) + "</h1><p class=\"sub\">Comisiones de " + mesesMeta().map(nombreMes).join(", ") + " al " + fechaTxt + ".</p></section>" +
-      '<section class="tarjeta dinero"><span class="num grande" style="color:' + (ganado >= cfg.meta ? "var(--ok)" : "var(--fg)") + '">' + pesos(ganado) + '</span><span class="de">de ' + pesos(cfg.meta) + " · te faltan " + pesos(Math.max(0, cfg.meta - ganado)) + "</span>" +
-      '<span class="barra"><i style="width:' + Math.min(100, ganado / cfg.meta * 100) + '%"></i></span>' +
+      '<section class="tarjeta dinero"><span class="num grande" style="color:' + (ganado >= cfg.meta ? "var(--ok)" : "var(--fg)") + '">' + cifra("ganado", ganado, "pesos", true) + '</span><span class="de">de ' + pesos(cfg.meta) + " · te faltan " + pesos(Math.max(0, cfg.meta - ganado)) + "</span>" +
+      barra("ganado", ganado / cfg.meta * 100, proy / cfg.meta * 100, "brillo gruesa") +
+      '<p class="cont-sub">La rayita negra es a donde llegas si cumples tus objetivos.</p>' +
       '<div class="aviso ' + (alcanza ? "ok" : "warn") + '">' + (alcanza ? "Con tus objetivos llegas a <b>" + pesos(proy) + "</b> al " + fechaTxt + "." : "Con tus objetivos llegas a <b>" + pesos(proy) + "</b>: te faltarían " + pesos(cfg.meta - proy) + ". Sube el objetivo de un mes a " + cfg.e2 + " o cambia la fecha.") + "</div></section>" +
       '<section class="tarjeta"><div class="tar-cab"><h2>' + cap(nombreMes(mh)) + '</h2><span class="nota">' + vm + " ventas · " + pesos(ganancia(vm)) + "</span></div>" +
       '<div class="esc">' + escal + "</div>" +
@@ -972,7 +1128,13 @@ details p { padding: 0 0 12px; font-size: 0.9rem; color: var(--muted); }
       '<div class="embudo">' + embudo.map(function (e) { return '<div><span class="num">' + e[0] + "</span><small>" + e[1] + "</small></div>"; }).join("") + "</div>" +
       '<p class="regla"><b>' + (o >= cfg.e2 ? "12-4-2" : "6-2-1") + "</b> diario en un mes completo. La meta de cada día en Hoy se ajusta con lo que te falta.</p>" +
       (mk === "2026-10" ? '<div class="aviso warn"><b>Pregúntale a Jorge</b> qué fecha cuenta para el escalón: apartada, facturada o entregada. Si cuenta la facturada, los créditos entran a más tardar el miércoles 21.</div>' : "") +
-      "</section>" + bloques +
+      "</section>" +
+      '<section class="tarjeta"><div class="tar-cab"><h2>El método</h2><span class="chip ok">Con evidencia</span></div>' +
+      '<p class="cont-sub">Siete reglas que ya funcionaron, con su fuente cuando viene de afuera. Ningún método garantiza ventas: lo que sí cambia el resultado es hacerlo todos los días.</p>' +
+      '<ol class="metodo">' + METODO.map(function (x) {
+        return "<li><b>" + x.t + "</b><span>" + x.p + "</span>" + (x.f ? '<a class="fuente" href="' + x.f[1] + '" target="_blank" rel="noopener">' + x.f[0] + " →</a>" : "") + "</li>";
+      }).join("") + "</ol></section>" +
+      bloques +
       '<section class="tarjeta"><div class="tar-cab"><h2>Lo que no se hace</h2></div><ul class="no-hacer">' +
       "<li>Mandar «¿sigues interesado?»</li><li>Enseñar todo el catálogo</li><li>Inventar especificaciones, garantías o tiempos de carga</li><li>Pedir la separación antes de la aprobación del crédito</li><li>Detener a un cliente que quiere comprar hoy para cuadrar el mes</li><li>Dejar un prospecto sin siguiente acción y fecha en el CRM</li><li>Prometer entrega con adeudo pendiente</li></ul></section>";
   }
@@ -999,7 +1161,7 @@ details p { padding: 0 0 12px; font-size: 0.9rem; color: var(--muted); }
       "<li><b>Vertical, de 20 a 45 segundos</b>, con subtítulos: casi todos lo ven sin sonido.</li>" +
       "<li><b>Un solo dato por video.</b> Nada de catálogo completo, igual que en piso.</li>" +
       "<li><b>Cierre con acción:</b> «Comenta KING y te mando tu cotización» o «Agenda tu prueba de manejo».</li>" +
-      "<li><b>Precios y mensualidades con la letra chica oficial</b> (vigencia, sujeto a crédito). Las piezas oficiales y el Generador de anuncios del portal ya la traen.</li></ol></section>" +
+      "<li><b>Si dices precio, tasa o mensualidad, va la letra chica:</b> precio con IVA, CAT promedio informativo, fecha de cálculo, vigencia y «sujeto a aprobación de crédito». Las piezas oficiales la traen; en el Generador de anuncios del portal agrega el CAT que te dé Banorte. Detalle en Guía → Reglas MX.</li></ol></section>" +
       '<section class="tarjeta"><div class="tar-cab"><h2>Lives: martes y jueves, 21:00</h2></div><ol class="pasos">' +
       LIVES.map(function (l) { return "<li>" + l + "</li>"; }).join("") + "</ol>" +
       '<p class="cont-sub">TikTok pide un mínimo de seguidores para transmitir en vivo (las guías hablan de unos 1,000) y ser mayor de edad: revísalo en tu app. Mientras, haz el live en Instagram o Facebook. Avísalo un día antes con el mensaje 11. Para transmitir desde el módulo, pide permiso a la agencia.</p></section>' +
@@ -1007,7 +1169,7 @@ details p { padding: 0 0 12px; font-size: 0.9rem; color: var(--muted); }
       Object.keys(grupos).map(function (g) { return '<p class="grupo-eti">' + g + '</p><div class="lista">' + grupos[g].map(function (x) { return itemHtml(x[1], x[2]); }).join("") + "</div>"; }).join("") + "</section>" +
       '<section class="tarjeta"><div class="tar-cab"><h2>Cuidados</h2></div><ul class="no-hacer">' +
       "<li>Clientes en video solo con su permiso, sin placas, VIN ni datos personales.</li>" +
-      "<li>Nunca prometas tasa ni mensualidad sin el Cotizador.</li>" +
+      "<li>Nunca prometas tasa ni mensualidad sin el Cotizador, y en publicidad siempre con CAT.</li>" +
       "<li>Pregunta la política de la agencia para usar logos y grabar en el módulo.</li>" +
       "<li>Cada prospecto de redes va al CRM con origen «Redes», para saber cuánto te dejan.</li></ul></section>";
   }
@@ -1024,6 +1186,14 @@ details p { padding: 0 0 12px; font-size: 0.9rem; color: var(--muted); }
             '<p class="msg-txt" id="msg-' + i + '">' + esc(textoMsg(m)) + "</p>" +
             '<button type="button" class="btn" data-act="copiar" data-i="' + i + '" data-k="copiar-' + i + '">' + I.copiar + "Copiar mensaje</button></section>";
         }).join("");
+    } else if (guia === "reglas") {
+      var cumplo = REGLAS.filter(function (r) { return S.hechos[r.id]; }).length;
+      cuerpo = '<section class="tarjeta"><div class="tar-cab"><h2>Lo que pide la ley</h2><span class="chip ' + (cumplo === REGLAS.length ? "ok" : "") + '">' + cumplo + " de " + REGLAS.length + "</span></div>" +
+        '<p class="cont-sub">Marca cada regla cuando ya la apliques siempre. Es información para vender bien, no asesoría legal: ante cualquier duda, el área de cumplimiento de la agencia decide.</p></section>' +
+        REGLAS.map(function (r) {
+          return '<section class="tarjeta regla-mx">' + itemHtml(r.id, r.t) + '<p class="regla-p">' + r.p + "</p>" +
+            (r.f ? '<div class="fuentes">' + r.f.map(function (x) { return '<a class="fuente" href="' + x[1] + '" target="_blank" rel="noopener">' + x[0] + " →</a>"; }).join("") + "</div>" : "") + "</section>";
+        }).join("");
     } else {
       var cat = CATALOGO.map(function (m) {
         return '<div class="modelo"><b>' + m[0] + '</b><span class="precio">' + pesos(m[2]) + "</span>" +
@@ -1034,6 +1204,9 @@ details p { padding: 0 0 12px; font-size: 0.9rem; color: var(--muted); }
         ESTUDIO.map(function (e) { return itemHtml(e.id, cap(largo(e.f)) + ": " + e.t + ". Ya quedó si: " + e.listo + "."); }).join("") + "</div></section>" +
         '<section class="tarjeta"><div class="tar-cab"><h2>BYD en 30 segundos</h2><span class="nota">De memoria</span></div>' +
         '<p class="pitch">«BYD empezó fabricando baterías y hoy fabrica en casa la batería, los motores, la electrónica y los chips de sus autos. Por eso te da más tecnología por tu dinero. En 2025 fue el fabricante de autos eléctricos e híbridos enchufables más grande del mundo, y en México ya vende más que marcas como Ford. Tu próximo BYD empieza aquí: te acompaño de la cotización a la entrega.»</p></section>' +
+        '<section class="tarjeta"><div class="tar-cab"><h2>Lo que se vende en Cumbres</h2><span class="nota">7 expedientes de la agencia, abril a septiembre</span></div>' +
+        VENDIDOS.map(function (x) { return '<div class="metrica"><div class="fila"><span>' + x[0] + '</span><span class="val">' + x[1] + "</span></div>" + barra("vend-" + x[0], x[1] / 2 * 100) + '<span class="cont-sub">' + x[2] + "</span></div>"; }).join("") +
+        '<p class="cont-sub">6 de 7 fueron híbridos DM-i. Abre con KING, Song Pro o Song Plus según el diagnóstico, y usa el Dolphin Mini como entrada. Muestra chica: tómala como pista, no como estadística.</p></section>' +
         '<section class="tarjeta"><div class="tar-cab"><h2>Catálogo de octubre</h2><span class="nota">Precio con IVA · bono solo financiando desde 5%</span></div>' + cat +
         '<p class="cont-sub">Las mensualidades «desde» son de la campaña oficial. Al cliente dale siempre la del Cotizador. Cada mes, actualiza con la oferta nueva.</p></section>' +
         '<section class="tarjeta"><div class="tar-cab"><h2>Tasas Banorte</h2></div><div class="tabla-wrap"><table><thead><tr><th>Enganche</th><th>Tasa</th><th>Comisión</th></tr></thead><tbody>' +
@@ -1044,8 +1217,9 @@ details p { padding: 0 0 12px; font-size: 0.9rem; color: var(--muted); }
         '<section class="tarjeta"><div class="tar-cab"><h2>Guía completa</h2></div><p class="cont-sub">Historia de la marca, tecnología explicada, diagnóstico y fuentes.</p>' +
         '<a class="externo" href="https://github.com/alexherreracantu-gif/PROCESO-DE-VENTA-/blob/claude/dreamy-euler-ow3wpq/docs/byd-guia-de-estudio.md" target="_blank" rel="noopener">Abrir la guía de estudio →</a></section>';
     }
-    return '<section class="titulo"><p class="eyebrow">Guía</p><h1>' + (guia === "mensajes" ? "Mensajes listos" : "BYD al 100%") + "</h1></section>" +
-      seg("guia", guia, [["mensajes", "Mensajes"], ["estudio", "Estudio"]]) + cuerpo;
+    var titulos = { mensajes: "Mensajes listos", estudio: "BYD al 100%", reglas: "Reglas MX" };
+    return '<section class="titulo"><p class="eyebrow">Guía</p><h1>' + titulos[guia] + "</h1></section>" +
+      seg("guia", guia, [["mensajes", "Mensajes"], ["estudio", "Estudio"], ["reglas", "Reglas MX"]]) + cuerpo;
   }
 
   var VISTAS = { hoy: vHoy, avance: vAvance, plan: vPlan, redes: vRedes, guia: vGuia };
@@ -1057,11 +1231,18 @@ details p { padding: 0 0 12px; font-size: 0.9rem; color: var(--muted); }
       return '<button type="button" class="tab" data-tab="' + x.id + '"' + (x.id === tab ? ' aria-current="page"' : "") + ">" + I[x.ico] + "<span>" + x.et + "</span></button>";
     }).join("");
   }
-  function render() {
+  var navTab = null, tAnim = null;
+  function render(vista) {
     var a = document.activeElement, k = a && a.dataset ? a.dataset.k : null;
+    if (vista && !quieto()) { $main.classList.add("anim"); clearTimeout(tAnim); tAnim = setTimeout(function () { $main.classList.remove("anim"); }, 900); }
     $main.innerHTML = VISTAS[tab]();
-    document.getElementById("nav-tabs").innerHTML = navHtml();
-    document.getElementById("nav-lado").innerHTML = navHtml();
+    if (navTab !== tab) {
+      navTab = tab;
+      document.getElementById("nav-tabs").innerHTML = navHtml();
+      document.getElementById("nav-lado").innerHTML = navHtml();
+    }
+    ultimoMarcado = null;
+    animar();
     if (k) {
       var el = $main.querySelector('[data-k="' + k + '"]');
       if (el && !el.disabled) el.focus({ preventScroll: true });
@@ -1071,7 +1252,7 @@ details p { padding: 0 0 12px; font-size: 0.9rem; color: var(--muted); }
     tab = t;
     try { localStorage.setItem(LLAVE + "-tab", t); } catch (e) {}
     try { history.replaceState(null, "", "#" + t); } catch (e) {}
-    render();
+    render(true);
     window.scrollTo(0, 0);
   }
   document.addEventListener("click", function (ev) {
@@ -1080,28 +1261,31 @@ details p { padding: 0 0 12px; font-size: 0.9rem; color: var(--muted); }
     var b = ev.target.closest("[data-act]");
     if (!b || b.disabled) return;
     var act = b.dataset.act;
+    var rc = b.getBoundingClientRect(), px = rc.left + rc.width / 2, py = rc.top + rc.height / 2;
     if (act === "mas" || act === "menos") {
-      var f = diaVista, c = contDe(f), k = b.dataset.c;
+      var f = diaVista, c = contDe(f), k = b.dataset.c, antes = logros(f), m = metasDia(f), previo = c[k];
       c[k] = Math.max(0, c[k] + (act === "mas" ? 1 : -1));
       S.cont[f] = c;
       cambio();
+      if (!celebrar(antes, logros(f), px, py) && m[k] && previo < m[k] && c[k] >= m[k]) { fiesta(30, px, py); toast("Meta de " + ({ conv: "conversaciones", citas: "citas", pruebas: "pruebas" })[k] + " cumplida."); }
     } else if (act === "dia") {
-      diaVista = clampF(sumar(diaVista, Number(b.dataset.d))); render();
+      diaVista = clampF(sumar(diaVista, Number(b.dataset.d))); render(true);
     } else if (act === "ir") {
       diaVista = clampF(b.dataset.f);
-      if (tab !== "hoy") irA("hoy"); else render();
+      if (tab !== "hoy") irA("hoy"); else render(true);
     } else if (act === "obj") {
       S.objetivo[b.dataset.mk] = Number(b.dataset.v); cambio();
     } else if (act === "ajuste") {
-      var mk = b.dataset.mk;
+      var mk = b.dataset.mk, antesA = logros(clampF(hoyMty()));
       S.ajuste[mk] = Math.max(0, (Number(S.ajuste[mk]) || 0) + Number(b.dataset.d)); cambio();
+      celebrar(antesA, logros(clampF(hoyMty())), px, py);
     } else if (act === "calmes") {
       var i = MESES.indexOf(mesCal) + Number(b.dataset.d);
       if (i >= 0 && i < MESES.length) { mesCal = MESES[i]; render(); }
     } else if (act === "seg") {
       var g = b.dataset.g, v = b.dataset.v;
-      if (g === "mes") { mesPlan = v; render(); }
-      else if (g === "guia") { guia = v; render(); }
+      if (g === "mes") { mesPlan = v; render(true); }
+      else if (g === "guia") { guia = v; render(true); }
       else if (g === "fecha") { S.cfg.fecha = v; cambio(); }
     } else if (act === "corte") {
       copiar(textoCorte());
@@ -1112,8 +1296,10 @@ details p { padding: 0 0 12px; font-size: 0.9rem; color: var(--muted); }
   document.addEventListener("change", function (ev) {
     var el = ev.target;
     if (el.matches && el.matches('input[type="checkbox"][data-id]')) {
-      if (el.checked) S.hechos[el.dataset.id] = true; else delete S.hechos[el.dataset.id];
+      var antesC = logros(diaVista);
+      if (el.checked) { S.hechos[el.dataset.id] = true; ultimoMarcado = el.dataset.id; } else delete S.hechos[el.dataset.id];
       cambio();
+      if (tab === "hoy") celebrar(antesC, logros(diaVista), innerWidth / 2, innerHeight / 2);
     } else if (el.dataset && el.dataset.cfg) {
       var n = Number(String(el.value).replace(/[^0-9]/g, ""));
       var k = el.dataset.cfg;
@@ -1171,7 +1357,7 @@ details p { padding: 0 0 12px; font-size: 0.9rem; color: var(--muted); }
     } catch (e) { respaldo(); }
   }
 
-  render();
+  render(true);
   ponerModo("conectando");
   conectar();
 })();

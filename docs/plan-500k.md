@@ -4,6 +4,20 @@
 
 > La app de este plan, con requerimientos diarios, está en `plan-500k.html` (publicada en https://claude.ai/artifact/QcKuhiRPysFmVrwarqPzFi). Estudia la marca con la [guía de estudio BYD](byd-guia-de-estudio.md), arma tus redes con la [guía de marca personal](marca-personal-redes.md) y lleva cada venta con [el proceso de venta](proceso-de-venta.md).
 
+## El método (lo que ya funcionó)
+
+Ningún método garantiza ventas; estos tienen evidencia o son reglas de tu Academia:
+
+1. **Contesta en menos de 5 minutos.** Harvard Business Review analizó 1.25 millones de prospectos. Contactar en la primera hora hizo casi 7 veces más probable una conversación con quien decide, contra esperar una hora más, y más de 60 veces más que esperar un día ([HBR, 2011](https://hbr.org/2011/03/the-short-life-of-online-sales-leads)).
+2. **Cada cliente vale por 250.** Joe Girard vendió 13,001 autos entre 1963 y 1978, con el récord Guinness de 1,425 en un año. Su sistema era contactar a cada cliente cada mes y pedirle referidos ([Wikipedia](https://en.wikipedia.org/wiki/Joe_Girard)).
+3. **Sin prueba de manejo casi no hay venta.** Cada cita termina en prueba.
+4. **Diagnóstico y un solo modelo.**
+5. **Vende lo que se vende en Cumbres.** En los 7 expedientes de ventas de la agencia que tienes en Drive (abril a septiembre de 2026), 6 fueron híbridos DM-i: 2 Song Pro, 2 KING y 2 Song Plus. El séptimo fue un Dolphin Mini. A nivel nacional, el Dolphin es el BYD más vendido y el Song Plus el segundo ([InformaBTL](https://www.informabtl.com/precio-del-byd-song-plus-2026-costo-del-segundo-auto-mas-popular-despues-del-byd-dolphin/)). Es una muestra chica: tómala como pista.
+6. **Junta tus ventas para cruzar escalones** (ver abajo).
+7. **Sé visible todos los días** en redes ([guía de marca personal](marca-personal-redes.md)).
+
+Y vende dentro de la ley: efectivo, CAT en publicidad, Profeco y datos personales están en [reglas de México](cumplimiento-mexico.md).
+
 ## Cómo te pagan
 
 El pago sube **para todas las ventas del mes** al cruzar cada escalón (montos aproximados):
