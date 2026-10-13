@@ -707,6 +707,24 @@ details p { padding: 0 0 12px; font-size: 0.9rem; color: var(--muted); }
     { id: "q9", t: "Tus comisiones pagan impuestos", p: "Son ingreso gravado. Pregunta si te retienen ISR y cuenta tus $500,000 ya con impuestos.", f: null }
   ];
 
+  var FLOTA_MSG = [
+    { t: "Empresa (LinkedIn, correo o WhatsApp)", cuando: "Primer contacto con Compras, Flotillas o Dirección.",
+      b: "Hola {nombre}, soy {yo}, asesor de flotillas en BYD Grupo TEC Monterrey. Ayudo a empresas a bajar su gasto de gasolina con autos eléctricos e híbridos; BYD ya trabaja en flotillas con empresas como Lala, Cemex y FEMSA. Con el kilometraje de sus unidades le calculo cuánto ahorraría al año. ¿Le parece una llamada de 15 minutos esta semana?" },
+    { t: "Mesa directiva de fraccionamiento", cuando: "Mesa directiva, asociación de colonos o administradora.",
+      b: "Hola {nombre}, soy {yo}, asesor BYD en Park Point Cumbres. Tengo dos propuestas para {fraccionamiento}: unidades eléctricas para los rondines de vigilancia, con muy bajo costo por kilómetro, y un Día BYD para los residentes con pruebas de manejo en la casa club. ¿Le mando la propuesta y la vemos 15 minutos con la mesa directiva?" },
+    { t: "Municipio (Adquisiciones)", cuando: "Siempre formal y por el procedimiento oficial.",
+      b: "Buen día, {nombre}. Soy {yo}, de BYD Grupo TEC (Automóviles Tecnológico). Quisiera presentar a la Dirección de Adquisiciones opciones de vehículos eléctricos e híbridos para las áreas que más kilómetros recorren, con el cálculo de ahorro de combustible para el municipio. ¿Cuál es el procedimiento para registrarnos en el padrón de proveedores y agendar una presentación?" },
+    { t: "Seguimiento con números", cuando: "Después del diagnóstico, con la calculadora llena.",
+      b: "Hola {nombre}, le comparto el cálculo con sus datos: con {N} unidades, el ahorro estimado es de ${ahorro} al año. ¿Lo revisamos el {día} a las {hora}? Si le sirve, llevo una unidad para que su equipo la maneje." }
+  ];
+  var FLOTA_PASOS = [
+    ["fl1", "Preguntarle a Jorge si las flotillas te cuentan para el escalón, quién autoriza el precio de flotilla y si puedes usar el papel membretado"],
+    ["fl2", "Lista de 30 prospectos: empresas con vendedores en la calle, constructoras, fraccionamientos de Cumbres y García, escuelas y municipios"],
+    ["fl3", "Primer contacto a 5 prospectos con los mensajes de abajo"],
+    ["fl4", "Primer diagnóstico: unidades, km por día, gasto de gasolina, dónde se estacionan y quién decide"],
+    ["fl5", "Llenar la calculadora con sus datos y mandar la primera propuesta en Word"]
+  ];
+
   /* ================= Estado ================= */
   var LLAVE = "plan18-parkpoint-v1";
   var CFG0 = { base: 12000, e1: 7, m1: 18000, e2: 13, m2: 22000, meta: 500000, fecha: "2026-12-31" };
@@ -770,6 +788,7 @@ details p { padding: 0 0 12px; font-size: 0.9rem; color: var(--muted); }
     ESTUDIO.forEach(function (e) { if (e.f === f) arr.push({ key: e.id, t: "Estudio: " + e.t, hora: "10:00" }); });
     var d = dow(f);
     if (f >= "2026-10-19" && d === 1) arr.push({ key: "g-" + f, t: "Grabar los videos de la semana (5 a 7) con el calendario de Redes", hora: "10:00" });
+    if (d === 3) arr.push({ key: "f-" + f, t: "Flotillas: 5 contactos nuevos (empresas, fraccionamientos o municipios) y 1 propuesta enviada. Guía → Flotillas", hora: "9:30" });
     if (f >= "2026-10-20" && (d === 2 || d === 4)) {
       var i = Math.floor(dif("2026-10-20", f) / 2) % LIVES.length;
       arr.push({ key: "l-" + f, t: "Live de 30 minutos: " + LIVES[i] + " (avísalo con el mensaje 11)", hora: "21:00" });
@@ -1186,6 +1205,31 @@ details p { padding: 0 0 12px; font-size: 0.9rem; color: var(--muted); }
             '<p class="msg-txt" id="msg-' + i + '">' + esc(textoMsg(m)) + "</p>" +
             '<button type="button" class="btn" data-act="copiar" data-i="' + i + '" data-k="copiar-' + i + '">' + I.copiar + "Copiar mensaje</button></section>";
         }).join("");
+    } else if (guia === "flotillas") {
+      var c = S.cfg;
+      cuerpo = '<section class="tarjeta"><div class="tar-cab"><h2>Una flotilla cruza tu escalón</h2></div>' +
+        '<div class="datos"><div class="dato"><span>Flotilla de ' + c.e1 + '</span><b>' + pesos(ganancia(c.e1)) + '</b></div>' +
+        '<div class="dato verde"><span>Flotilla de ' + c.e2 + "</span><b>" + pesos(ganancia(c.e2)) + "</b></div></div>" +
+        '<p class="cont-sub">Si la agencia te paga las flotillas igual que el piso: confírmalo con Jorge antes de la primera. BYD México vendió cerca del 14% de sus autos en flotillas el año pasado, y tu grupo ya hizo un programa de 3,000 taxis con BYD.</p></section>' +
+        '<section class="tarjeta"><div class="tar-cab"><h2>Arranque</h2><span class="chip">' + FLOTA_PASOS.filter(function (x) { return S.hechos[x[0]]; }).length + " de " + FLOTA_PASOS.length + '</span></div><div class="lista">' +
+        FLOTA_PASOS.map(function (x) { return itemHtml(x[0], x[1]); }).join("") + "</div>" +
+        '<p class="cont-sub">Cada miércoles en Hoy: 5 contactos nuevos y 1 propuesta enviada.</p></section>' +
+        '<section class="tarjeta"><div class="tar-cab"><h2>A quién ir</h2></div><ol class="metodo">' +
+        "<li><b>Empresas con vendedores o supervisores en la calle</b><span>KING DM-i y Song Pro. Decide Compras o Dirección. 1 a 3 meses.</span></li>" +
+        "<li><b>Constructoras y servicios</b><span>Shark. Decide Operaciones.</span></li>" +
+        "<li><b>Reparto en ciudad</b><span>Dolphin Mini, el de menor costo por kilómetro.</span></li>" +
+        "<li><b>Fraccionamientos y desarrolladoras de Cumbres y García</b><span>Vigilancia, mantenimiento y Día BYD para residentes.</span></li>" +
+        "<li><b>Escuelas, hospitales y universidades</b><span>Administración y mensajería.</span></li>" +
+        "<li><b>Municipios</b><span>Los más lentos (procedimiento formal), pero los más grandes. Proveedor es la agencia, inscrita en el padrón. Cero regalos o comisiones a servidores públicos.</span></li></ol></section>" +
+        '<section class="tarjeta"><div class="tar-cab"><h2>Lo que mandas</h2></div><ul class="no-hacer">' +
+        "<li>Propuesta en Word para empresa, municipio o fraccionamiento, con el precio de flotilla que autorice gerencia (carpeta propuestas del repositorio).</li>" +
+        "<li>Calculadora de ahorro en Excel con los datos del cliente. No trae comisiones: se puede mandar.</li>" +
+        "<li>Beneficio fiscal para empresas: deducción de hasta $250,000 por unidad (contra $175,000) o arrendamiento hasta $285 diarios (contra $200). Que lo confirme su contador.</li></ul></section>" +
+        FLOTA_MSG.map(function (m, i) {
+          return '<section class="tarjeta msg"><div class="tar-cab"><h2>' + m.t + '</h2></div><p class="cuando">' + m.cuando + "</p>" +
+            '<p class="msg-txt" id="fmsg-' + i + '">' + esc(textoMsg(m)) + "</p>" +
+            '<button type="button" class="btn" data-act="copiarf" data-i="' + i + '" data-k="copiarf-' + i + '">' + I.copiar + "Copiar mensaje</button></section>";
+        }).join("");
     } else if (guia === "reglas") {
       var cumplo = REGLAS.filter(function (r) { return S.hechos[r.id]; }).length;
       cuerpo = '<section class="tarjeta"><div class="tar-cab"><h2>Lo que pide la ley</h2><span class="chip ' + (cumplo === REGLAS.length ? "ok" : "") + '">' + cumplo + " de " + REGLAS.length + "</span></div>" +
@@ -1217,9 +1261,9 @@ details p { padding: 0 0 12px; font-size: 0.9rem; color: var(--muted); }
         '<section class="tarjeta"><div class="tar-cab"><h2>Guía completa</h2></div><p class="cont-sub">Historia de la marca, tecnología explicada, diagnóstico y fuentes.</p>' +
         '<a class="externo" href="https://github.com/alexherreracantu-gif/PROCESO-DE-VENTA-/blob/claude/dreamy-euler-ow3wpq/docs/byd-guia-de-estudio.md" target="_blank" rel="noopener">Abrir la guía de estudio →</a></section>';
     }
-    var titulos = { mensajes: "Mensajes listos", estudio: "BYD al 100%", reglas: "Reglas MX" };
+    var titulos = { mensajes: "Mensajes listos", estudio: "BYD al 100%", reglas: "Reglas MX", flotillas: "Flotillas" };
     return '<section class="titulo"><p class="eyebrow">Guía</p><h1>' + titulos[guia] + "</h1></section>" +
-      seg("guia", guia, [["mensajes", "Mensajes"], ["estudio", "Estudio"], ["reglas", "Reglas MX"]]) + cuerpo;
+      seg("guia", guia, [["mensajes", "Mensajes"], ["flotillas", "Flotillas"], ["estudio", "Estudio"], ["reglas", "Reglas"]]) + cuerpo;
   }
 
   var VISTAS = { hoy: vHoy, avance: vAvance, plan: vPlan, redes: vRedes, guia: vGuia };
@@ -1291,6 +1335,8 @@ details p { padding: 0 0 12px; font-size: 0.9rem; color: var(--muted); }
       copiar(textoCorte());
     } else if (act === "copiar") {
       copiar(textoMsg(MENSAJES[Number(b.dataset.i)]), document.getElementById("msg-" + b.dataset.i));
+    } else if (act === "copiarf") {
+      copiar(textoMsg(FLOTA_MSG[Number(b.dataset.i)]), document.getElementById("fmsg-" + b.dataset.i));
     }
   });
   document.addEventListener("change", function (ev) {

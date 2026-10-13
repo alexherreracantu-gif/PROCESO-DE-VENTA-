@@ -66,6 +66,8 @@ La sección **Aprende** tiene las reglas de oro, los 11 pasos explicados y tus *
 | `docs/plan-500k.md` | Plan para juntar $500,000 en comisiones de octubre a diciembre de 2026: escalones de pago, ruta 7-13-7, metas por mes, Buen Fin, aguinaldo y día de piso |
 | `docs/marca-personal-redes.md` | Marca personal en redes: perfil, semana de contenido, 20 ideas de video, lives y cuidados |
 | `docs/cumplimiento-mexico.md` | Reglas de México para vender autos: límite de efectivo (LFPIORPI), CAT en publicidad de crédito, Profeco y NOM-160, datos personales, bono por escrito y comisiones |
+| `docs/flotillas.md` | Vender flotillas a empresas, fraccionamientos y municipios: a quién ir, cómo entrar, reglas de compras públicas, mensajes y objeciones |
+| `propuestas/` | Propuestas en Word para empresa, municipio y fraccionamiento (lo amarillo se llena) y calculadora de ahorro de flotilla en Excel |
 | `plan-500k.html` | El plan como app para iPhone con el estilo del portal: meta diaria que se ajusta a tu escalón, comisiones hacia $500k, plan mes por mes, redes, mensajes y estudio. Publicada en https://claude.ai/artifact/QcKuhiRPysFmVrwarqPzFi (lo que marcas se guarda en tu cuenta de Claude) |
 
 ## Dónde abrirla
