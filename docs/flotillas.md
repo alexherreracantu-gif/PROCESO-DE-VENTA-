@@ -2,6 +2,8 @@
 
 Una sola flotilla puede valer más que un mes de piso. Esta guía dice a quién ir, cómo entrar, qué mandar y qué cuidar. Las propuestas listas para llenar y la calculadora de ahorro están en [`propuestas/`](../propuestas/). En la app, ve a **Guía → Flotillas**.
 
+**Landing:** `/flotillas` en tu portal (con `?a=tu-usuario` te llegan a ti). Calcula el ahorro, guarda el prospecto en el CRM y, si configuras WhatsApp Business, le manda al cliente un WhatsApp automático con imagen y a ti un aviso. Plan completo en [plan-landing-automatizacion.md](plan-landing-automatizacion.md).
+
 ## Por qué vale la pena
 
 Con tus escalones, una flotilla de 7 unidades son 7 × $18,000 = **$126,000**, y una de 13 son 13 × $22,000 = **$286,000**.
