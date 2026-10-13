@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { BatteryCharging, Building2, Calculator, Check, ChevronRight, Landmark, MessageCircle, Receipt, Trees, House } from "lucide-react";
+import { BatteryCharging, Building2, CalendarCheck, Calculator, Check, ChevronRight, Landmark, MessageCircle, Receipt, Trees, House } from "lucide-react";
 import { Boton, cx } from "@/components/ui";
 import { Logo } from "@/components/marca";
 import { ahorroFlotilla, MODELOS_POR_TIPO, resumenFlotilla, SUPUESTOS, TIPOS_FLOTILLA, type TipoFlotilla } from "@/lib/dominio/flotillas";
@@ -19,8 +19,8 @@ const TEXTO_TIPO: Record<TipoFlotilla, string> = {
   Desarrolladora: "Una promoción que vende casas («compra tu casa y estrena BYD») y la flotilla de tu equipo de ventas y obra.",
 };
 
-export function LandingFlotillas({ modelos, asesor, agencia, vigencia, avisoPrivacidad }: {
-  modelos: ModeloFlotilla[]; asesor: Asesor | null; agencia: { nombre: string; ciudad: string }; vigencia: string; avisoPrivacidad: string | null;
+export function LandingFlotillas({ modelos, asesor, agencia, vigencia, avisoPrivacidad, agenda }: {
+  modelos: ModeloFlotilla[]; asesor: Asesor | null; agencia: { nombre: string; ciudad: string }; vigencia: string; avisoPrivacidad: string | null; agenda: string | null;
 }) {
   const [tipo, setTipo] = useState<TipoFlotilla>("Empresa");
   const [unidades, setUnidades] = useState(10);
@@ -155,7 +155,7 @@ export function LandingFlotillas({ modelos, asesor, agencia, vigencia, avisoPriv
         {/* Formulario */}
         <section id="propuesta" className="mx-auto w-full max-w-[560px] scroll-mt-20">
           <FormFlotilla tipo={tipo} setTipo={setTipo} unidades={unidades} kmDia={kmDia} asesor={asesor} avisoPrivacidad={avisoPrivacidad}
-            foto={recomendados[0]?.foto ?? null} />
+            foto={recomendados[0]?.foto ?? null} agenda={agenda} />
         </section>
 
         <footer className="grid gap-2 text-center text-[0.72rem] leading-relaxed text-muted">
@@ -190,8 +190,8 @@ function Resultado({ titulo, sub, anual, unidadMes, destacado }: { titulo: strin
   );
 }
 
-function FormFlotilla({ tipo, setTipo, unidades, kmDia, asesor, avisoPrivacidad, foto }: {
-  tipo: TipoFlotilla; setTipo: (t: TipoFlotilla) => void; unidades: number; kmDia: number; asesor: Asesor | null; avisoPrivacidad: string | null; foto: string | null;
+function FormFlotilla({ tipo, setTipo, unidades, kmDia, asesor, avisoPrivacidad, foto, agenda }: {
+  tipo: TipoFlotilla; setTipo: (t: TipoFlotilla) => void; unidades: number; kmDia: number; asesor: Asesor | null; avisoPrivacidad: string | null; foto: string | null; agenda: string | null;
 }) {
   const [cargada] = useState(() => Date.now());
   const [f, setF] = useState({ nombre: "", organizacion: "", telefono: "", correo: "", aceptaWhatsapp: false, sitio_web: "" });
@@ -221,6 +221,10 @@ function FormFlotilla({ tipo, setTipo, unidades, kmDia, asesor, avisoPrivacidad,
         {listo.telefono ? (
           <a href={enlaceWhatsApp(listo.telefono, resumen.whatsapp)} target="_blank" rel="noopener noreferrer"
             className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-wa px-5 font-semibold text-white hover:brightness-110"><MessageCircle className="size-5" />Escribir ahora por WhatsApp</a>
+        ) : null}
+        {agenda ? (
+          <a href={agenda} target="_blank" rel="noopener noreferrer"
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-line px-5 font-semibold hover:bg-surface-2"><CalendarCheck className="size-5 text-brand" />Agendar prueba de manejo</a>
         ) : null}
       </div>
     );

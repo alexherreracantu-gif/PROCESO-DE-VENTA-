@@ -52,7 +52,14 @@ export async function enviarFlotilla(e: z.input<typeof Entrada>): Promise<{ ok: 
     const { data } = await supabaseAdmin().from("perfiles").select("id").eq("agencia_id", s.agencia.id).eq("usuario", d.asesor.toLowerCase()).eq("activo", true).maybeSingle();
     asesorId = data?.id ?? null;
   }
-  const res = await registrarLead(lead, { agenciaId: s.agencia.id, asesorId });
+  const datos = {
+    flotilla: {
+      tipo: d.tipo, organizacion: d.organizacion, unidades: d.unidades, kmDia: d.kmDia, correo: d.correo || null,
+      ahorroElectrico: Math.round(ahorro.electrico.ahorroAnual), ahorroHibrido: Math.round(ahorro.hibrido.ahorroAnual),
+      aceptaWhatsapp: d.aceptaWhatsapp, fecha: new Date().toISOString(),
+    },
+  };
+  const res = await registrarLead(lead, { agenciaId: s.agencia.id, asesorId, datos });
   if (!res.ok) return { ok: false, error: res.status === 429 ? res.error : "No se pudo enviar. Escríbenos por WhatsApp." };
   const { data: a } = await supabaseAdmin().from("perfiles").select("nombre_corto, telefono").eq("id", res.asesor_id).maybeSingle();
 

@@ -10,7 +10,7 @@ export type ResultadoLead = { ok: true; id: string; asesor_id: string; duplicado
  * al asesor indicado si viene uno, o por turno al que menos prospectos lleva hoy.
  * Si el teléfono ya llegó en los últimos 30 días, se suma la nota al mismo prospecto.
  */
-export async function registrarLead(lead: LeadEntrante, opciones: { agenciaId?: string | null; asesorId?: string | null } = {}): Promise<ResultadoLead> {
+export async function registrarLead(lead: LeadEntrante, opciones: { agenciaId?: string | null; asesorId?: string | null; datos?: Record<string, unknown> } = {}): Promise<ResultadoLead> {
   const admin = supabaseAdmin();
   const agenciaId = opciones.agenciaId ?? (await admin.from("agencias").select("id").order("created_at").limit(1).single()).data?.id;
   if (!agenciaId) return { ok: false, error: "No hay agencia configurada.", status: 500 };
@@ -22,7 +22,10 @@ export async function registrarLead(lead: LeadEntrante, opciones: { agenciaId?: 
   const hace30 = new Date(Date.now() - 30 * 864e5).toISOString();
   const { data: previo } = await admin.from("prospectos").select("id, asesor_id, notas").eq("agencia_id", agenciaId).eq("telefono", lead.telefono).gte("created_at", hace30).limit(1).maybeSingle();
   if (previo) {
-    await admin.from("prospectos").update({ notas: [previo.notas, `— Volvió a escribir (${hoy()}) —`, lead.notas].filter(Boolean).join("\n").slice(0, 2000), fecha_siguiente: hoy(), calor: "alta" }).eq("id", previo.id);
+    await admin.from("prospectos").update({
+      notas: [previo.notas, `— Volvió a escribir (${hoy()}) —`, lead.notas].filter(Boolean).join("\n").slice(0, 2000), fecha_siguiente: hoy(), calor: "alta",
+      ...(opciones.datos ? { datos: opciones.datos } : {}),
+    }).eq("id", previo.id);
     return { ok: true, id: previo.id, asesor_id: previo.asesor_id, duplicado: true };
   }
 
@@ -47,6 +50,7 @@ export async function registrarLead(lead: LeadEntrante, opciones: { agenciaId?: 
     agencia_id: agenciaId, asesor_id: asesor, nombre: lead.nombre, telefono: lead.telefono, modelo_id: modelo?.id ?? null,
     origen: lead.origen, calor: lead.calor, etapa: "nuevo", fecha_siguiente: hoy(), siguiente_accion: "Contactar por WhatsApp en menos de 5 minutos",
     notas: [lead.modelo && !modelo ? `Modelo que pidió: ${lead.modelo}` : null, lead.notas].filter(Boolean).join("\n") || null,
+    ...(opciones.datos ? { datos: opciones.datos } : {}),
   }).select("id").single();
   if (error || !data) return { ok: false, error: "No se pudo guardar: " + (error?.message ?? ""), status: 500 };
   return { ok: true, id: data.id, asesor_id: asesor };

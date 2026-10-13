@@ -152,6 +152,7 @@ function CuerpoProspecto({ prospecto, ctx, modelos, alCerrar, alConvertir }: { p
         {f.telefono.replace(/\D/g, "").length >= 10 ? <BotonEnlace variante="whatsapp" externo href={enlaceWhatsApp(f.telefono, `Hola ${f.nombre.split(" ")[0]}, soy ${ctx.yo.nombre.split(" ")[0]} de BYD Park Point. `)}>WhatsApp</BotonEnlace> : null}
         {prospecto && !prospecto.venta_id ? <Boton variante="secundario" icono={CarFront} disabled={ocupado} onClick={() => guardar(() => alConvertir({ ...prospecto, ...entrada(), enganche: f.enganche ? Number(f.enganche) : null } as Prospecto))}>Convertir en venta</Boton> : null}
         {prospecto?.venta_id ? <BotonEnlace variante="secundario" href={`/ventas/${prospecto.venta_id}`}>Ver venta</BotonEnlace> : null}
+        {prospecto && (prospecto.origen === "Landing flotillas" || prospecto.origen === "Flotilla") ? <BotonEnlace variante="secundario" href={`/propuesta/${prospecto.id}`}>Propuesta de flotilla</BotonEnlace> : null}
         <span className="flex-1" />
         {prospecto ? <Boton variante="peligro" icono={Trash2} onClick={() => setBorrar(true)}>Borrar</Boton> : null}
       </div>

@@ -44,6 +44,8 @@ export type Prospecto = {
   id: string; asesor_id: string; nombre: string; telefono: string | null; modelo_id: string | null; etapa: Etapa;
   origen: string; calor: Calor; siguiente_accion: string | null; fecha_siguiente: string | null; enganche: number | null;
   toma_a_cuenta: string | null; notas: string | null; venta_id: string | null; created_at: string; updated_at: string;
+  /** Datos estructurados (p. ej. los de la landing de flotillas). */
+  datos?: Record<string, unknown> | null;
 };
 export type Corte = { fecha: string; usuario_id: string; valores: Record<string, number>; updated_at: string };
 export type Metas = { mes: string; unidades: Record<string, number>; productos: Record<string, number>; guardadas: boolean };

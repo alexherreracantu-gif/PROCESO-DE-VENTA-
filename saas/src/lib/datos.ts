@@ -121,7 +121,7 @@ export async function ranking(s: Sesion, mes: string): Promise<FilaRanking[]> {
 }
 
 export async function prospectos(s: Sesion, asesor?: string | null): Promise<Prospecto[]> {
-  let q = s.sb.from("prospectos").select("id, asesor_id, nombre, telefono, modelo_id, etapa, origen, calor, siguiente_accion, fecha_siguiente, enganche, toma_a_cuenta, notas, venta_id, created_at, updated_at").order("fecha_siguiente", { ascending: true, nullsFirst: false }).limit(500);
+  let q = s.sb.from("prospectos").select("id, asesor_id, nombre, telefono, modelo_id, etapa, origen, calor, siguiente_accion, fecha_siguiente, enganche, toma_a_cuenta, notas, venta_id, datos, created_at, updated_at").order("fecha_siguiente", { ascending: true, nullsFirst: false }).limit(500);
   if (asesor) q = q.eq("asesor_id", asesor);
   return revisar<Prospecto[]>(await q, "los prospectos").map((p) => ({ ...p, enganche: p.enganche == null ? null : Number(p.enganche) }));
 }

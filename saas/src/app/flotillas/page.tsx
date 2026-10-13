@@ -45,6 +45,7 @@ export default async function Flotillas(props: PageProps<"/flotillas">) {
       agencia={{ nombre: s.agencia.nombre, ciudad: s.agencia.ciudad ?? "Monterrey, N.L." }}
       vigencia={vigencia(hoy())}
       avisoPrivacidad={process.env.AVISO_PRIVACIDAD_URL || null}
+      agenda={process.env.CALENDLY_URL || null}
     />
   );
 }

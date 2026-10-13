@@ -92,6 +92,7 @@ Se guardan en **Supabase Storage**, en un bucket privado `expedientes` que el po
 | `ANTHROPIC_API_KEY` u `OPENAI_API_KEY` | Anthropic u OpenAI (opcional) | Agente IA (Claude o ChatGPT) |
 | `OPENAI_MODEL` | Tú (opcional) | Modelo de ChatGPT; por omisión `gpt-4o-mini` |
 | `AVISO_PRIVACIDAD_URL` | La agencia (opcional) | Link al aviso de privacidad que muestra la landing de flotillas |
+| `CALENDLY_URL` | Calendly (opcional) | Botón "Agendar prueba de manejo" en la pantalla de gracias de la landing de flotillas |
 | `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID` | Meta, WhatsApp Business Platform (opcional) | Mensajes automáticos de la landing de flotillas |
 | `WHATSAPP_PLANTILLA_FLOTILLA`, `WHATSAPP_PLANTILLA_ASESOR` | WhatsApp Manager (opcional) | Nombres de las plantillas aprobadas (ver abajo) |
 | `WHATSAPP_IDIOMA`, `WHATSAPP_API_VERSION`, `SITIO_URL` | Tú (opcional) | Idioma de las plantillas (`es_MX`), versión de la API de Meta (`v23.0`) y dominio para las imágenes |
@@ -116,6 +117,13 @@ Cada prospecto que llega se guarda en el CRM como **Nuevo**, con siguiente acci�
 - formulario que entra al CRM como **Landing flotillas**. Con 5 unidades o más entra como prospecto caliente.
 
 Con `?a=<usuario>` el prospecto le llega a ese asesor; sin él, se reparte por turno.
+
+**Propuesta lista para mandar.** Cada prospecto de flotilla tiene en el CRM el botón **Propuesta de flotilla**. Abre `/propuesta/<id>` con:
+- los datos que el cliente dejó en la landing;
+- los modelos recomendados con precio público;
+- el ahorro estimado y el beneficio fiscal, o la nota de contratación si es municipio.
+
+El asesor ajusta unidades, modelo y precio de flotilla autorizado, y la guarda como PDF desde el navegador. Cada asesor solo abre sus prospectos (permisos por fila); dirección abre todos. Los datos de la landing se guardan en la columna `datos` de `prospectos`.
 
 **Mensajes automáticos (opcional).** Si el cliente marca "Quiero recibir la propuesta por WhatsApp" y están las variables de WhatsApp, al enviar el formulario:
 1. Al cliente le llega en automático una plantilla con la foto del modelo recomendado y su ahorro estimado.
