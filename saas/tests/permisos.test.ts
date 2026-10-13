@@ -262,6 +262,28 @@ d("permisos por rol (RLS)", () => {
       expect(String(e)).toMatch(/permission denied/);
     }));
 
+  it("el historial de etapas se llena solo y respeta los permisos de prospectos", () =>
+    escenario(async (tx, x) => {
+      await como(tx, x.omar);
+      const [p] = await tx`insert into public.prospectos (asesor_id, nombre) values (${x.omar}, 'Prospecto de Omar') returning id`;
+      await tx`update public.prospectos set notas = 'sin cambio de etapa' where id = ${p.id}`;
+      await tx`update public.prospectos set etapa = 'cita' where id = ${p.id}`;
+      await tx`update public.prospectos set etapa = 'cotizado' where id = ${p.id}`;
+      expect(await tx`select de, a from public.prospecto_etapas where prospecto_id = ${p.id} order by id`).toEqual([
+        { de: null, a: "nuevo" }, { de: "nuevo", a: "cita" }, { de: "cita", a: "cotizado" },
+      ]);
+      const e = await tx.savepoint((sp) => sp`insert into public.prospecto_etapas (agencia_id, prospecto_id, a) values (${x.agA}, ${p.id}, 'entregado')`).catch((err) => err);
+      expect(String(e)).toMatch(/permission denied/);
+      const b = await tx.savepoint((sp) => sp`delete from public.prospecto_etapas where prospecto_id = ${p.id}`).catch((err) => err);
+      expect(String(b)).toMatch(/permission denied/);
+      await como(tx, x.mariana);
+      expect(await tx`select 1 from public.prospecto_etapas where prospecto_id = ${p.id}`).toHaveLength(0);
+      await como(tx, x.jorge);
+      expect(await tx`select 1 from public.prospecto_etapas where prospecto_id = ${p.id}`).toHaveLength(3);
+      await como(tx, x.ajeno);
+      expect(await tx`select 1 from public.prospecto_etapas where prospecto_id = ${p.id}`).toHaveLength(0);
+    }));
+
   it("los anuncios oficiales: dirección los sube, el equipo los ve, nadie de otra agencia", () =>
     escenario(async (tx, x) => {
       const img = "A".repeat(200);

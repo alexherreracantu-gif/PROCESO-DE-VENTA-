@@ -28,6 +28,7 @@ Identidad **BYD Grupo TEC** en colores claros: fondo blanco, barra lateral blanc
 | **Objetivos** | Meta de unidades por vendedor y meta de penetración por producto, por mes. Dirección las edita; el equipo ve su avance. |
 | **Corte de piso** | Contadores del día (clientes nuevos, citas, demos, solicitudes…) que se guardan solos; texto listo para WhatsApp. Dirección ve el corte de todos. |
 | **Prospectos (CRM)** | Tablero de Nuevo a Referidor con siguiente acción y fecha; avisa los vencidos; **Convertir en venta** con un clic. Recibe prospectos automáticos de la landing y de Meta, repartidos por turno. |
+| **Reporte semanal** | Cada lunes, por correo (y WhatsApp opcional): nuevos → contactados → citas → propuestas → cierres de la semana pasada contra la anterior, flotillas aparte, unidades del mes contra los escalones de 7 y 13, prospectos sin contactar y un foco para la semana. Dirección recibe el de la agencia con cada asesor. |
 | **Fotos de modelos** | 4 fotos por modelo (3 exterior, 1 interior). Dirección las sube desde el celular o la compu (se comprimen solas); cualquier asesor toca **Enviar al cliente** y en el celular se abre compartir con las 4 fotos (WhatsApp); en la compu se descargan. También desde el cotizador. |
 | **Generador de anuncios** | Anuncios con el estilo de BYD Grupo TEC (estilos Bono, Mensualidad y Centrado; formatos 1:1, 4:5 y 9:16) con la oferta del mes del catálogo, mensualidad y tasa del cotizador Banorte, foto del modelo, nombre y WhatsApp del asesor y letra chica automática (precio con IVA, condiciones del bono y de la mensualidad, vigencia). Descargar, compartir y textos listos para Facebook, Instagram, Meta Ads y WhatsApp. |
 | **Anuncios oficiales** | Galería con las piezas de la campaña del mes (las que manda mercadotecnia): se abren en grande, se descargan o se comparten por WhatsApp de un clic. Dirección sube las nuevas cada mes. El generador usa las cifras oficiales de la campaña (mensualidad desde, tasa desde, enganche desde y autonomía) que se capturan por modelo en Catálogo y precios, con el estilo "Campaña" igual a las piezas oficiales. |
@@ -76,6 +77,42 @@ Cada mañana (7:00 Monterrey) el portal manda a cada quien sus pendientes: entre
 
 Sin dominio propio, Resend solo entrega al correo con el que abriste la cuenta. Para mandar a todo el equipo, verifica un dominio en Resend y agrega `RESUMEN_REMITENTE` (ej. `Park Point <avisos@tudominio.com>`).
 
+### Reporte semanal (opcional)
+
+Cada lunes a las 7:30 (Monterrey) llega el embudo de la semana pasada, de lunes a domingo:
+
+| Paso | Qué cuenta |
+|---|---|
+| Prospectos nuevos | Los que entraron al CRM (landing, Meta, cotizador o a mano) |
+| Contactados | Los que pasaron a Contactado o más adelante |
+| Citas | Los que llegaron a Cita o Prueba de manejo |
+| Propuestas | Los que llegaron a Cotizado (la propuesta de flotilla o la cotización ya se mandó) |
+| Cierres | Los que llegaron a Apartado o Entregado |
+
+Cada número se compara contra la semana anterior (▲▼). El correo también trae:
+- **Flotillas:** el mismo embudo solo con prospectos de "Landing flotillas" o "Flotilla", y las unidades potenciales de los nuevos.
+- **Tu mes:** unidades vendidas y cuántas faltan para el escalón de 7 y de 13.
+- **Sin contactar:** prospectos que llevan más de un día en Nuevo.
+- **Foco de esta semana:** una sola acción, según dónde se atora el embudo.
+- **Dirección:** el embudo de toda la agencia y una tabla con cada asesor.
+
+Se cuenta con el historial de etapas (`prospecto_etapas`), que se llena solo cada vez que un prospecto cambia de etapa en el CRM. Si nadie mueve al prospecto en el portal, no aparece en el reporte. A un asesor sin movimiento en dos semanas, sin pendientes y sin ventas no se le manda.
+
+Usa las mismas `RESEND_API_KEY` y `CRON_SECRET` del resumen diario. Por WhatsApp es opcional:
+1. Crea en WhatsApp Manager la plantilla **Reporte semanal**: categoría Utilidad, idioma español (México), sin imagen.
+   - Cuerpo: "Hola {{1}}, este es tu reporte de la semana del {{2}}. Prospectos nuevos: {{3}}. Contactados: {{4}}. Citas: {{5}}. Propuestas: {{6}}. Cierres: {{7}}. Unidades del mes: {{8}}. Foco de esta semana: {{9}} El detalle está en tu correo y en el portal."
+   - Pie: "Reporte interno Park Point. Para dejar de recibirlo, avisa a tu gerente."
+2. Pon su nombre en `WHATSAPP_PLANTILLA_REPORTE`.
+3. Pon en `REPORTE_WHATSAPP` los usuarios que lo pidieron, separados por coma (ej. `alex,jorge`). Les llega al teléfono de su perfil. Para dar de baja a alguien, quítalo de la lista.
+
+Para probarlo sin esperar al lunes, usa tu `CRON_SECRET`:
+```bash
+curl -H "Authorization: Bearer $CRON_SECRET" "https://TU-PORTAL.vercel.app/api/cron/reporte-semanal?simular=1"
+```
+- `simular=1` regresa los números sin mandar nada.
+- `para=<usuario>` lo manda solo a esa persona.
+- `fecha=AAAA-MM-DD` reporta la semana anterior a esa fecha.
+
 ### Archivos del expediente
 
 Se guardan en **Supabase Storage**, en un bucket privado `expedientes` que el portal crea solo la primera vez que alguien sube un archivo (no hay que configurar nada). Nadie entra directo al bucket: el portal revisa permisos y firma URLs de 2 minutos para subir o abrir cada archivo. El plan gratis incluye 1 GB; para ahorrar espacio, lo que ya está en Google Drive se puede **enlazar** en lugar de subirlo. Límite por archivo: 25 MB.
@@ -95,6 +132,8 @@ Se guardan en **Supabase Storage**, en un bucket privado `expedientes` que el po
 | `CALENDLY_URL` | Calendly (opcional) | Botón "Agendar prueba de manejo" en la pantalla de gracias de la landing de flotillas |
 | `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID` | Meta, WhatsApp Business Platform (opcional) | Mensajes automáticos de la landing de flotillas |
 | `WHATSAPP_PLANTILLA_FLOTILLA`, `WHATSAPP_PLANTILLA_ASESOR` | WhatsApp Manager (opcional) | Nombres de las plantillas aprobadas (ver abajo) |
+| `RESEND_API_KEY`, `CRON_SECRET`, `RESUMEN_REMITENTE` | Resend y tú (opcional) | Resumen diario y reporte semanal por correo |
+| `WHATSAPP_PLANTILLA_REPORTE`, `REPORTE_WHATSAPP` | WhatsApp Manager y tú (opcional) | Reporte semanal por WhatsApp y a qué usuarios les llega |
 | `WHATSAPP_IDIOMA`, `WHATSAPP_API_VERSION`, `SITIO_URL` | Tú (opcional) | Idioma de las plantillas (`es_MX`), versión de la API de Meta (`v23.0`) y dominio para las imágenes |
 
 ### Sin la integración de Vercel (alternativa)
