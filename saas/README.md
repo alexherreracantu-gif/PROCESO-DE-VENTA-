@@ -32,7 +32,7 @@ Identidad **BYD Grupo TEC** en colores claros: fondo blanco, barra lateral blanc
 | **Fotos de modelos** | 4 fotos por modelo (3 exterior, 1 interior). Dirección las sube desde el celular o la compu (se comprimen solas); cualquier asesor toca **Enviar al cliente** y en el celular se abre compartir con las 4 fotos (WhatsApp); en la compu se descargan. También desde el cotizador. |
 | **Generador de anuncios** | Anuncios con el estilo de BYD Grupo TEC (estilos Bono, Mensualidad y Centrado; formatos 1:1, 4:5 y 9:16) con la oferta del mes del catálogo, mensualidad y tasa del cotizador Banorte, foto del modelo, nombre y WhatsApp del asesor y letra chica automática (precio con IVA, condiciones del bono y de la mensualidad, vigencia). Descargar, compartir y textos listos para Facebook, Instagram, Meta Ads y WhatsApp. |
 | **Anuncios oficiales** | Galería con las piezas de la campaña del mes (las que manda mercadotecnia): se abren en grande, se descargan o se comparten por WhatsApp de un clic. Dirección sube las nuevas cada mes. El generador usa las cifras oficiales de la campaña (mensualidad desde, tasa desde, enganche desde y autonomía) que se capturan por modelo en Catálogo y precios, con el estilo "Campaña" igual a las piezas oficiales. |
-| **Landing de flotillas** (`/flotillas`) | Página pública para empresas, fraccionamientos, municipios y desarrolladoras: calculadora de ahorro contra gasolina, modelos por uso y formulario que entra al CRM como "Landing flotillas". Con `?a=<usuario>` le llega a ese asesor. Opcional: WhatsApp automático con imagen al cliente y aviso al asesor (ver "Landing de flotillas y WhatsApp automático"). |
+| **Landing de flotillas** (`/flotillas`) | Página pública para empresas, fraccionamientos, municipios y desarrolladoras: calculadora de ahorro contra gasolina, modelos por uso y formulario que entra al CRM como "Landing flotillas". Con `?a=<usuario>` le llega a ese asesor. Opcional: WhatsApp automático con imagen al cliente, aviso al asesor y seguimiento los días 1, 3, 7 y 14 que se detiene si el cliente contesta o pide BAJA (ver "Landing de flotillas y WhatsApp automático"). |
 | **Cotizador para clientes** (`/cotiza`) | Página pública, sin contraseña, para compartir en redes, estados y anuncios: el cliente elige su BYD, mueve enganche y plazo, ve su mensualidad Banorte con el bono del mes y deja su nombre y WhatsApp. Llega como prospecto "Cotizador web" al CRM. Con `?a=<usuario>` (botón "Copiar mi link" en el Cotizador) la cotización le llega a ese asesor; sin él, se reparte por turno. Toma precios, bonos y campaña del catálogo, así que se actualiza solo cada mes. |
 | **Cotizador** | Herramienta interna en 3 pasos (vehículo y cliente → enganche y extras → resumen y Banorte), con fórmulas Banorte Plan Tradicional validadas al centavo: responsable, enganche total con bono o presupuesto a la firma, convenio automático o elegido, plazos de 12 a 72 meses, Wallbox, accesorios, Cerocible, seguro de llantas y garantía financiados, seguros del primer año. **Cotizar y verificar en Banorte** abre el simulador oficial y la extensión de Chrome *Conector Banorte* (carpeta `conector-banorte/`, se descarga desde el mismo Cotizador) lo llena, calcula y regresa mensualidad, comisión, plazos y seguros oficiales; la cotización queda "Verificada con Banorte" (con captura manual de respaldo). Después de cambiar la extensión: `npm run conector` para regenerar `public/conector-banorte.zip`. Resume "de la bolsa del cliente a la firma", manda WhatsApp, genera PDF y guarda la cotización en el CRM. |
 | **Guiones**, **Academia BYD**, **Agente IA** | Guiones para copiar, 7 módulos con quiz y examen final (avance por persona) y un asistente con Claude que conoce el catálogo del mes y tus seguimientos. |
@@ -133,6 +133,8 @@ Se guardan en **Supabase Storage**, en un bucket privado `expedientes` que el po
 | `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID` | Meta, WhatsApp Business Platform (opcional) | Mensajes automáticos de la landing de flotillas |
 | `WHATSAPP_PLANTILLA_FLOTILLA`, `WHATSAPP_PLANTILLA_ASESOR` | WhatsApp Manager (opcional) | Nombres de las plantillas aprobadas (ver abajo) |
 | `RESEND_API_KEY`, `CRON_SECRET`, `RESUMEN_REMITENTE` | Resend y tú (opcional) | Resumen diario y reporte semanal por correo |
+| `WHATSAPP_SEGUIMIENTO`, `WHATSAPP_PLANTILLA_RESPUESTA` | WhatsApp Manager (opcional) | Las 4 plantillas del seguimiento de flotillas y el aviso al asesor cuando el cliente contesta |
+| `WHATSAPP_VERIFY_TOKEN`, `WHATSAPP_APP_SECRET` | Tú y Meta (opcional) | Webhook de WhatsApp: respuestas, BAJA y estados de entrega |
 | `WHATSAPP_PLANTILLA_REPORTE`, `REPORTE_WHATSAPP` | WhatsApp Manager y tú (opcional) | Reporte semanal por WhatsApp y a qué usuarios les llega |
 | `WHATSAPP_IDIOMA`, `WHATSAPP_API_VERSION`, `SITIO_URL` | Tú (opcional) | Idioma de las plantillas (`es_MX`), versión de la API de Meta (`v23.0`) y dominio para las imágenes |
 
@@ -173,11 +175,40 @@ Los envíos salen después de responder, así que el cliente no espera. Sin las 
 Para activarlo:
 1. En [Meta Business](https://business.facebook.com), agrega un número a WhatsApp Business Platform y copia el **Phone number ID** y un **token permanente** de usuario del sistema. Ponlos en `WHATSAPP_PHONE_ID` y `WHATSAPP_TOKEN`.
 2. En **WhatsApp Manager → Plantillas**, crea y espera la aprobación de las dos plantillas siguientes. Luego pon sus nombres en `WHATSAPP_PLANTILLA_FLOTILLA` y `WHATSAPP_PLANTILLA_ASESOR`.
-   - **Cliente**, categoría Marketing, encabezado de imagen, idioma español (México). Cuerpo: "Hola {{1}}, gracias por tu interés en una flotilla BYD de {{2}} unidades. Con los datos que nos diste, el ahorro estimado es de hasta {{3}} al año. {{4}}, tu asesor de flotillas, te escribe hoy para preparar tu propuesta. Responde a este mensaje si quieres agendar una prueba de manejo para tu equipo." Pie: "Ahorro estimado; no es una oferta."
+   - **Cliente**, categoría Marketing, encabezado de imagen, idioma español (México). Cuerpo: "Hola {{1}}, gracias por tu interés en una flotilla BYD de {{2}} unidades. Con los datos que nos diste, el ahorro estimado es de hasta {{3}} al año. {{4}}, tu asesor de flotillas, te escribe hoy para preparar tu propuesta. Responde a este mensaje si quieres agendar una prueba de manejo para tu equipo." Pie: "Ahorro estimado. Responde BAJA para no recibir más."
    - **Asesor**, categoría Utilidad, sin imagen. Cuerpo: "Nuevo prospecto de flotilla: {{1}}, {{2}}, {{3}} unidades. WhatsApp: {{4}}. Contáctalo en menos de 5 minutos."
 3. Vuelve a desplegar. Si un envío falla, el error aparece en los logs de Vercel y el prospecto ya quedó guardado en el CRM.
 
 WhatsApp solo deja escribir primero con plantillas aprobadas y a quien aceptó recibir mensajes: por eso la casilla de la landing está desmarcada hasta que el cliente la marca. Meta cobra cada conversación iniciada con plantilla.
+
+### Seguimiento automático (días 1, 3, 7 y 14)
+
+A los prospectos de la landing que aceptaron WhatsApp les llega una plantilla el día 1, 3, 7 y 14 después de entrar. Sale todos los días a las 10:00 (Monterrey), menos los domingos. La secuencia se detiene sola en cualquiera de estos casos:
+- **Contesta cualquier cosa.** Se anota lo que escribió en sus notas del CRM, queda como seguimiento para hoy y, si hay plantilla de aviso, le llega un WhatsApp al asesor.
+- **Escribe BAJA** (o STOP, ALTO, "dar de baja"). Se le confirma y no se le vuelve a mandar nada automático. Solo vuelve a recibir si marca otra vez la casilla en la landing.
+- **El asesor lo mueve a Cita** o más adelante, o a Perdido.
+- **Un envío falla** (número que no existe, por ejemplo).
+
+Ningún paso se manda dos veces y nunca sale más de un mensaje al día. Cada envío queda en `whatsapp_mensajes` con su estado: enviado, entregado, leído o falló.
+
+Las respuestas llegan al número de la API de WhatsApp, no a tu WhatsApp personal. Por eso el portal te avisa y te deja lo que escribió el cliente en el CRM, para que le contestes desde tu WhatsApp.
+
+Para activarlo (necesita lo de arriba ya funcionando):
+1. **Webhook.** En Meta, abre tu app → WhatsApp → Configuración → Webhook.
+   - URL de devolución de llamada: `https://TU-PORTAL.vercel.app/api/whatsapp/webhook`.
+   - Token de verificación: cualquier texto largo. Ponlo igual en `WHATSAPP_VERIFY_TOKEN`.
+   - Suscríbete al campo **messages**.
+   - Copia la **clave secreta de la app** (Configuración de la app → Básica) en `WHATSAPP_APP_SECRET`. Sin ella el portal rechaza todo lo que llega.
+2. **Plantillas.** Crea estas 4, categoría Marketing, idioma español (México), con el pie "Responde BAJA para no recibir más mensajes." En todas, {{1}} es el nombre del cliente y {{2}} el del asesor.
+   - `flotilla_dia1`: "Hola {{1}}, soy {{2}}, asesor de flotillas de BYD Grupo TEC. Ayer calculaste el ahorro estimado de tu flotilla en nuestra página. ¿Quieres que te prepare la propuesta con los modelos que mejor se adaptan a tu operación? Responde a este mensaje y te contacto hoy."
+   - `flotilla_dia3`: "Hola {{1}}, ¿ya pudiste revisar el ahorro estimado de tu flotilla? Lo que más ayuda a decidir es que tu equipo maneje un BYD. Responde con el día y la hora que te acomoden y agendamos una prueba de manejo. {{2}}, BYD Grupo TEC."
+   - `flotilla_dia7`: "Hola {{1}}, además del ahorro estimado en combustible, la Ley del ISR permite a las empresas deducir un monto mayor por autos eléctricos e híbridos que por los de gasolina; tu contador puede confirmarte cómo aplica en tu caso. Si quieres, te preparo el comparativo con los datos de tu flotilla. {{2}}, BYD Grupo TEC."
+   - `flotilla_dia14`: "Hola {{1}}, este es mi último mensaje automático sobre tu flotilla. Si más adelante quieres retomar la propuesta o agendar una prueba de manejo, responde a este mensaje y te atiendo personalmente. {{2}}, BYD Grupo TEC."
+3. Pon los 4 nombres, en ese orden y separados por coma, en `WHATSAPP_SEGUIMIENTO` (`flotilla_dia1,flotilla_dia3,flotilla_dia7,flotilla_dia14`).
+4. **Aviso al asesor (opcional).** Crea `flotilla_respuesta`, categoría Utilidad. Cuerpo: "{{1}} respondió el WhatsApp automático de flotillas. Su número: {{2}}. Escribió: {{3}}. Contéstale desde tu WhatsApp en menos de 5 minutos." Ponla en `WHATSAPP_PLANTILLA_RESPUESTA`.
+5. Vuelve a desplegar.
+
+Para probar sin mandar nada: `curl -H "Authorization: Bearer $CRON_SECRET" "https://TU-PORTAL.vercel.app/api/cron/seguimiento-flotillas?simular=1"` regresa a quién le tocaría qué paso y por qué se detuvo el resto.
 
 ## Operación del día a día
 

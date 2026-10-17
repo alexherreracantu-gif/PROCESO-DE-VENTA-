@@ -1,10 +1,10 @@
 /**
  * Rutas que se abren sin sesión. `/api/leads` se protege con su propio LEADS_TOKEN,
- * `/api/cron` con CRON_SECRET, `/panel` es el dashboard general de solo lectura y
+ * `/api/cron` con CRON_SECRET, `/api/whatsapp/webhook` con la firma de Meta, `/panel` es el dashboard general de solo lectura y
  * `/convenio` es una presentación cifrada que se abre con su propia contraseña. `/cotiza` y
  * `/flotillas` son las páginas para clientes.
  */
-export const RUTAS_PUBLICAS = ["/login", "/configurar", "/salir", "/instalar", "/panel", "/cotiza", "/flotillas", "/convenio", "/api/leads", "/api/cron"];
+export const RUTAS_PUBLICAS = ["/login", "/configurar", "/salir", "/instalar", "/panel", "/cotiza", "/flotillas", "/convenio", "/api/leads", "/api/cron", "/api/whatsapp/webhook"];
 
 export type Acceso = "pasar" | "no-autorizado" | "al-login" | "al-inicio";
 

@@ -62,6 +62,8 @@ export async function enviarFlotilla(e: z.input<typeof Entrada>): Promise<{ ok: 
   const res = await registrarLead(lead, { agenciaId: s.agencia.id, asesorId, datos });
   if (!res.ok) return { ok: false, error: res.status === 429 ? res.error : "No se pudo enviar. Escríbenos por WhatsApp." };
   const { data: a } = await supabaseAdmin().from("perfiles").select("nombre_corto, telefono").eq("id", res.asesor_id).maybeSingle();
+  // Volver a marcar la casilla es un consentimiento nuevo: si antes había pedido BAJA, se quita.
+  if (d.aceptaWhatsapp) await supabaseAdmin().from("whatsapp_bajas").delete().eq("agencia_id", s.agencia.id).eq("telefono", lead.telefono);
 
   const automatico = d.aceptaWhatsapp && whatsappListo() && !!process.env.WHATSAPP_PLANTILLA_FLOTILLA;
   if (automatico || (whatsappListo() && process.env.WHATSAPP_PLANTILLA_ASESOR && a?.telefono)) {
@@ -75,6 +77,11 @@ export async function enviarFlotilla(e: z.input<typeof Entrada>): Promise<{ ok: 
         const envio = await enviarPlantilla({ telefono: lead.telefono, nombre: process.env.WHATSAPP_PLANTILLA_FLOTILLA!, imagen,
           variables: [primerNombre, String(d.unidades), dinero(resumen.mejor), a?.nombre_corto ?? "tu asesor"] });
         if (!envio.ok) console.error("WhatsApp al cliente:", envio.error);
+        // Queda en la bitácora del seguimiento (los días 1, 3, 7 y 14 los manda /api/cron/seguimiento-flotillas).
+        await supabaseAdmin().from("whatsapp_mensajes").upsert({
+          agencia_id: s.agencia.id, prospecto_id: res.id, paso: "bienvenida", plantilla: process.env.WHATSAPP_PLANTILLA_FLOTILLA!,
+          ...(envio.ok ? { estado: "enviado", wa_id: envio.id } : { estado: "fallido", error: envio.error.slice(0, 300) }),
+        }, { onConflict: "prospecto_id,paso", ignoreDuplicates: true });
       }
       if (process.env.WHATSAPP_PLANTILLA_ASESOR && a?.telefono) {
         // Plantilla del asesor: {{1}} cliente, {{2}} organización y tipo, {{3}} unidades, {{4}} WhatsApp del cliente.

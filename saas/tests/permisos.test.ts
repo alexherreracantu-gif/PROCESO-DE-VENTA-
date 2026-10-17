@@ -284,6 +284,30 @@ d("permisos por rol (RLS)", () => {
       expect(await tx`select 1 from public.prospecto_etapas where prospecto_id = ${p.id}`).toHaveLength(0);
     }));
 
+  it("los mensajes automáticos de WhatsApp: el asesor ve los de sus prospectos, nadie los escribe, uno por paso", () =>
+    escenario(async (tx, x) => {
+      const [p] = await tx`insert into public.prospectos (agencia_id, asesor_id, nombre, telefono) values (${x.agA}, ${x.omar}, 'Flotilla de Omar', '8112345678') returning id`;
+      await tx`insert into public.whatsapp_mensajes (agencia_id, prospecto_id, paso, plantilla, estado) values (${x.agA}, ${p.id}, 'dia1', 'flotilla_dia1', 'enviado')`;
+      const dup = await tx.savepoint((sp) => sp`insert into public.whatsapp_mensajes (agencia_id, prospecto_id, paso, plantilla) values (${x.agA}, ${p.id}, 'dia1', 'flotilla_dia1')`).catch((e) => e);
+      expect(String(dup)).toMatch(/duplicate key/);
+      await tx`insert into public.whatsapp_entrantes (agencia_id, wa_id, telefono, prospecto_id) values (${x.agA}, 'wamid.1', '8112345678', ${p.id})`;
+      await tx`insert into public.whatsapp_bajas (agencia_id, telefono) values (${x.agA}, '8112345678')`;
+
+      await como(tx, x.omar);
+      expect(await tx`select paso from public.whatsapp_mensajes`).toEqual([{ paso: "dia1" }]);
+      expect(await tx`select wa_id from public.whatsapp_entrantes`).toEqual([{ wa_id: "wamid.1" }]);
+      expect(await tx`select 1 from public.whatsapp_bajas`).toHaveLength(0);
+      const e = await tx.savepoint((sp) => sp`insert into public.whatsapp_bajas (agencia_id, telefono) values (${x.agA}, '8100000000')`).catch((err) => err);
+      expect(String(e)).toMatch(/permission denied/);
+      await como(tx, x.mariana);
+      expect(await tx`select 1 from public.whatsapp_mensajes`).toHaveLength(0);
+      await como(tx, x.jorge);
+      expect(await tx`select 1 from public.whatsapp_bajas`).toHaveLength(1);
+      await como(tx, x.ajeno);
+      expect(await tx`select 1 from public.whatsapp_mensajes`).toHaveLength(0);
+      expect(await tx`select 1 from public.whatsapp_bajas`).toHaveLength(0);
+    }));
+
   it("los anuncios oficiales: dirección los sube, el equipo los ve, nadie de otra agencia", () =>
     escenario(async (tx, x) => {
       const img = "A".repeat(200);
